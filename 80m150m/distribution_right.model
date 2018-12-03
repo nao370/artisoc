@@ -22,8 +22,8 @@ UNIVERSE {
             Dim debug(0, 0) As Boolean = (0);
             Dim commu_agt(0, 0) As AgtSet = ();
             Dim type(0, 0) As Integer = (0);
-            Dim color(0, 0) As Integer = ();
-            Dim direct(0, 0) As Double = ();
+            Dim color(0, 0) As Integer = (0);
+            Dim direct(0, 0) As Double = (0.0);
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -140,14 +140,16 @@ Agt_Step{
   dim count as Integer
 
 	my.Direction = my.direct
-	if GetCountStep() > 500 then
+	if GetCountStep() > 300 and (GetCountStep() mod 1000) > 100 then
 		my.type = my.color
+	else
+		my.type = COLOR_RED
 	end if
 	v = Distribution()
 
 	if v(0) == my.X and v(1) == My.Y then
 		MakeOneAgtSetAroundOwn(temp,10,universe.map.barrier,false)
-		if CountAgtSet(temp) != 0 and GetCountStep() > 500 then // ï«å©Ç¬ÇØÇΩ
+		if CountAgtSet(temp) != 0 and GetCountStep() > 300 and (GetCountStep() mod 1000) > 100 then // ï«å©Ç¬ÇØÇΩ
 			my.direct = direct_black(temp)
 		else //ï«å©Ç¬Ç©ÇÁÇ»Ç¢
 			my.color = COLOR_CYAN
@@ -167,10 +169,10 @@ Agt_Step{
   			if CountAgtSet(black) == 0 then //ÉtÉHÉçÅ[ÇµÇƒÇÈÇ‚Ç¬Ç‡Ç¢Ç»Ç¢Ç»ÇÁé~Ç‹ÇÈ
 					Forward(-0.5)
 				else	//Ç¢ÇÈÇ»ÇÁÇ¬Ç¢ÇƒÇ¢Ç≠
-					my.direct = direct_blue(black)
+					my.direct = direct_blue(black,v)
 				end if
 			else //é¸ÇËÇ…çïÇ™Ç¢ÇÍÇŒ
-				my.direct = direct_blue(black)
+				my.direct = direct_blue(black,v)
 			end if
 		end if
 	else
@@ -192,15 +194,11 @@ Agt_Step{
 			  T = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
 				My.direct =  T + rnd() * 5
 			else
-				my.direct = direct_blue(black)
-				v(0) = v(0) + Cos(my.direct)
-				v(1) = v(1) + Sin(my.direct)
-			  T = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
-				My.direct =  T + rnd() * 5
+				my.direct = direct_blue(black,v)
 				my.color = COLOR_RED
 			end if
 		else
-			my.direct = direct_blue(black)
+			my.direct = direct_blue(black,v)
 		end if
   end if
 
@@ -216,7 +214,7 @@ Agt_Step{
   MakeOneAgtSetAroundOwn(my.commu_agt,10,universe.map.robot,false)
 }
 
-function direct_blue(temp as AgtSet) as Double{
+function direct_blue(temp as AgtSet,v(2) as Double) as Double{
 	dim T as Double
 	dim direct as Double
 
@@ -226,7 +224,9 @@ function direct_blue(temp as AgtSet) as Double{
 		T = T + one.Direction
 	next one
 	T = T / CountAgtSet(temp)
-	direct = T + Rnd() * 10 - 5
+	v(0) = my.X + (v(0) + 2 * Cos(T))/3
+	v(1) = My.Y + (v(1) + 2 * Sin(T))/3
+	direct = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
 
 	return direct
 }
@@ -245,7 +245,7 @@ function direct_black(temp as AgtSet) as Double{
 			T = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
 		end if
 	next one
-	direct = (T + 90 + 360) mod 360
+	direct = (T + 90 + 360 + Rnd() * 10) mod 360
 
 	return direct
 }
@@ -404,9 +404,9 @@ Map_Output {
     Disable = No;
     Background_Color = 255, 255, 255;
     Position_x = 0;
-    Position_y = 2;
-    Size_x = 1206;
-    Size_y = 908;
+    Position_y = 287;
+    Size_x = 752;
+    Size_y = 623;
     Map_Cell_Size = 1;
     Remarks = Yes;
     Legend_Pos = Top;
