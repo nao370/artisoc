@@ -1,0 +1,719 @@
+//====================================================================/
+//　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　/
+// artisoc                                                            /
+//                                                                    /
+//====================================================================/
+
+Version = 4.0;
+
+
+
+//-------------------------------------------------------
+// Component Tree
+//-------------------------------------------------------
+UNIVERSE {
+    Space map(0,0),Square_2D(160, 300, !Loop, North, 1, !Map_3D){
+        AgtType robot(0, 0)[0] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim debug(0, 0) As Boolean = (0);
+            Dim commu_agt(0, 0) As AgtSet = ();
+            Dim speed(0, 0) As Integer = ();
+        }
+        AgtType barrier(0, 0)[0] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+        }
+        Dim wall(0, 0)[160][300][1] As Integer = (48000*0);
+        Dim fin(0, 0)[160][300][1] As Integer = (48000*0);
+        AgtType phero(0, 0)[0] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim time(0, 0) As Integer = (0);
+        }
+    }
+    Dim num_robot(0, 0) As Integer = (0);
+    Dim num_fin(0, 0) <1000>  As Integer = (0);
+    Dim rubble(0, 0) As Boolean = (0);
+}
+
+
+//-------------------------------------------------------
+// Agent Variable Initial Data
+//-------------------------------------------------------
+Initial_Value {
+    UNIVERSE.NUM_ROBOT = 1(100);
+    UNIVERSE.RUBBLE = 1(1);
+}
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE
+Univ_Init{
+    dim i as integer
+    dim j as integer
+    dim one as Agt
+
+    CreateAgtMulti(universe.map.robot,universe.num_robot)
+    
+    for i = 0 to GetWidthSpace(universe.map) -1
+     for j = 0 to GetHeightSpace(universe.map) - 1
+       if i==0 or j==0 or i ==GetWidthSpace(universe.map) -1 or j == GetHeightSpace(universe.map) - 1 then
+         one = CreateAgt(universe.map.barrier)
+         one.x = i
+         one.y = j
+       end if
+     next j
+    next i
+
+	if universe.rubble then
+		make_big_rubble()
+	end if
+
+}
+
+sub make_big_rubble(){
+	dim i as integer
+	dim j as integer
+	dim one as agt
+	dim two as agt
+	dim three as agt
+	dim four as agt
+	dim temp as AgtSet
+	
+	for i = 1 to GetWidthSpace(universe.map) -3
+		for j = 1 to GetHeightSpace(universe.map) - 3
+	  	if rnd()*100 < 10 and (i > 10 or j > 10 ) then
+	  		MakeOneAgtSetAroundPosition(temp,universe.map,i,j,0,0,universe.map.barrier)
+	  		if CountAgtSet(temp) == 0 then
+		    	one = CreateAgt(universe.map.barrier)
+		    	one.x = i
+		    	one.y = j
+		    	two = CreateAgt(universe.map.barrier)
+		    	two.x = i + 1
+		    	two.y = j
+		    	three = CreateAgt(universe.map.barrier)
+		    	three.x = i
+		    	three.y = j + 1
+		    	four = CreateAgt(universe.map.barrier)
+		    	four.x = i + 1
+		    	four.y = j + 1
+	    	end if
+	    end if
+	   next j
+	  next i
+}
+
+sub make_rubble(){
+	dim i as integer
+	dim j as integer
+	dim one as agt
+	
+	for i = 1 to GetWidthSpace(universe.map) -2
+		for j = 1 to GetHeightSpace(universe.map) - 2
+	  	if rnd()*100 < 20 then
+	    	one = CreateAgt(universe.map.barrier)
+	    	one.x = i
+	    	one.y = j
+	    end if
+	   next j
+	  next i
+}
+
+Univ_Step_Begin{
+
+}
+
+Univ_Step_End{
+	dim prefin as integer
+
+	prefin = GetHistory(universe.num_fin,1000)
+
+	if prefin == universe.num_fin then
+		print("Num of Step is ")
+		println(GetCountStep())
+		print("Num of fin is ")
+		println(prefin)
+		println("")
+		ExitSimulation()
+	end if
+}
+
+Univ_Finish{
+}
+#end_rule UNIVERSE
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.ROBOT
+Agt_Init{
+   my.X = 4 + rnd()
+   my.Y = 4 + rnd()
+   my.Direction = rnd()*360
+}
+
+Agt_Step{
+	dim temp as AgtSet
+	dim T as Double
+
+		if my.speed == 0 then 
+	  my.Direction = rnd() * 360  
+	  if rnd()*100 > 10 then
+	  	my.speed = 1
+	  elseif rnd()*100 > 10 then
+	  	my.speed = 2
+	  elseif rnd()*100 > 10 then
+	  	my.speed = 10
+	  else 
+	  	My.speed = 20
+  	end if
+	end if
+
+	MakeOneAgtSetAroundOwn(temp,2,universe.map.barrier,false)
+	for each one in temp
+		T = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+		T = T - my.Direction
+		if T < 30 and T > - 30 then
+			my.Direction = my.Direction - T
+		end if
+	next one
+
+	forward(0.5)
+ 
+	MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,0,0.8,universe.map.barrier)
+  if(CountAgtSet(temp) > 0) then
+    Forward(-0.5)
+    Turn(rnd()*60 - 120)
+	else
+	 draw_fin(my)
+	end if
+  MakeOneAgtSetAroundOwn(my.commu_agt,10,universe.map.robot,false)
+}
+
+function isGo (temp as AgtSet , one as Agt) as Boolean{
+
+	if one.X > 0.1 and one.X < GetWidthSpace(universe.map) - 0.1 then
+		if one.Y > 0.1 and one.Y < GetHeightSpace(universe.map) - 0.1 then
+				return true
+		end if
+	end if
+	
+	return false
+}
+
+sub draw_fin(one as agt){
+	dim px as Integer
+	dim py as Integer
+	dim two as Agt
+	dim temp as AgtSet
+
+	 px = Int(one.X)
+	 py = Int(one.Y)
+
+	if px < GetWidthSpace(universe.map) and px >= 0 then
+	if py < GetHeightSpace(universe.map)  and py >= 0 then
+ 	 if universe.map.fin(px,py,0) == 0 then
+ 		 universe.map.fin(px,py,0) = 1
+ 		 universe.num_fin = universe.num_fin + 1
+   end if
+  end if
+  end if
+}
+#end_rule UNIVERSE.MAP.ROBOT
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.BARRIER
+Agt_Init{
+
+}
+
+Agt_Step{
+
+}
+#end_rule UNIVERSE.MAP.BARRIER
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.PHERO
+Agt_Init{
+	My.time = 50
+}
+
+Agt_Step{
+	if my.time == 0 then
+		KillAgt(my)
+	end if
+	my.time = my.time -1
+}
+#end_rule UNIVERSE.MAP.PHERO
+
+
+
+
+//-------------------------------------------------------
+// Simulation Definition Division
+//-------------------------------------------------------
+Single_Simulation {
+    Step_Max = 0;
+    Time_Max = 0;
+    End_Condition = "";
+    Exec_Wait = 0;
+    Exec_Wait_Max = 1000;
+    Random_Generator = Java_Standard;
+    Exec_Order = Random;
+    Exec_Order_Random_First_Step_Only = No;
+    Random_Seed = 0;
+    Redraw_Timing = Step;
+    Redraw_Interval = 1;
+    Garbage_Interval = 0;
+}
+
+
+//-------------------------------------------------------
+// Simulation Loop Definition Division
+//-------------------------------------------------------
+Repeat_Simulation {
+    Value_Change = None;
+    Initial_Value_Change_None {
+        Repeat_Max = 10;
+    }
+}
+
+
+//-------------------------------------------------------
+// 2 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map_Output {
+    Map_Space_Name = "Universe.map";
+    Map_Name = "map";
+    Title = "map";
+    Disable = No;
+    Background_Color = 255, 255, 255;
+    Position_x = 764;
+    Position_y = 455;
+    Size_x = 764;
+    Size_y = 455;
+    Map_Cell_Size = 1;
+    Remarks = Yes;
+    Legend_Pos = Top;
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    FastDraw = Yes;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Axis_Label = "", "";
+    Draw_Range = 0, 0, 160, 300;
+    Ruled_Line = No;
+    Text_Display = No;
+    Text_Display_Variable_Name = "";
+    Chess_Type_Display_Position = Yes;
+    Background_Transparent = No;
+    Target_Layer = 0;
+    Coordinate_Display = No;
+    Space_Kind = Square_2D;
+    BG_Pict = No;
+    BG_Type = 0;
+    BG_Var_Name = "";
+    BG_File_Name = "";
+    Origin_Position = 2;
+    Output_Group_Name = "";
+    Output {
+        Map_Element_Name = "robot";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.robot";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 255,0,0;
+        Marker_Id = 1;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.robot.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.robot.ID";
+    }
+    Output {
+        Map_Element_Name = "barrier";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.barrier";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 0,0,255;
+        Marker_Id = 2;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.barrier.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.barrier.ID";
+    }
+    Output {
+        Map_Element_Name = "fin";
+        Map_Element = Space_Variable;
+        Output_Expression = "Universe.map.fin";
+        Space_Color_Direct_RGB = No;
+        Space_Draw_Range = 0.0, 1.0;
+        Space_Color_Min = 255, 255, 255;
+        Space_Color_Max = 255, 255, 51;
+        Marker_Id = 6;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Space_Variable_Transparency_by_value = Yes;
+        Space_Variable_Transparency_Value = 0.0;
+        Space_Variable_Transparency_Variable_Name = "Universe.map.wall";
+    }
+    Output {
+        Map_Element_Name = "commu";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.robot";
+        Draw_Line = Yes;
+        Collection_Name = "Universe.map.robot.commu_agt";
+        Line_Type = 1;
+        Line_Arrow = 1;
+        Line_Width = 1;
+        Line_Color = 51, 255, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 255,0,0;
+        Marker_Id = 1;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.robot.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.robot.ID";
+    }
+    Output {
+        Map_Element_Name = "pheromon";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.phero";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 204,0,204;
+        Marker_Id = 6;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.phero.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.phero.ID";
+    }
+}
+
+
+//-------------------------------------------------------
+// Time Graph Output Definition Division
+//-------------------------------------------------------
+Time_Graph {
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Graph_Name = "num_fin";
+    Title = "num_fin";
+    Disable = No;
+    Background_Color = 255, 255, 255;
+    Remarks = Yes;
+    Legend_Pos = Top;
+    FastDraw = No;
+    Position_x = 764;
+    Position_y = 0;
+    Size_x = 764;
+    Size_y = 455;
+    Map_Cell_Size = -1;
+    Axis_Label = "", "";
+    Draw_By_JFree_Chart = Yes;
+    Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
+    ScaleAuto = Yes, Yes;
+    Output_Group_Name = "";
+    Output {
+        Graph_Element_Name = "num_fin";
+        Line_Color = 255, 0, 0;
+        Line_Width = 2;
+        Marker_Id = 0;
+        Output_Expression = "universe.num_fin";
+        Expression_Value_Display = No;
+        Effective_Fraction_Figures = 0;
+        Graph_Element_Color = (0, 255, 0);
+    }
+}
+
+
+//-------------------------------------------------------
+// Control Panel Definition Division
+//-------------------------------------------------------
+Control_Panel {
+    Display_Area = 0, 0, 283, 113;
+    Display_Type = 1;
+    Panel_Item {
+        Item_Type = Slider;
+        Item_Name = "num_robot";
+        Display_Area = 0, 0, 0, 0;
+        Font_Name = "";
+        Font_Char_Set = 0;
+        Font_Size = 0.0;
+        Font_Style = 0;
+        Font_Color = 0, 0, 0;
+        Font_Background_Color = 0, 0, 0;
+        Var_Name = "Universe.num_robot";
+        Slider_Range_Max = 100;
+        Slider_Value_Min = 0.0;
+        Slider_Value_Step = 1.0;
+        Slider_Value = "100";
+    }
+    Panel_Item {
+        Item_Type = Toggle;
+        Item_Name = "rubble";
+        Display_Area = 0, 0, 0, 0;
+        Font_Name = "";
+        Font_Char_Set = 0;
+        Font_Size = 0.0;
+        Font_Style = 0;
+        Font_Color = 0, 0, 0;
+        Font_Background_Color = 0, 0, 0;
+        Var_Name = "Universe.rubble";
+        Control_On = Yes;
+        Control_On_Int = 0;
+        Control_On_Long = 0;
+        Control_On_Double = 0.0;
+        Control_On_String = "";
+        Control_Off = No;
+        Control_Off_Int = 0;
+        Control_Off_Long = 0;
+        Control_Off_Double = 0.0;
+        Control_Off_String = "";
+        Toggle_Button_On = Yes;
+        Slider_Range_Max = 100;
+        Slider_Value_Min = 0.0;
+        Slider_Value_Step = 1.0;
+        Slider_Value = "100";
+        Shortcut_Key = "";
+    }
+}
+
+
+//-------------------------------------------------------
+// Space Initial Value Definition Divsion
+//-------------------------------------------------------
+Space_Initial {
+}
+
+
+//-------------------------------------------------------
+// Other Miscellaneous Data Definition Division
+//-------------------------------------------------------
+Others_Data {
+    Indent = 4;
+    Rule_Colored = Yes;
+    Rule_LineNo = Yes;
+    Window_Hide_Run = 1;
+    Debug_Position_x = 509;
+    Debug_Position_y = 303;
+    Debug_Size_x = 509;
+    Debug_Size_y = 303;
+    Console_Position_x = 0;
+    Console_Position_y = 455;
+    Console_Size_x = 764;
+    Console_Size_y = 455;
+    Componen_Tree_Position_x = 0;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 764;
+    Componen_Tree_Size_y = 455;
+    Console_Background_Color = 16777215;
+    Console_Foreground_Color = 255;
+    Console_DisplayLines_Max = 500;
+    plug_in_module_name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 0;
+    Font_Size = 14.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 0, 0, 0;
+}
+
+
+//-------------------------------------------------------
+// Network Information Definition Division
+//-------------------------------------------------------
+Network_Info {
+    Global_Space_Area = 0, 0, 100, 100;
+    Local_Space_Info {
+    }
+}
+
+
+//-------------------------------------------------------
+// Space Map Initial Value Definition Division
+//-------------------------------------------------------
+Space_Map_Initial_Value {
+    Space_Path_Name = Universe.map;
+    Background_Image_File_Path_Name = "";
+    Origin_Position = Left_Bottom;
+    Space_Variable {
+        Variable = Universe.map.wall,(201*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 201*1, 8000*0);
+        Marker_Id = 2;
+        Min_Value = "0";
+        Max_Value = "1";
+        Min_Value_Color = 255, 255, 255;
+        Max_Value_Color = 0, 255, 255;
+    }
+}
+
+
+//-------------------------------------------------------
+// Window Location Definition Division
+//-------------------------------------------------------
+Window_Rectangle {
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+}
+
+
+//-------------------------------------------------------
+// Help Favorite Division
+//-------------------------------------------------------
+Help_Favorite {
+}
