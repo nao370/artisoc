@@ -195,7 +195,10 @@ Agt_Step{
 				My.direct =  T + rnd() * 5
 			else
 				my.direct = direct_blue(black,v)
-				
+				v(0) = v(0) + Cos(my.direct)
+				v(1) = v(1) + Sin(my.direct)
+			  T = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
+				My.direct =  T + rnd() * 5
 				my.color = COLOR_RED
 			end if
 		else
