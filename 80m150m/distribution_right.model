@@ -195,6 +195,7 @@ Agt_Step{
 				My.direct =  T + rnd() * 5
 			else
 				my.direct = direct_blue(black,v)
+				
 				my.color = COLOR_RED
 			end if
 		else
@@ -224,9 +225,7 @@ function direct_blue(temp as AgtSet,v(2) as Double) as Double{
 		T = T + one.Direction
 	next one
 	T = T / CountAgtSet(temp)
-	v(0) = my.X + (v(0) + 2 * Cos(T))/3
-	v(1) = My.Y + (v(1) + 2 * Sin(T))/3
-	direct = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
+	direct = T
 
 	return direct
 }
