@@ -118,6 +118,7 @@ Univ_Finish{
 // Agent Rule
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.ROBOT
+Include "distribution.inc"
 Agt_Init{
    my.X = (rnd() * 4 - 2) + 5
    my.Y = (rnd() * 4 - 2) + 5
@@ -132,89 +133,17 @@ Agt_Step{
   dim far as AgtSet
   dim T as Double
   dim one as Agt
-  dim x_v as Double
-  dim y_v as Double
+  dim v(2) as Double
   dim count as Integer
 
-	x_v = 0
-	y_v = 0
-  MakeOneAgtSetAroundOwn(neighbor,4,universe.map.robot,false)
-	MakeOneAgtSetAroundOwn(far,10,universe.map.robot,false)
-	DelAgtSet(far,alignment)
-	DelAgtSet(alignment,neighbor)
-
-	if CountAgtSet(neighbor) > 0 then //ãﬂÇ∑Ç¨ÇÈèÍçáÇÃêÀóÕ
-	  for each one in neighbor
-	    d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/4
-	    if d != 0 then
-		  	x_v = x_v + (my.X - one.X)/(d^3)
-		  	y_v = y_v + (my.Y - one.Y)/(d^3)
-		  end if
-	  next one
-  end if
-
-  MakeOneAgtSetAroundOwn(temp,1,universe.map.barrier,false)
-  if CountAgtSet(temp) > 0 then //è·äQï®Ç©ÇÁÇÃêÀóÕ
-	  for each one in temp
-	    d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/1
-	    if d != 0 then
-		  	x_v = x_v + (my.X - one.X)/(d^10)
-		  	y_v = y_v + (my.Y - one.Y)/(d^10)
-		  end if
-	  next one
-  end if
-  
-  if CountAgtSet(far) > 0 then //âìÇ¢å¬ëÃÇ©ÇÁÇÃà¯óÕ
-  	for each one in neighbor
-  		d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/5
-  		if d != 0 then
-		  	x_v = x_v + (one.X - my.X) * (d ^ 2)
-		  	y_v = y_v + (one.Y - my.Y) * (d ^ 2)
-		  end if
-	  next one
-  end if
-
-	x_v = x_v + my.X
-	y_v = y_v + my.Y
-
-
-	if x_v == my.X and y_v == my.Y then //íﬁÇËçáÇ¡ÇƒÇ¢ÇÈèÍçá
-	  MakeOneAgtSetAroundOwn(temp,10,universe.map.barrier,false)
-		if CountAgtSet(temp) != 0 then
-			d = 255
-		  for each one in temp
-		  	if d > MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map) then
-		  		d = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
-		  		count = GetAgtEntry(temp,one)
-		  	end if
-		  next one
-		  one = GetAgt(temp,count)
-		  TurnAgt(one)
-		  Turn(100 - Rnd() * 20)
-	  else
-	  	MakeOneAgtSetAroundOwn(alignment,6,universe.map.robot,false)
-	  	if CountAgtSet(alignment) > 0 then
-				for Each one in alignment
-					T = one.Direction
-					x_v = x_v + Cos(DegreeToRad(T))
-					y_v = y_v + Sin(DegreeToRad(T))
-				Next one
-				T = GetDirection(my.X,my.Y,x_v,y_v,universe.map)
-				My.Direction =  T + rnd() * 10 - 5
-			else
-				my.Direction = Rnd()*360
-			end if						
-	  end if
-	  		MakeOneAgtSetAroundOwn(temp,3,universe.map.barrier,false)
-		for each one in temp
-			T = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
-			T = T - my.Direction
-			if T < 30 and T > - 30 then
-				my.Direction = my.Direction - T
-			end if
-		next one
+	v(0) = 0
+	v(1) = 0
+	v = distribution()
+	
+	if v(0) == my.X and v(1) == my.Y then //íﬁÇËçáÇ¡ÇƒÇ¢ÇÈèÍçá
+		Forward(-0.5)
 	else
-	  T = GetDirection(my.X,my.Y,x_v,y_v,universe.map)
+	  T = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
 	  My.Direction =  T + rnd() * 10 - 5
 	
 		MakeOneAgtSetAroundOwn(temp,3,universe.map.barrier,false)
