@@ -142,6 +142,7 @@ Agt_Step{
 	v(1) = 0
 	v = distribution()
 	
+	
 	if v(0) == my.X and v(1) == my.Y then //’Ş‚è‡‚Á‚Ä‚¢‚éê‡
 		Forward(-0.5)
 	else
