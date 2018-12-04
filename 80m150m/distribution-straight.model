@@ -21,6 +21,7 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim debug(0, 0) As Boolean = (0);
             Dim commu_agt(0, 0) As AgtSet = ();
+            Dim g_direction(0, 0) As Double = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -123,6 +124,7 @@ Agt_Init{
    my.X = (rnd() * 4 - 2) + 5
    my.Y = (rnd() * 4 - 2) + 5
    my.Direction = rnd()*360
+   my.g_direction = Rnd() * 30 + 60
 }
 
 Agt_Step{
