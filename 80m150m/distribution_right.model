@@ -54,7 +54,7 @@ UNIVERSE {
 //-------------------------------------------------------
 Initial_Value {
     UNIVERSE.NUM_ROBOT = 1(100);
-    UNIVERSE.RUBBLE = 1(0);
+    UNIVERSE.RUBBLE = 1(1);
 }
 
 
@@ -82,8 +82,7 @@ Univ_Init{
     next i
 
 	if universe.rubble then
-		make_N_rubble(20,0.5)
-		make_N_rubble(2,1)
+		make_N_rubble(20,0.1)
 	end if
 
 }
@@ -406,9 +405,9 @@ Map_Output {
     Disable = No;
     Background_Color = 255, 255, 255;
     Position_x = 0;
-    Position_y = 287;
-    Size_x = 752;
-    Size_y = 623;
+    Position_y = 321;
+    Size_x = 747;
+    Size_y = 589;
     Map_Cell_Size = 1;
     Remarks = Yes;
     Legend_Pos = Top;
@@ -677,7 +676,7 @@ Control_Panel {
         Control_Off_Long = 0;
         Control_Off_Double = 0.0;
         Control_Off_String = "";
-        Toggle_Button_On = No;
+        Toggle_Button_On = Yes;
         Slider_Range_Max = 100;
         Slider_Value_Min = 0.0;
         Slider_Value_Step = 1.0;
