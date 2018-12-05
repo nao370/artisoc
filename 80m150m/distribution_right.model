@@ -130,13 +130,8 @@ Agt_Init{
 }
 
 Agt_Step{
-  dim temp as AgtSet
-  dim d as Double
-  dim T as Double
-  dim one as Agt
-  dim black as AgtSet
   dim v(2) as Double
-  dim count as Integer
+  dim temp as AgtSet
 
 	my.Direction = my.direct
 	if check_distribution() then
@@ -144,6 +139,7 @@ Agt_Step{
 			if check_rubble() then
 				//áŠQ•¨‚ğŒ©‚Â‚¯‚½‚Ì‘Î‰
 			else
+				my.direct = follow_wall()
 				Forward(0.5)
 			end if
 		else
@@ -164,6 +160,11 @@ Agt_Step{
 	 draw_fin(my)
 	end if
   MakeOneAgtSetAroundOwn(my.commu_agt,10,universe.map.robot,false)
+}
+
+function follow_wall() as Double{
+
+	return 0
 }
 
 function check_rubble() as Boolean{
