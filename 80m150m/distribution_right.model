@@ -160,7 +160,7 @@ Agt_Step{
 
 	MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,0,0.6,universe.map.barrier)
   if(CountAgtSet(temp) > 0) then
-    Forward(-0.5)
+    Forward(-0.501)
     Turn(rnd()*60 - 120)
 	else
 	 draw_fin(my)
@@ -393,9 +393,9 @@ Map_Output {
     Disable = No;
     Background_Color = 255, 255, 255;
     Position_x = 0;
-    Position_y = 0;
-    Size_x = 1528;
-    Size_y = 910;
+    Position_y = 286;
+    Size_x = 761;
+    Size_y = 624;
     Map_Cell_Size = 1;
     Remarks = Yes;
     Legend_Pos = Top;
