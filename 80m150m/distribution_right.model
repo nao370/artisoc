@@ -82,8 +82,7 @@ Univ_Init{
     next i
 
 	if universe.rubble then
-		make_N_rubble(20,0.5)
-		make_N_rubble(2,1)
+		make_N_rubble(20,0.1)
 	end if
 
 }
@@ -131,88 +130,80 @@ Agt_Init{
 }
 
 Agt_Step{
-  dim temp as AgtSet
-  dim d as Double
-  dim T as Double
-  dim one as Agt
-  dim black as AgtSet
   dim v(2) as Double
-  dim count as Integer
+  dim temp as AgtSet
 
 	my.Direction = my.direct
-	if GetCountStep() > 300 and (GetCountStep() mod 1000) > 100 then
-		my.type = my.color
-	else
-		my.type = COLOR_RED
-	end if
-	v = Distribution()
-
-	if v(0) == my.X and v(1) == My.Y then
-		MakeOneAgtSetAroundOwn(temp,10,universe.map.barrier,false)
-		if CountAgtSet(temp) != 0 and GetCountStep() > 300 and (GetCountStep() mod 1000) > 100 then // 壁見つけた
-			my.direct = direct_black(temp)
-		else //壁見つからない
-			my.color = COLOR_CYAN
-			MakeOneAgtSetAroundOwn(temp,10,universe.map.robot,false)
-			for each one in temp
-				if one.type == COLOR_BLACK then
-					AddAgt(black,one)
-				end if
-			next one
-			if	CountAgtSet(black) == 0 then //周りに壁沿いのやつがいなければ留まる
-				MakeOneAgtSetAroundOwn(temp,10,universe.map.robot,false)
-				for each one in temp
-					if one.type == COLOR_BLUE then
-						AddAgt(black,one)
-					end if
-  			next one
-  			if CountAgtSet(black) == 0 then //フォローしてるやつもいないなら止まる
-					Forward(-0.5)
-				else	//いるならついていく
-					my.direct = direct_blue(black,v)
-				end if
-			else //周りに黒がいれば
-				my.direct = direct_blue(black,v)
-			end if
-		end if
-	else
-		my.color = COLOR_RED
-		MakeOneAgtSetAroundOwn(temp,10,universe.map.robot,false)
-		for each one in temp
-			if one.type == COLOR_BLACK then
-				AddAgt(black,one)
-			end if
-		next one
-		if	CountAgtSet(black) == 0 then //壁伝いがいない
- 			MakeOneAgtSetAroundOwn(temp,10,universe.map.robot,false)
-			for each one in temp
-				if one.type == COLOR_BLUE then
-					AddAgt(black,one)
-				end if
-  		next one //ここまでで青を探してる
-  		if CountAgtSet(black) == 0 then 
-			  T = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
-				My.direct =  T + rnd() * 5
+	my.type = my.color
+	if check_distribution() then
+		if check_wall() then
+			if check_rubble() then
+				//障害物を見つけた時の対応
 			else
-				my.direct = direct_blue(black,v)
-				my.color = COLOR_RED
+				my.direct = follow_wall()
+				Forward(0.5)
 			end if
 		else
-			my.direct = direct_blue(black,v)
+			//誰も壁を見つけられない場合ここ。終了？？？
+			PrintLn("Not Found Wall.")
 		end if
-  end if
-
-  Forward(0.5)
+	else
+		v = Distribution()
+		my.direct = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
+		if my.X == v(0) and my.Y == v(1) then
+			my.color = COLOR_CYAN
+		else
+			my.color = COLOR_RED
+			Forward(0.5)
+		end if
+	end if
 
 	MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,0,0.6,universe.map.barrier)
   if(CountAgtSet(temp) > 0) then
-    Forward(-0.5)
+    Forward(-0.501)
     Turn(rnd()*60 - 120)
 	else
 	 draw_fin(my)
 	end if
   MakeOneAgtSetAroundOwn(my.commu_agt,10,universe.map.robot,false)
 }
+
+function follow_wall() as Double{
+
+	return 0
+}
+
+function check_rubble() as Boolean{
+
+	return false
+}
+
+function check_wall() as Boolean{
+
+	return true
+}
+
+function check_distribution() as Boolean{
+	dim temp as AgtSet
+	dim red as AgtSet
+	dim one as Agt
+	dim dis as Boolean
+
+	MakeOneAgtSetAroundOwn(temp,10,universe.map.robot,True)
+	for each one in temp
+		if one.type == COLOR_RED then
+			AddAgt(red,one)
+		end if
+	next one
+
+	if CountAgtSet(red) == 0 then
+		dis = true
+	else
+		dis = false
+	end if
+
+	return dis
+} 
 
 function direct_blue(temp as AgtSet,v(2) as Double) as Double{
 	dim T as Double
@@ -224,9 +215,7 @@ function direct_blue(temp as AgtSet,v(2) as Double) as Double{
 		T = T + one.Direction
 	next one
 	T = T / CountAgtSet(temp)
-	v(0) = my.X + (v(0) + 2 * Cos(T))/3
-	v(1) = My.Y + (v(1) + 2 * Sin(T))/3
-	direct = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
+	direct = T
 
 	return direct
 }
@@ -404,9 +393,9 @@ Map_Output {
     Disable = No;
     Background_Color = 255, 255, 255;
     Position_x = 0;
-    Position_y = 287;
-    Size_x = 752;
-    Size_y = 623;
+    Position_y = 286;
+    Size_x = 761;
+    Size_y = 624;
     Map_Cell_Size = 1;
     Remarks = Yes;
     Legend_Pos = Top;
@@ -797,7 +786,7 @@ Space_Map_Initial_Value {
 //-------------------------------------------------------
 Window_Rectangle {
     Window_Name = Main_Window, -8, -8, 1696, 1026;
-    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Output_Setting_Window, 202, 333, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
 }
 
