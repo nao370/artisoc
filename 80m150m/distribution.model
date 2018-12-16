@@ -138,8 +138,9 @@ Agt_Step{
 
 	x_v = 0
 	y_v = 0
-  MakeOneAgtSetAroundOwn(neighbor,4,universe.map.robot,false)
-	MakeOneAgtSetAroundOwn(far,10,universe.map.robot,false)
+  MakeOneAgtSetAroundOwn(neighbor,10,universe.map.robot,false)
+  MakeOneAgtSetAroundOwn(alignment,14,universe.map.robot,false)
+	MakeOneAgtSetAroundOwn(far,20,universe.map.robot,false)
 	DelAgtSet(far,alignment)
 	DelAgtSet(alignment,neighbor)
 
