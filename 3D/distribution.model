@@ -12,8 +12,17 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(1600, 3000, Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(1600, 3000, Loop, North, 80, Map_3D){
         AgtType insect(0, 0)[100] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Z(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+        }
+        AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = ();
             Dim X(0, 0) As Double = ();
             Dim Y(0, 0) As Double = ();
@@ -38,7 +47,7 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
-
+	make_N_rubble_3D(10,0.1)
 }
 
 Univ_Step_Begin{
@@ -51,6 +60,69 @@ Univ_Step_End{
 
 Univ_Finish{
 
+}
+
+sub make_N_rubble_3D(N as Integer, rate as Double){
+	dim i as integer
+	dim j as integer
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+	dim k as Integer
+	dim t as Integer
+	dim c as Integer
+
+	for k = 0 to 79 - (N+1)
+		for j = 1 to GetHeightSpace(universe.map) - (N + 1)
+		for i = 1 to GetWidthSpace(universe.map) - (N + 1)
+	  	if rnd()*100 < rate and (i > 20 or j > 20 or k > 20) then
+	  		MakeOneAgtSetAroundPosition(temp,universe.map,i,j,k,0,universe.map.barrier)
+	  		if CountAgtSet(temp) == 0 then
+	  			set = CreateAgtMulti(universe.map.barrier,(N^2))
+	  			for each one in set
+	  				t = GetAgtEntry(set,one)
+	  				a = t  / (N^2) 
+	  				b = t Mod (N^2)
+	  				c = b / N
+	  				b = b Mod N
+	  				one.X = i + b
+	  				one.Y = j + c
+	  				one.Z = k + a
+	  			next one
+	    	end if
+	    end if
+	   next i
+	  next j
+	 next k
+}
+
+sub make_N_rubble(N as Integer, rate as double){
+	dim i as integer
+	dim j as integer
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+
+	for j = 1 to GetHeightSpace(universe.map) - (N + 1)
+		for i = 1 to GetWidthSpace(universe.map) - (N + 1)
+	  	if rnd()*100 < rate and (i > 10 or j > 10) then
+	  		MakeOneAgtSetAroundPosition(temp,universe.map,i,j,0,0,universe.map.barrier)
+	  		if CountAgtSet(temp) == 0 then
+	  			set = CreateAgtMulti(universe.map.barrier,(N^2))
+	  			for each one in set
+	  				a = GetAgtEntry(set,one) / N 
+	  				b = GetAgtEntry(set,one) Mod N
+	  				one.X = i + a
+	  				one.Y = j + b
+	  			next one
+	    	end if
+	    end if
+	   next i
+	  next j
 }
 #end_rule UNIVERSE
 
@@ -69,6 +141,22 @@ Agt_Step{
 Forward(1)
 }
 #end_rule UNIVERSE.MAP.INSECT
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.BARRIER
+Agt_Init{
+
+}
+
+Agt_Step{
+
+}
+#end_rule UNIVERSE.MAP.BARRIER
 
 
 
