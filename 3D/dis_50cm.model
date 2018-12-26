@@ -155,6 +155,7 @@ Agt_Step{
 		end if
 	end if
 	move()
+	my.Direction = my.direct
 }
 
 function search_leader() as Boolean{
@@ -174,7 +175,46 @@ Forward(my.speed)
 }
 
 Function distribution() as Double{
-return 0
+  dim v(2) as Double
+  dim temp as AgtSet
+  dim neighbor as AgtSet
+  dim alignment as AgtSet
+  dim d as Double
+  dim far as AgtSet
+  dim T as Double
+  dim one as Agt
+  dim count as Integer
+
+  v(0) = 0
+  v(1) = 0
+	MakeOneAgtSetAroundOwn(neighbor,4,universe.map.insect,false)
+	MakeOneAgtSetAroundOwn(far,10,universe.map.insect,false)
+	DelAgtSet(far,alignment)
+	DelAgtSet(alignment,neighbor)
+
+	if CountAgtSet(neighbor) > 0 then //‹ß‚·‚¬‚éê‡‚ÌË—Í
+	  for each one in neighbor
+	    d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/4
+	    if d != 0 then
+		  	v(0) = v(0) + (my.X - one.X)/(d^3)
+		  	v(1) = v(1) + (my.Y - one.Y)/(d^3)
+		  end if
+	  next one
+  end if
+  
+  if CountAgtSet(far) > 0 then //‰“‚¢ŒÂ‘Ì‚©‚ç‚Ìˆø—Í
+  	for each one in neighbor
+  		d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/5
+		  v(0) = v(0) + (one.X - my.X) * (d ^ 2)
+	  	v(1) = v(1) + (one.Y - my.Y) * (d ^ 2)
+	  next one
+  end if
+
+
+	v(0) = v(0) + my.X
+	v(1) = v(1) + my.Y
+
+	return v
 }
 
 Function search_void() as Double{
@@ -469,14 +509,14 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 840;
+    Console_Position_x = 0;
     Console_Position_y = 0;
-    Console_Size_x = 840;
-    Console_Size_y = 303;
+    Console_Size_x = 1680;
+    Console_Size_y = 910;
     Componen_Tree_Position_x = 0;
-    Componen_Tree_Position_y = 455;
-    Componen_Tree_Size_x = 840;
-    Componen_Tree_Size_y = 455;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 1680;
+    Componen_Tree_Size_y = 910;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
