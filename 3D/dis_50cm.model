@@ -23,6 +23,7 @@ UNIVERSE {
             Dim Angle(0, 0) As Double = (0.0);
             Dim speed(0, 0) As Double = ();
             Dim position(0, 0)[3] As Double = ();
+            Dim direct(0, 0) As Double = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -121,7 +122,75 @@ my.Direction = Rnd() * 360
 }
 
 Agt_Step{
-Forward(1)
+	dim d as Double
+
+	if leader() then //自分がリーダー
+		if last_leader() then
+			d = search_void()
+			if d == -1 then
+				my.speed = 1
+			else
+				my.direct = d
+			end if
+		else
+			my.speed = 1
+		end if
+	else //リーダーじゃない
+		if search_leader() then
+			detect_direction()
+			d = tune_direction()
+			if d == -1 then
+				my.direct = distribution()
+				d = search_void()
+				if d != -1 and (Not search_barrier()) then
+					my.speed = 0.9
+				end if
+			end if
+		else
+			my.direct = distribution()
+			d = search_void()
+			if d != -1 and (Not search_barrier()) then
+				my.speed = 0.9
+			end if
+		end if
+	end if
+	move()
+}
+
+function search_leader() as Boolean{
+return true
+}
+
+function detect_direction() as Double{
+return 0
+}
+
+function search_barrier() as Boolean{
+return true
+}
+
+sub move() {
+Forward(my.speed)
+}
+
+Function distribution() as Double{
+return 0
+}
+
+Function search_void() as Double{
+return -1
+}
+
+function last_leader() as Boolean{
+return true
+}
+
+Function leader() as Boolean{
+return true
+}
+
+function tune_direction() as Double{
+Return -1
 }
 #end_rule UNIVERSE.MAP.INSECT
 
