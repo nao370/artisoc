@@ -1,0 +1,559 @@
+//====================================================================/
+//　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　/
+// artisoc                                                            /
+//                                                                    /
+//====================================================================/
+
+Version = 4.0;
+
+
+
+//-------------------------------------------------------
+// Component Tree
+//-------------------------------------------------------
+UNIVERSE {
+    Space map(0,0),Square_2D(160, 300, !Loop, North, 8, Map_3D){
+        AgtType insect(0, 0)[100] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Z(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+            Dim speed(0, 0) As Double = (0.0);
+            Dim position(0, 0)[3] As Double = (3*0.0);
+            Dim direct(0, 0) As Double = (0.0);
+        }
+        AgtType barrier(0, 0)[0] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Z(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+        }
+    }
+}
+
+
+//-------------------------------------------------------
+// Agent Variable Initial Data
+//-------------------------------------------------------
+Initial_Value {
+    UNIVERSE.MAP.INSECT.X = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.Y = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.Z = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.LAYER = 100(100*0);
+    UNIVERSE.MAP.INSECT.DIRECTION = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.ANGLE = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.SPEED = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.POSITION = 100(300*0.0);
+}
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE
+Univ_Init{
+	make_N_rubble_3D(3,0.05)
+}
+
+Univ_Step_Begin{
+
+}
+
+Univ_Step_End{
+
+}
+
+Univ_Finish{
+
+}
+
+sub make_N_rubble_3D(N as Integer, rate as Double){
+	dim i as integer
+	dim j as integer
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+	dim k as Integer
+	dim t as Integer
+	dim c as Integer
+
+	for k = 0 to 8 - (N+1)
+		for j = 1 to GetHeightSpace(universe.map) - (N + 1)
+		for i = 1 to GetWidthSpace(universe.map) - (N + 1)
+	  	if rnd()*100 < rate and (i > 20 or j > 20 or k > 20) then
+	  		MakeOneAgtSetAroundPosition(temp,universe.map,i,j,k,0,universe.map.barrier)
+	  		if CountAgtSet(temp) == 0 then
+	  			set = CreateAgtMulti(universe.map.barrier,(N^3))
+	  			for each one in set
+	  				t = GetAgtEntry(set,one)
+	  				a = t  / (N^2) 
+	  				b = t Mod (N^2)
+	  				c = b / N
+	  				b = b Mod N
+	  				one.X = i + b
+	  				one.Y = j + c
+	  				one.Z = k + a
+	  			next one
+	    	end if
+	    end if
+	   next i
+	  next j
+	 next k
+}
+#end_rule UNIVERSE
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.INSECT
+Agt_Init{
+my.Direction = Rnd() * 360
+}
+
+Agt_Step{
+	dim d as Double
+
+	if leader() then //自分がリーダー
+		if last_leader() then
+			d = search_void()
+			if d == -1 then
+				my.speed = 1
+			else
+				my.direct = d
+			end if
+		else
+			my.speed = 1
+		end if
+	else //リーダーじゃない
+		if search_leader() then
+			detect_direction()
+			d = tune_direction()
+			if d == -1 then
+				my.direct = distribution(4,10)
+				d = search_void()
+				if d != -1 and (Not search_barrier()) then
+					my.speed = 0.9
+				end if
+			end if
+		else
+			my.direct = distribution(4,10)
+			d = search_void()
+			if d != -1 and (Not search_barrier()) then
+				my.speed = 0.9
+			end if
+		end if
+	end if
+	move()
+	my.Direction = my.direct
+}
+
+function search_leader() as Boolean{
+return true
+}
+
+function detect_direction() as Double{
+return 0
+}
+
+function search_barrier() as Boolean{
+return true
+}
+
+sub move() {
+Forward(my.speed)
+}
+
+Function distribution(nei_d as Double, far_d as Double) as Double{
+  dim v(2) as Double
+  dim temp as AgtSet
+  dim neighbor as AgtSet
+  dim alignment as AgtSet
+  dim d as Double
+  dim far as AgtSet
+  dim T as Double
+  dim one as Agt
+  dim count as Integer
+
+  v(0) = 0
+  v(1) = 0
+	MakeOneAgtSetAroundOwn(neighbor,nei_d,universe.map.insect,false)
+	MakeOneAgtSetAroundOwn(far,far_d,universe.map.insect,false)
+	DelAgtSet(far,alignment)
+	DelAgtSet(alignment,neighbor)
+
+	if CountAgtSet(neighbor) > 0 then //近すぎる場合の斥力
+	  for each one in neighbor
+	    d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/4
+	    if d != 0 then
+		  	v(0) = v(0) + (my.X - one.X)/(d^3)
+		  	v(1) = v(1) + (my.Y - one.Y)/(d^3)
+		  end if
+	  next one
+  end if
+  
+  if CountAgtSet(far) > 0 then //遠い個体からの引力
+  	for each one in neighbor
+  		d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/5
+		  v(0) = v(0) + (one.X - my.X) * (d ^ 2)
+	  	v(1) = v(1) + (one.Y - my.Y) * (d ^ 2)
+	  next one
+  end if
+
+
+	v(0) = v(0) + my.X
+	v(1) = v(1) + my.Y
+
+	return v
+}
+
+Function search_void() as Double{
+return -1
+}
+
+function last_leader() as Boolean{
+return true
+}
+
+Function leader() as Boolean{
+return true
+}
+
+function tune_direction() as Double{
+Return -1
+}
+#end_rule UNIVERSE.MAP.INSECT
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.BARRIER
+Agt_Init{
+
+}
+
+Agt_Step{
+
+}
+#end_rule UNIVERSE.MAP.BARRIER
+
+
+
+
+//-------------------------------------------------------
+// Simulation Definition Division
+//-------------------------------------------------------
+Single_Simulation {
+    Step_Max = 0;
+    Time_Max = 0;
+    End_Condition = "";
+    Exec_Wait = 0;
+    Exec_Wait_Max = 1000;
+    Random_Generator = Java_Standard;
+    Exec_Order = Random;
+    Exec_Order_Random_First_Step_Only = No;
+    Random_Seed = 0;
+    Redraw_Timing = Step;
+    Redraw_Interval = 1;
+    Garbage_Interval = 0;
+}
+
+
+//-------------------------------------------------------
+// Simulation Loop Definition Division
+//-------------------------------------------------------
+Repeat_Simulation {
+    Value_Change = None;
+    Initial_Value_Change_None {
+        Repeat_Max = 1;
+    }
+}
+
+
+//-------------------------------------------------------
+//  3 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map3D_Output {
+    Map3D_Name = "map";
+    Disable = Yes;
+    Background_Image_Display = No;
+    Background_Image_Type = Fixed_Value;
+    Background_Image_Folder_Name = "";
+    Background_Image_Folder_Variable_Name = Dummy;
+    Background_Color = -1;
+    FastDraw = Yes;
+    Line_Display = No;
+    Camera_Position_Type = Mouse;
+    Camera_Position_Agent_Name = Dummy;
+    Light_Position_Type = Coordinate;
+    Light_Position = 0.0,0.0,0.0;
+    Light_Position_Agent_Name = Dummy;
+    Output_Group_Name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Position_x = 840;
+    Position_y = 606;
+    Size_x = 840;
+    Size_y = 303;
+    Map_Cell_Size = -1;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Space3D_Output {
+        Space_3D_Name = "map";
+        Space_Path_Name = Universe.map;
+        Layer = 0;
+        Space_3D_PositionD = 0.0,0.0,0.0;
+        Ruled_Line_Display = Yes;
+        Origin_Position = Left_Top;
+        Display_Object_Type = None;
+        Image_File_Path_Name = "";
+        Model_3D_File_Path_Name = "";
+        Agent3D_Output {
+                Agent_3D_Name = "insect";
+                Agent_Path_Name = Universe.map.insect;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Sphere_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -52429;
+                Color_Variable_Path_Name = Universe.map.insect.ID;
+                Smooth_Movement = Yes;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+        Agent3D_Output {
+                Agent_3D_Name = "barrier";
+                Agent_Path_Name = Universe.map.barrier;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Quadrartic_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -16777063;
+                Color_Variable_Path_Name = Universe.map.barrier.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+    }
+}
+
+
+//-------------------------------------------------------
+// 2 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map_Output {
+    Map_Space_Name = "Universe.map";
+    Map_Name = "map";
+    Title = "map";
+    Disable = No;
+    Background_Color = 255, 255, 255;
+    Position_x = 840;
+    Position_y = 303;
+    Size_x = 840;
+    Size_y = 303;
+    Map_Cell_Size = 2;
+    Remarks = Yes;
+    Legend_Pos = Top;
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    FastDraw = Yes;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Axis_Label = "", "";
+    Draw_Range = 0, 0, 160, 300;
+    Ruled_Line = No;
+    Text_Display = No;
+    Text_Display_Variable_Name = "";
+    Chess_Type_Display_Position = Yes;
+    Background_Transparent = No;
+    Target_Layer = 0;
+    Coordinate_Display = No;
+    Space_Kind = Square_2D;
+    BG_Pict = No;
+    BG_Type = 0;
+    BG_Var_Name = "";
+    BG_File_Name = "";
+    Origin_Position = 2;
+    Output_Group_Name = "";
+    Output {
+        Map_Element_Name = "insect";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.insect";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 255,0,0;
+        Marker_Id = 1;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.insect.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.insect.ID";
+    }
+    Output {
+        Map_Element_Name = "barrier";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.barrier";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 0,0,153;
+        Marker_Id = 2;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.barrier.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.barrier.ID";
+    }
+}
+
+
+//-------------------------------------------------------
+// Control Panel Definition Division
+//-------------------------------------------------------
+Control_Panel {
+    Display_Area = 0, 0, 136, 49;
+    Display_Type = 0;
+}
+
+
+//-------------------------------------------------------
+// Space Initial Value Definition Divsion
+//-------------------------------------------------------
+Space_Initial {
+}
+
+
+//-------------------------------------------------------
+// Other Miscellaneous Data Definition Division
+//-------------------------------------------------------
+Others_Data {
+    Indent = 4;
+    Rule_Colored = Yes;
+    Rule_LineNo = Yes;
+    Window_Hide_Run = 1;
+    Debug_Position_x = 75;
+    Debug_Position_y = 75;
+    Debug_Size_x = 400;
+    Debug_Size_y = 200;
+    Console_Position_x = 0;
+    Console_Position_y = 0;
+    Console_Size_x = 1680;
+    Console_Size_y = 910;
+    Componen_Tree_Position_x = 0;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 1680;
+    Componen_Tree_Size_y = 910;
+    Console_Background_Color = 16777215;
+    Console_Foreground_Color = 255;
+    Console_DisplayLines_Max = 500;
+    plug_in_module_name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 0;
+    Font_Size = 14.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 0, 0, 0;
+}
+
+
+//-------------------------------------------------------
+// Network Information Definition Division
+//-------------------------------------------------------
+Network_Info {
+    Global_Space_Area = 0, 0, 100, 100;
+    Local_Space_Info {
+    }
+}
+
+
+//-------------------------------------------------------
+// Window Location Definition Division
+//-------------------------------------------------------
+Window_Rectangle {
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
+}
+
+
+//-------------------------------------------------------
+// Help Favorite Division
+//-------------------------------------------------------
+Help_Favorite {
+}
