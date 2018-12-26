@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(160, 300, Loop, North, 8, Map_3D){
+    Space map(0,0),Square_2D(1600, 3000, Loop, North, 80, Map_3D){
         AgtType insect(0, 0)[100] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -47,9 +47,8 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
-	make_N_rubble_3D(3,1)
-	//make_N_rubble_3D(2,3)
-	//make_N_rubble_3D(1,5)
+	make_N_rubble_3D(2,0.001)
+	make_N_rubble_3D(1,0.0001)
 }
 
 Univ_Step_Begin{
@@ -76,7 +75,7 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 	dim t as Integer
 	dim c as Integer
 
-	for k = 0 to 7 - (N+1)
+	for k = 0 to 79 - (N+1)
 		for j = 1 to GetHeightSpace(universe.map) - (N + 1)
 		for i = 1 to GetWidthSpace(universe.map) - (N + 1)
 	  	if rnd()*100 < rate and (i > 20 or j > 20 or k > 20) then
@@ -99,6 +98,7 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 	  next j
 	 next k
 }
+
 #end_rule UNIVERSE
 
 
@@ -143,7 +143,7 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 70;
+    Exec_Wait = 0;
     Exec_Wait_Max = 0;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
@@ -247,7 +247,7 @@ Map3D_Output {
                 Line_Arrow_Variable_Path_Name = "";
                 Line_Color = -16777216;
                 Line_Color_Variable_Path_Name = "";
-                Magnify_Value = 1.0;
+                Magnify_Value = 10.0;
                 Magnify_Variable_Path_Name = "";
         }
     }
@@ -280,7 +280,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 160, 300;
+    Draw_Range = 0, 0, 1600, 3000;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
@@ -355,7 +355,7 @@ Map_Output {
         Num_Display = No;
         Num_Var_Name = "";
         Agent_Image_Magnify_by_value = Yes;
-        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Value = 10.0;
         Agent_Image_Magnify_Variable_Name = "Universe.map.barrier.ID";
         Agent_Image_Transparency_by_value = Yes;
         Agent_Image_Transparency_Value = 0.0;

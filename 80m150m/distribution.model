@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(160, 300, !Loop, North, 1, !Map_3D){
+    Space map(0,0),Square_2D(800, 1500, !Loop, North, 1, !Map_3D){
         AgtType robot(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -29,8 +29,8 @@ UNIVERSE {
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
         }
-        Dim wall(0, 0)[160][300][1] As Integer = (48000*0);
-        Dim fin(0, 0)[160][300][1] As Integer = (48000*0);
+        Dim wall(0, 0)[800][1500][1] As Integer = (4800000*0);
+        Dim fin(0, 0)[800][1500][1] As Integer = (4800000*0);
         AgtType phero(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -50,8 +50,8 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
-    UNIVERSE.NUM_ROBOT = 1(100);
-    UNIVERSE.RUBBLE = 1(0);
+    UNIVERSE.NUM_ROBOT = 1(1);
+    UNIVERSE.RUBBLE = 1(1);
 }
 
 
@@ -79,8 +79,8 @@ Univ_Init{
     next i
 
 	if universe.rubble then
-		make_N_rubble(5,4)
-		make_N_rubble(2,2)
+		make_N_rubble(10,1)
+		make_N_rubble(4,0.5)
 	end if
 
 }
@@ -349,10 +349,10 @@ Map_Output {
     Title = "map";
     Disable = No;
     Background_Color = 255, 255, 255;
-    Position_x = 0;
-    Position_y = 0;
-    Size_x = 1528;
-    Size_y = 910;
+    Position_x = 48;
+    Position_y = 217;
+    Size_x = 689;
+    Size_y = 594;
     Map_Cell_Size = 1;
     Remarks = Yes;
     Legend_Pos = Top;
@@ -366,7 +366,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 160, 300;
+    Draw_Range = 0, 0, 800, 1500;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
@@ -555,10 +555,10 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = No;
-    Position_x = 764;
-    Position_y = 606;
-    Size_x = 764;
-    Size_y = 303;
+    Position_x = 22;
+    Position_y = 39;
+    Size_x = 589;
+    Size_y = 273;
     Map_Cell_Size = -1;
     Axis_Label = "", "";
     Draw_By_JFree_Chart = Yes;
@@ -582,7 +582,7 @@ Time_Graph {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 283, 113;
+    Display_Area = 0, 0, 289, 130;
     Display_Type = 1;
     Panel_Item {
         Item_Type = Slider;
@@ -598,7 +598,7 @@ Control_Panel {
         Slider_Range_Max = 100;
         Slider_Value_Min = 0.0;
         Slider_Value_Step = 1.0;
-        Slider_Value = "100";
+        Slider_Value = "1";
     }
     Panel_Item {
         Item_Type = Toggle;
@@ -621,11 +621,11 @@ Control_Panel {
         Control_Off_Long = 0;
         Control_Off_Double = 0.0;
         Control_Off_String = "";
-        Toggle_Button_On = No;
+        Toggle_Button_On = Yes;
         Slider_Range_Max = 100;
         Slider_Value_Min = 0.0;
         Slider_Value_Step = 1.0;
-        Slider_Value = "100";
+        Slider_Value = "1";
         Shortcut_Key = "";
     }
 }
@@ -728,7 +728,7 @@ Space_Map_Initial_Value {
 , 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
 , 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
 , 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0
-, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 201*1, 8000*0);
+, 2*1, 198*0, 2*1, 198*0, 2*1, 198*0, 201*1, 4760000*0);
         Marker_Id = 2;
         Min_Value = "0";
         Max_Value = "1";
@@ -742,8 +742,8 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
-    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
 }
 
