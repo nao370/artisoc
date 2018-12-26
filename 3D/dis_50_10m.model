@@ -21,9 +21,10 @@ UNIVERSE {
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
-            Dim speed(0, 0) As Double = ();
-            Dim position(0, 0)[3] As Double = ();
+            Dim speed(0, 0) As Double = (0.0);
+            Dim position(0, 0)[3] As Double = (3*0.0);
             Dim direct(0, 0) As Double = ();
+            Dim mode(0, 0) As Integer = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -119,26 +120,71 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 #begin_rule UNIVERSE.MAP.INSECT
 Agt_Init{
 my.Direction = Rnd() * 360
+my.speed = 1
 }
 
 Agt_Step{
+	dim m as Integer
+	dim d as Double
 
+	m = my.mode
+
+	if m == 0 then
+		my.direct = random_walk()
+		if check_time() then
+			my.mode = 1
+		end if
+	elseif m == 1 then
+		my.direct = distribution(5,9.5)
+		if check_distribution() or check_time() then
+			my.mode = 2
+		end if
+	elseif m == 2 then
+		my.direct = random_walk()
+		if (not adjust_distance()) then
+			my.direct = adjust_random_walk()
+		end if
+		if check_time() then
+			my.mode = 3
+		end if
+	else // m == 3
+		if search_mode0() then
+			my.mode = 0
+		else
+			if search_slower() then
+				my.direct = follow_slower()
+			else
+				d = search_void()
+				if d == -1 then
+					if check_time() then
+						my.mode = 0
+					end if
+				end if
+			end if
+		end if
+	end if
+	move()
+	my.Direction = my.direct
 }
 
-function search_leader() as Boolean{
+function search_slower() as Boolean{
 return true
 }
 
-function detect_direction() as Double{
+function adjust_random_walk() as Double{
 return 0
 }
 
-function search_barrier() as Boolean{
+function adjust_distance() as Boolean{
 return true
 }
 
 sub move() {
 Forward(my.speed)
+}
+
+Function random_walk() as Double{
+return 0
 }
 
 Function distribution(nei_d as Double, far_d as Double) as Double{
@@ -181,22 +227,27 @@ Function distribution(nei_d as Double, far_d as Double) as Double{
 	v(0) = v(0) + my.X
 	v(1) = v(1) + my.Y
 
-	return v
+	d = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
+	return d
 }
 
 Function search_void() as Double{
 return -1
 }
 
-function last_leader() as Boolean{
+function search_mode0() as Boolean{
 return true
 }
 
-Function leader() as Boolean{
+function check_time() as Boolean{
 return true
 }
 
-function tune_direction() as Double{
+Function check_distribution() as Boolean{
+return true
+}
+
+function follow_slower() as Double{
 Return -1
 }
 #end_rule UNIVERSE.MAP.INSECT
@@ -275,10 +326,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 840;
-    Position_y = 606;
-    Size_x = 840;
-    Size_y = 303;
+    Position_x = 0;
+    Position_y = 0;
+    Size_x = 1680;
+    Size_y = 910;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -347,10 +398,10 @@ Map_Output {
     Title = "map";
     Disable = No;
     Background_Color = 255, 255, 255;
-    Position_x = 840;
-    Position_y = 303;
-    Size_x = 840;
-    Size_y = 303;
+    Position_x = 0;
+    Position_y = 0;
+    Size_x = 1680;
+    Size_y = 910;
     Map_Cell_Size = 2;
     Remarks = Yes;
     Legend_Pos = Top;

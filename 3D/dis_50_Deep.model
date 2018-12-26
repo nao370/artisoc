@@ -23,7 +23,7 @@ UNIVERSE {
             Dim Angle(0, 0) As Double = (0.0);
             Dim speed(0, 0) As Double = (0.0);
             Dim position(0, 0)[3] As Double = (3*0.0);
-            Dim direct(0, 0) As Double = (0.0);
+            Dim direct(0, 0) As Double = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -214,7 +214,8 @@ Function distribution(nei_d as Double, far_d as Double) as Double{
 	v(0) = v(0) + my.X
 	v(1) = v(1) + my.Y
 
-	return v
+	d = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
+	return d
 }
 
 Function search_void() as Double{
@@ -485,7 +486,7 @@ Map_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 136, 40;
     Display_Type = 0;
 }
 
