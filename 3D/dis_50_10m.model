@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(160, 300, Loop, North, 8, Map_3D){
+    Space map(0,0),Square_2D(160, 300, !Loop, North, 8, Map_3D){
         AgtType insect(0, 0)[100] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -21,6 +21,10 @@ UNIVERSE {
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
+            Dim speed(0, 0) As Double = (0.0);
+            Dim position(0, 0)[3] As Double = (3*0.0);
+            Dim direct(0, 0) As Double = ();
+            Dim mode(0, 0) As Integer = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -39,6 +43,14 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
+    UNIVERSE.MAP.INSECT.X = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.Y = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.Z = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.LAYER = 100(100*0);
+    UNIVERSE.MAP.INSECT.DIRECTION = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.ANGLE = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.SPEED = 100(100*0.0);
+    UNIVERSE.MAP.INSECT.POSITION = 100(300*0.0);
 }
 
 
@@ -47,9 +59,7 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
-	make_N_rubble_3D(3,1)
-	//make_N_rubble_3D(2,3)
-	//make_N_rubble_3D(1,5)
+	make_N_rubble_3D(3,0.05)
 }
 
 Univ_Step_Begin{
@@ -76,13 +86,13 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 	dim t as Integer
 	dim c as Integer
 
-	for k = 0 to 7 - (N+1)
+	for k = 0 to 8 - (N+1)
 		for j = 1 to GetHeightSpace(universe.map) - (N + 1)
 		for i = 1 to GetWidthSpace(universe.map) - (N + 1)
 	  	if rnd()*100 < rate and (i > 20 or j > 20 or k > 20) then
 	  		MakeOneAgtSetAroundPosition(temp,universe.map,i,j,k,0,universe.map.barrier)
 	  		if CountAgtSet(temp) == 0 then
-	  			set = CreateAgtMulti(universe.map.barrier,(N^2))
+	  			set = CreateAgtMulti(universe.map.barrier,(N^3))
 	  			for each one in set
 	  				t = GetAgtEntry(set,one)
 	  				a = t  / (N^2) 
@@ -99,10 +109,6 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 	  next j
 	 next k
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> c56615383a3133130fe60ebec61c886af9e41fba
 #end_rule UNIVERSE
 
 
@@ -114,10 +120,135 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 #begin_rule UNIVERSE.MAP.INSECT
 Agt_Init{
 my.Direction = Rnd() * 360
+my.speed = 1
 }
 
 Agt_Step{
-Forward(1)
+	dim m as Integer
+	dim d as Double
+
+	m = my.mode
+
+	if m == 0 then
+		my.direct = random_walk()
+		if check_time() then
+			my.mode = 1
+		end if
+	elseif m == 1 then
+		my.direct = distribution(5,9.5)
+		if check_distribution() or check_time() then
+			my.mode = 2
+		end if
+	elseif m == 2 then
+		my.direct = random_walk()
+		if (not adjust_distance()) then
+			my.direct = adjust_random_walk()
+		end if
+		if check_time() then
+			my.mode = 3
+		end if
+	else // m == 3
+		if search_mode0() then
+			my.mode = 0
+		else
+			if search_slower() then
+				my.direct = follow_slower()
+			else
+				d = search_void()
+				if d == -1 then
+					if check_time() then
+						my.mode = 0
+					end if
+				end if
+			end if
+		end if
+	end if
+	move()
+	my.Direction = my.direct
+}
+
+function search_slower() as Boolean{
+return true
+}
+
+function adjust_random_walk() as Double{
+return 0
+}
+
+function adjust_distance() as Boolean{
+return true
+}
+
+sub move() {
+Forward(my.speed)
+}
+
+Function random_walk() as Double{
+return 0
+}
+
+Function distribution(nei_d as Double, far_d as Double) as Double{
+  dim v(2) as Double
+  dim temp as AgtSet
+  dim neighbor as AgtSet
+  dim alignment as AgtSet
+  dim d as Double
+  dim far as AgtSet
+  dim T as Double
+  dim one as Agt
+  dim count as Integer
+
+  v(0) = 0
+  v(1) = 0
+	MakeOneAgtSetAroundOwn(neighbor,nei_d,universe.map.insect,false)
+	MakeOneAgtSetAroundOwn(far,far_d,universe.map.insect,false)
+	DelAgtSet(far,alignment)
+	DelAgtSet(alignment,neighbor)
+
+	if CountAgtSet(neighbor) > 0 then //‹ß‚·‚¬‚éê‡‚ÌË—Í
+	  for each one in neighbor
+	    d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/4
+	    if d != 0 then
+		  	v(0) = v(0) + (my.X - one.X)/(d^3)
+		  	v(1) = v(1) + (my.Y - one.Y)/(d^3)
+		  end if
+	  next one
+  end if
+  
+  if CountAgtSet(far) > 0 then //‰“‚¢ŒÂ‘Ì‚©‚ç‚Ìˆø—Í
+  	for each one in neighbor
+  		d = MeasureDistance(one.X,one.Y,my.X,my.Y,universe.map)/5
+		  v(0) = v(0) + (one.X - my.X) * (d ^ 2)
+	  	v(1) = v(1) + (one.Y - my.Y) * (d ^ 2)
+	  next one
+  end if
+
+
+	v(0) = v(0) + my.X
+	v(1) = v(1) + my.Y
+
+	d = GetDirection(my.X,my.Y,v(0),v(1),universe.map)
+	return d
+}
+
+Function search_void() as Double{
+return -1
+}
+
+function search_mode0() as Boolean{
+return true
+}
+
+function check_time() as Boolean{
+return true
+}
+
+Function check_distribution() as Boolean{
+return true
+}
+
+function follow_slower() as Double{
+Return -1
 }
 #end_rule UNIVERSE.MAP.INSECT
 
@@ -147,8 +278,8 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 70;
-    Exec_Wait_Max = 0;
+    Exec_Wait = 0;
+    Exec_Wait_Max = 1000;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
     Exec_Order_Random_First_Step_Only = No;
@@ -197,8 +328,8 @@ Map3D_Output {
     Font_Background_Color = 255, 255, 255;
     Position_x = 0;
     Position_y = 0;
-    Size_x = 841;
-    Size_y = 909;
+    Size_x = 1680;
+    Size_y = 910;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -267,10 +398,10 @@ Map_Output {
     Title = "map";
     Disable = No;
     Background_Color = 255, 255, 255;
-    Position_x = 834;
+    Position_x = 0;
     Position_y = 0;
-    Size_x = 1286;
-    Size_y = 896;
+    Size_x = 1680;
+    Size_y = 910;
     Map_Cell_Size = 2;
     Remarks = Yes;
     Legend_Pos = Top;
@@ -346,7 +477,7 @@ Map_Output {
         Line_Arrow_Variable = "";
         Line_Width_Variable = "";
         Line_Color_Variable = "";
-        Agent_Color = 0,51,153;
+        Agent_Color = 0,0,153;
         Marker_Id = 2;
         Effective_Figures = 0;
         Format_Id = 0;
@@ -396,14 +527,14 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 960;
-    Console_Position_y = 303;
-    Console_Size_x = 960;
-    Console_Size_y = 303;
+    Console_Position_x = 0;
+    Console_Position_y = 0;
+    Console_Size_x = 1680;
+    Console_Size_y = 910;
     Componen_Tree_Position_x = 0;
-    Componen_Tree_Position_y = 606;
-    Componen_Tree_Size_x = 1920;
-    Componen_Tree_Size_y = 303;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 1680;
+    Componen_Tree_Size_y = 910;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -432,10 +563,10 @@ Network_Info {
 //-------------------------------------------------------
 Window_Rectangle {
     Window_Name = Main_Window, -8, -8, 1696, 1026;
-    Window_Name = Output_Setting_Window, 746, 346, 480, 350;
+    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
-    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
+    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
 
 
