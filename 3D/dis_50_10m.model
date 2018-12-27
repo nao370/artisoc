@@ -23,8 +23,8 @@ UNIVERSE {
             Dim Angle(0, 0) As Double = (0.0);
             Dim speed(0, 0) As Double = (0.0);
             Dim position(0, 0)[3] As Double = (3*0.0);
-            Dim direct(0, 0) As Double = ();
-            Dim mode(0, 0) As Integer = ();
+            Dim direct(0, 0) As Double = (0.0);
+            Dim mode(0, 0) As Integer = (0);
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -136,7 +136,7 @@ Agt_Step{
 		end if
 	elseif m == 1 then
 		my.direct = distribution(5,9.5)
-		if check_distribution() or check_time() then
+		if check_time() then
 			my.mode = 2
 		end if
 	elseif m == 2 then
@@ -240,10 +240,6 @@ return true
 }
 
 function check_time() as Boolean{
-return true
-}
-
-Function check_distribution() as Boolean{
 return true
 }
 
@@ -562,7 +558,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, 833, 0, 854, 1017;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
