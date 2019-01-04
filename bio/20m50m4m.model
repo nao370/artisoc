@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(80, 150, !Loop, North, 40, Map_3D){
+    Space map(0,0),Square_2D(100, 170, !Loop, North, 40, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -24,6 +24,7 @@ UNIVERSE {
             Dim speed(0, 0) As Double = (0.0);
             Dim position(0, 0)[3] As Double = (3*0.0);
             Dim direct(0, 0) As Double = (0.0);
+            Dim state(0, 0) As Integer = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -34,7 +35,7 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[80][150][40] As Integer = (480000*0);
+        Dim fin(0, 0)[100][170][40] As Integer = (680000*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) As Integer = (0);
@@ -81,10 +82,10 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 	dim t as Integer
 	dim c as Integer
 
-	for k = 0 to 8 - (N+1)
-		for j = 1 to GetHeightSpace(universe.map) - (N + 1)
-		for i = 1 to GetWidthSpace(universe.map) - (N + 1)
-	  	if rnd()*100 < rate and (i > 10 or j > 10 or k > 10) then
+	for k = 0 to 8 - N
+		for j = 0 to GetHeightSpace(universe.map) - N
+		for i = 0 to GetWidthSpace(universe.map) - N
+	  	if rnd()*100 < rate and (i > 5 or j > 5 or k > 5) then
 	  		MakeOneAgtSetAroundPosition(temp,universe.map,i,j,k,0,universe.map.barrier)
 	  		if CountAgtSet(temp) == 0 then
 	  			set = CreateAgtMulti(universe.map.barrier,(N^3))
@@ -119,18 +120,123 @@ my.Direction = 50
 
 Agt_Step{
 	dim temp as AgtSet
-
-	if	forward(0.5) > 0 then
-		my.Direction = rnd() * 360
+	my.Direction = my.direct
+	Forward(0.5)
+	if check_obj() then
+		my.direct = follow_wall()
+		if Rnd() * 100 < 1 then
+			my.direct = leave_wall()
+		end if
 	end if
-	
-	MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.5,universe.map.barrier)
+
+	MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.2,universe.map.barrier)
   if(CountAgtSet(temp) > 0) then
     Forward(-0.5)
-    Turn(rnd()*60 - 120)
+    //Turn(rnd()*60 - 120)
 	else
 	 draw_fin(my)
 	end if
+}
+
+
+function leave_wall() as Double{
+	dim tmp as AgtSet
+	dim ret as Double
+	dim dis as Double
+	dim obj_direction as Double
+	dim obj_distance as Double
+
+	ret = my.Direction
+	if my.state == 1 then
+		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+		obj_distance = 1
+		for Each one in tmp
+			dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+			if dis < obj_distance and one.Z == my.Z then
+				obj_direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+				obj_distance = dis
+				my.state = 1
+			end if
+		next one
+		if my.state == 1 then
+			my.direct = (dis + 180 + Rnd() * 60 - 30) mod 360
+		end if
+	end if
+	
+	return ret
+}
+
+function follow_wall() as Double{
+	dim one as Agt
+	dim tmp as AgtSet
+	dim tmp2 as AgtSet
+	dim dis as Double
+	dim ret as Double
+	dim obj_direction as Double
+	dim obj_distance as Double
+
+	ret = my.Direction
+	if my.state == 0 then
+		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+		obj_distance = 1
+		for Each one in tmp
+			dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+			if dis < obj_distance and one.Z == my.Z then
+				obj_direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+				obj_distance = dis
+				my.state = 1
+			end if
+		next one
+		if my.state == 1 then
+			if my.Direction - dis > 0 then
+				ret = (dis + 90) mod 360
+			else
+				ret = (dis - 90 + 360) mod 360
+			end if
+		end if
+	else
+		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+		for each one in tmp
+			obj_direction = my.Direction - GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+			if obj_direction < 30 and obj_direction > -30 then
+				AddAgt(tmp2,one)
+			end if
+		next one
+		if CountAgtSet(tmp2) > 0 then
+			obj_distance = 1
+			my.state = 0
+			for Each one in tmp2
+				dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+				if dis < obj_distance and one.Z == my.Z then
+					obj_direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+					obj_distance = dis
+					my.state = 1
+				end if
+			next one
+			if my.state == 1 then
+				if my.Direction - dis > 0 then
+					ret = (dis + 90) mod 360
+				else
+					ret = (dis - 90 + 360) mod 360
+				end if
+			end if
+			my.state = 1
+		end if
+	end if
+	return ret
+}
+
+Function check_obj() as Boolean{
+	dim tmp as AgtSet
+	dim ret as Boolean
+
+	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	if CountAgtSet(tmp) > 0 then
+		ret = true
+	else
+		ret = false
+	end if
+	return ret
 }
 
 sub draw_fin(one as agt){
@@ -156,7 +262,7 @@ sub draw_fin(one as agt){
 	tz = px + k
 	if tx < GetWidthSpace(universe.map) and tx >= 0 then
 		if ty < GetHeightSpace(universe.map)  and ty >= 0 then
-			if tz < 40 and tz >= 0 then
+			if tz < 8 and tz >= 0 then
 				if universe.map.fin(tx,ty,tz) == 0 then
 					universe.map.fin(tx,ty,tz) = 1
 					universe.num_fin = universe.num_fin + 1
@@ -244,10 +350,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 960;
-    Position_y = 454;
-    Size_x = 960;
-    Size_y = 454;
+    Position_x = 0;
+    Position_y = 0;
+    Size_x = 771;
+    Size_y = 910;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -316,10 +422,10 @@ Map_Output {
     Title = "map";
     Disable = No;
     Background_Color = 255, 255, 255;
-    Position_x = 1;
-    Position_y = -3;
-    Size_x = 960;
-    Size_y = 912;
+    Position_x = 770;
+    Position_y = -1;
+    Size_x = 910;
+    Size_y = 911;
     Map_Cell_Size = 2;
     Remarks = Yes;
     Legend_Pos = Top;
@@ -333,7 +439,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 80, 150;
+    Draw_Range = 0, 0, 100, 170;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
@@ -441,7 +547,7 @@ Map_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -465,14 +571,14 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 0;
-    Console_Position_y = 0;
-    Console_Size_x = 1680;
-    Console_Size_y = 910;
-    Componen_Tree_Position_x = 960;
-    Componen_Tree_Position_y = 0;
-    Componen_Tree_Size_x = 960;
-    Componen_Tree_Size_y = 454;
+    Console_Position_x = 30;
+    Console_Position_y = 30;
+    Console_Size_x = 300;
+    Console_Size_y = 250;
+    Componen_Tree_Position_x = 46;
+    Componen_Tree_Position_y = 152;
+    Componen_Tree_Size_x = 300;
+    Componen_Tree_Size_y = 250;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -500,7 +606,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
