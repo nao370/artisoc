@@ -252,20 +252,52 @@ function follow_wall() as Double{
 	dim one as Agt
 	dim distance as Double
 	dim tmp_dis as Double
+	dim direction as Double
 
 	MakeOneAgtSetAroundOwn(neighbor,1,universe.map.barrier,false)
 	MakeOneAgtSetAroundOwn(tmp,20,universe.map.barrier,false)
 	DelAgtSet(tmp,neighbor)
+	
 	if CountAgtSet(tmp) > 0 then
-		distance = 20
-		for each one in tmp
-			tmp_dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
-			if tmp_dis < distance then
-				distance = tmp_dis
-			end if			
-		next one
+		one = MostCloseInsect(tmp)
+		distance = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+		direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+		ret = power_Direction(distance,direction)
+		if CountAgtSet(neighbor) > 0 then
+			one = MostCloseInsect(neighbor)
+			distance = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+			direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+			ret = power_Direction(distance,direction)
+		end if		
+	elseif CountAgtSet(neighbor) > 0 then		
+		one = MostCloseInsect(neighbor)
+		distance = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+		direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+		ret = power_Direction(distance,direction)
 	end if
+
 	return ret
+}
+
+function MostCloseInsect(neighbor as AgtSet)as Agt{
+	dim one as Agt
+	dim ret as Agt
+	dim distance as Double
+	dim tmp_dis as Double
+
+	distance = 20
+	for each one in neighbor
+	tmp_dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+		if tmp_dis < distance and one.Z== my.Z then
+			ret = one
+		end if			
+	next one
+
+	return ret
+}
+
+function power_Direction(distance as Double,direction as Double) as Double{//Ž©•ª‚ÌŒü‚«‚Æ•Ç‚©‚çŽó‚¯‚é—Í‚ÅŽŸ‚Ì•ûŒü‚ðŒˆ‚ß‚é
+return direction+90
 }
 
 Function check_obj() as Boolean{
@@ -608,7 +640,7 @@ Map_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -667,9 +699,9 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 1395, 889;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
     Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
 }
