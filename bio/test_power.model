@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(100, 170, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(100, 170, !Loop, North, 40, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -35,7 +35,7 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[100][170][1] As Integer = (17000*0);
+        Dim fin(0, 0)[100][170][40] As Integer = (17000*0);
         AgtType camera(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -63,9 +63,10 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
-	//make_N_rubble_3D(1,10)
 	make_rubble_Pillar(true,0.3)
 	make_rubble_Pillar(false,0.6)
+	make_rubble_box(1)
+	make_rubble_board(1)
 	universe.CameraPointer = universe.map.camera(0)
 }
 
@@ -79,6 +80,76 @@ Univ_Step_End{
 
 Univ_Finish{
 
+}
+
+sub make_rubble_board(rate as Double){
+	dim i as integer
+	dim j as integer
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+	dim k as Integer
+	dim t as Integer
+	dim c as Integer
+
+	for k = 0 to 40 - 1
+		for j = 0 to GetHeightSpace(universe.map) - 1
+			for i = 0 to GetWidthSpace(universe.map) - 1
+	  		if rnd()*100 < rate and (i > 5 or j > 5 or k > 5) then
+	  			MakeOneAgtSetAroundPosition(temp,universe.map,i,j,k,0,universe.map.barrier)
+	  			if CountAgtSet(temp) == 0 then
+	  				set = CreateAgtMulti(universe.map.barrier,64)
+	  				for each one in set
+	  					t = GetAgtEntry(set,one)
+	  					c = t / 8
+	  					b = t Mod 8
+	  					one.X = i + b
+	  					one.Y = j + c
+	  					one.Z = k
+	  				next one
+	   	 	end if
+	    end if
+	   next i
+	  next j
+	 next k
+}
+
+sub make_rubble_box(rate as Double){
+	dim i as integer
+	dim j as integer
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+	dim k as Integer
+	dim t as Integer
+	dim c as Integer
+
+	for k = 0 to 40 - 4
+		for j = 0 to GetHeightSpace(universe.map) - 4
+			for i = 0 to GetWidthSpace(universe.map) - 4
+	  		if rnd()*100 < rate and (i > 5 or j > 5 or k > 5) then
+	  			MakeOneAgtSetAroundPosition(temp,universe.map,i,j,k,0,universe.map.barrier)
+	  			if CountAgtSet(temp) == 0 then
+	  				set = CreateAgtMulti(universe.map.barrier,64)
+	  				for each one in set
+	  					t = GetAgtEntry(set,one)
+	  					a = t  / 16 
+	  					b = t Mod (16)
+	  					c = b / 4
+	  					b = b Mod 4
+	  					one.X = i + b
+	  					one.Y = j + c
+	  					one.Z = k + a
+	  				next one
+	   	 	end if
+	    end if
+	   next i
+	  next j
+	 next k
 }
 
 sub make_rubble_Pillar(side as Boolean,rate as Double){
@@ -95,7 +166,7 @@ sub make_rubble_Pillar(side as Boolean,rate as Double){
 
 	if side then
 	//â°í∑ÇÃíåÇçÏÇÈ
-	for k = 0 to 2 - 2
+	for k = 0 to 40 - 2
 		for j = 0 to GetHeightSpace(universe.map) - 2
 			for i = 0 to GetWidthSpace(universe.map) - 16
 	  		if rnd()*100 < rate and (i > 5 or j > 5 or k > 5) then
