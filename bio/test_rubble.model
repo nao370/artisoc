@@ -67,6 +67,7 @@ Univ_Init{
 	make_rubble_Pillar(false,0.6)
 	make_rubble_box(1)
 	make_rubble_board(1)*/
+	ClearConsoleScreen()
 	make_rubble_mix(0.2)
 	universe.CameraPointer = universe.map.camera(0)
 }
@@ -89,7 +90,9 @@ sub make_rubble_mix(rate as Double){
 	dim max as Integer
 	dim height as Integer
 	dim width as Integer
-	dim position(3) as Integer
+	dim x as integer
+	dim y as integer
+	dim z as integer
 	dim r as Double
 
 	tmp_rate = 0
@@ -99,34 +102,25 @@ sub make_rubble_mix(rate as Double){
 	max = height * width * 40
 
 	Do While tmp_rate < rate
-		position(0) = Int(Rnd() * (width - 16))
-		position(1) = Int(Rnd() * (height - 16))
-		position(2) = Int(Rnd() * (40 - 4))
+		x = Int(Rnd() * (width - 16))
+		y = Int(Rnd() * (height - 16))
+		z = Int(Rnd() * (40 - 4))
 		r = Rnd() * 100
-		print(position(0))
-		print(",")
-		print(position(1))
-		print(",")
-		println(position(2))
-		print(r)
-		println("")
 		if r < 25 then
-			make_rubble_board(position)
+			make_rubble_board(x,y,z)
 		elseif r < 50 then
-			make_rubble_box(position)
+			make_rubble_box(x,y,z)
 		elseif r < 75 then
-			make_rubble_Pillar(true,position)
+			make_rubble_Pillar(true,x,y,z)
 		else
-			make_rubble_Pillar(false,position)
+			make_rubble_Pillar(false,x,y,z)
 		end if
 		tmp_number = tmp_number + 64
 		tmp_rate = tmp_number / max
-		println(tmp_rate)
-		println("")
 	Loop
 }
 
-sub make_rubble_board(position(3) as Integer){
+sub make_rubble_board(x as Integer, y as integer ,z as integer){
 	dim t as Integer
 	dim b as Integer
 	dim c as Integer
@@ -134,21 +128,28 @@ sub make_rubble_board(position(3) as Integer){
 	dim set as AgtSet
 	dim temp as AgtSet
 
-	MakeOneAgtSetAroundPosition(temp,universe.map,position(0),position(1),position(2),0,universe.map.barrier)
+	println("board : ")
+			print(x)
+		print(",")
+		print(y)
+		print(",")
+		println(z)
+		println("")
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
 	if CountAgtSet(temp) == 0 then
 		set = CreateAgtMulti(universe.map.barrier,64)
 		for each one in set
 			t = GetAgtEntry(set,one)
 			c = t / 8
 			b = t Mod 8
-			one.X = position(0) + b
-			one.Y = position(1) + c
-			one.Z = position(2)
+			one.X = x + b
+			one.Y = y + c
+			one.Z = z
 		next one
 	 end if
 }
 
-sub make_rubble_box(position(3) as Integer){
+sub make_rubble_box(x as Integer,y as integer, z as integer){
 	dim t as Integer
 	dim a as Integer
 	dim b as Integer
@@ -157,7 +158,15 @@ sub make_rubble_box(position(3) as Integer){
 	dim set as AgtSet
 	dim temp as AgtSet
 
-	MakeOneAgtSetAroundPosition(temp,universe.map,position(0),position(1),position(2),0,universe.map.barrier)
+	println("box : ")
+			print(x)
+		print(",")
+		print(y)
+		print(",")
+		println(z)
+		println("")
+
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
 	if CountAgtSet(temp) == 0 then
 		set = CreateAgtMulti(universe.map.barrier,64)
 		for each one in set
@@ -166,14 +175,14 @@ sub make_rubble_box(position(3) as Integer){
 			b = t Mod (16)
 			c = b / 4
 			b = b Mod 4
-			one.X = position(0) + b
-			one.Y = position(1) + c
-			one.Z = position(2) + a
+			one.X = x + b
+			one.Y = y + c
+			one.Z = z + a
 		next one
 	 end if
 }
 
-sub make_rubble_Pillar(side as Boolean,position(3) as Integer){
+sub make_rubble_Pillar(side as Boolean,x as Integer,y as integer ,z as integer){
 	dim set as AgtSet
 	dim a as Integer
 	dim b as Integer
@@ -182,7 +191,7 @@ sub make_rubble_Pillar(side as Boolean,position(3) as Integer){
 	dim t as Integer
 	dim c as Integer
 
-	MakeOneAgtSetAroundPosition(temp,universe.map,position(0),position(1),position(2),0,universe.map.barrier)
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
 	if side then
 	//‰¡’·‚Ì’Œ‚ðì‚é
 		if CountAgtSet(temp) == 0 then
@@ -193,9 +202,9 @@ sub make_rubble_Pillar(side as Boolean,position(3) as Integer){
 	  		b = t Mod (32)
 	  		c = b / 16
 	  		b = b Mod 16
-	  		one.X = position(0) + b
-	  		one.Y = position(1) + c
-	  		one.Z = position(2) + a
+	  		one.X = x + b
+	  		one.Y = y + c
+	  		one.Z = z + a
 	  	next one
 	  end if	 
 	else
@@ -208,9 +217,9 @@ sub make_rubble_Pillar(side as Boolean,position(3) as Integer){
   			b = t Mod (32)
   			c = b / 2
   			b = b Mod 2
-  			one.X = position(0) + b
-  			one.Y = position(1) + c
-  			one.Z = position(2) + a
+  			one.X = x + b
+  			one.Y = y + c
+  			one.Z = z + a
   		next one
   	end if
 	end if
@@ -733,7 +742,7 @@ Map_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -759,8 +768,8 @@ Others_Data {
     Debug_Size_y = 200;
     Console_Position_x = 30;
     Console_Position_y = 30;
-    Console_Size_x = 300;
-    Console_Size_y = 250;
+    Console_Size_x = 607;
+    Console_Size_y = 620;
     Componen_Tree_Position_x = 45;
     Componen_Tree_Position_y = 152;
     Componen_Tree_Size_x = 301;
@@ -792,7 +801,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
