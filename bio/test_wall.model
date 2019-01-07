@@ -12,12 +12,12 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(100, 170, !Loop, North, 40, Map_3D){
+    Space map(0,0),Square_2D(100, 170, !Loop, North, 5, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
-            Dim X(0, 0) As Double = (0.0);
-            Dim Y(0, 0) As Double = (0.0);
-            Dim Z(0, 0) As Double = (0.0);
+            Dim X(0, 0) <1>  As Double = ();
+            Dim Y(0, 0) <1>  As Double = ();
+            Dim Z(0, 0) <1>  As Double = ();
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
@@ -35,7 +35,7 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[100][170][40] As Integer = (680000*0);
+        Dim fin(0, 0)[100][170][5] As Integer = (85000*0);
         AgtType camera(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -68,7 +68,8 @@ Univ_Init{
 	make_rubble_box(1)
 	make_rubble_board(1)*/
 	ClearConsoleScreen()
-	make_rubble_mix(0.6)
+	make_rubble_mix(0.1)
+	println("start")
 	universe.CameraPointer = universe.map.camera(0)
 }
 
@@ -99,12 +100,12 @@ sub make_rubble_mix(rate as Double){
 	tmp_number = 0
 	height = GetHeightSpace(universe.map)
 	width = GetWidthSpace(universe.map)
-	max = height * width * 40
+	max = height * width * 5
 
 	Do While tmp_rate < rate
 		x = Int(Rnd() * (width - 16))
 		y = Int(Rnd() * (height - 16))
-		z = Int(Rnd() * (40 - 4))
+		z = Int(Rnd() * (5 - 4))
 		r = Rnd() * 100
 		if r < 25 then
 			make_rubble_board(x,y,z)
@@ -261,26 +262,121 @@ my.direct = Rnd() * 360
 
 Agt_Step{
 	dim temp as AgtSet
-	my.Direction = my.direct
-	if 	Forward(0.5) > 0 then
-		my.direct = Rnd() * 360
-	end if
-	if check_obj() then
-		my.direct = follow_wall()
-		if Rnd() * 100 < 1 then
-			my.direct = leave_wall()
-		end if
-	end if
+	dim flag as Boolean
+	dim wall as Boolean
+	dim on_wall as Boolean
 
-	MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.6,universe.map.barrier)
-  if(CountAgtSet(temp) > 0) then
-    Forward(-0.5)
-    Turn(rnd()*90)
+	flag = false
+	on_wall = false
+	my.Direction = my.direct
+	if on_wall then
+		on_wall = walk_wall(on_wall)
+		draw_fin(my)
 	else
-	 draw_fin(my)
+		if check_obj() then
+			if Rnd() * 100 < 10 then
+				on_wall = walk_wall(on_wall)
+			elseif Rnd() * 100 < 5 then
+				my.direct = leave_wall()
+				if 	Forward(0.5) > 0 then
+					my.direct = Rnd() * 360
+				end if
+			else
+				my.direct = follow_wall()
+				PrintLn("follow now")
+				if 	Forward(0.5) > 0 then
+					my.direct = Rnd() * 360
+				end if
+			end if
+		else
+			if 	Forward(0.5) > 0 then
+				my.direct = Rnd() * 360
+			end if
+		end if
+	
+		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.6,universe.map.barrier)
+	  if(CountAgtSet(temp) > 0) then
+	  	for each one in temp
+	  		if one.Z == my.Z then
+	  			flag = true
+	  		end if
+	  	next one
+	  	if flag then
+	  		Forward(-0.5)
+	  		Turn(rnd()*90)
+	  	else
+	  		draw_fin(my)
+	    end if
+		else
+		 draw_fin(my)
+		end if
 	end if
 }
 
+Function walk_wall(on_wall as Boolean) as Boolean{
+	dim tmp as AgtSet
+	dim one as Agt
+	dim flag as Boolean
+	dim ret as Boolean
+	dim x as Double
+	dim y as Double
+	dim z as Double
+
+	if on_wall then
+		flag = false
+		x = GetHistory(my.X,1)
+		y = GetHistory(my.Y,1)
+		z = GetHistory(my.Z,1)
+		if x == my.X then
+			my.Y = my.Y + (my.Y - y)
+			my.Z = my.Z + (my.Z - z)
+		elseif y == my.Y then
+			my.X = my.X + (my.X - y)
+			my.Z = my.Z + (my.Z - z)		
+		else
+			println("miss in walk_wall")
+		end if
+	else
+		flag = false
+		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+		one = MostCloseInsect(tmp)
+		if one.Z == my.Z then
+			if my.X < one.X - 0.7 then
+				x = Cos(DegreeToRad(my.Direction))
+				y = Sin(DegreeToRad(my.Direction))
+				my.Y = my.Y + y
+				my.Z = My.Z + Abs(x)
+			elseif my.X > one.X + 0.7 then
+				x = Cos(DegreeToRad(my.Direction))
+				y = Sin(DegreeToRad(my.Direction))
+				my.Y = my.Y + y
+				my.Z = My.Z + Abs(x)
+			elseif my.Y < one.Y - 0.7 then
+				x = Cos(DegreeToRad(my.Direction))
+				y = Sin(DegreeToRad(my.Direction))
+				my.X = my.X + x
+				my.Z = My.Z + Abs(y)
+			elseif my.Y > one.Y + 0.7 then
+				x = Cos(DegreeToRad(my.Direction))
+				y = Sin(DegreeToRad(my.Direction))
+				my.X = my.X + x
+				my.Z = My.Z + Abs(y)
+			else
+				PrintLn("miss!!")
+				println("my.X :"&my.X)
+				println("my.Y :"&my.Y)
+				println("one.X :"&one.X)
+				println("one.Y :"&one.Y)
+				PrintLn("")
+				my.Z = my.Z + 0.5
+			end if
+			println("my.z = "& my.Z)
+			flag = true
+		end if
+	end if
+
+	return flag
+}
 
 function leave_wall() as Double{
 	dim tmp as AgtSet
@@ -291,7 +387,7 @@ function leave_wall() as Double{
 
 	ret = my.Direction
 	if my.state == 1 then
-		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+		MakeOneAgtSetAroundOwn(tmp,2,universe.map.barrier,false)
 		obj_distance = 1
 		for Each one in tmp
 			dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
@@ -318,26 +414,38 @@ function follow_wall() as Double{
 	dim tmp_dis as Double
 	dim direction as Double
 
-	MakeOneAgtSetAroundOwn(neighbor,1,universe.map.barrier,false)
+	MakeOneAgtSetAroundOwn(neighbor,2,universe.map.barrier,false)
 	MakeOneAgtSetAroundOwn(tmp,20,universe.map.barrier,false)
 	DelAgtSet(tmp,neighbor)
 	
 	if CountAgtSet(tmp) > 0 then
 		one = MostCloseInsect(tmp)
-		distance = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
-		direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
-		ret = power_Direction(distance,direction)
-		if CountAgtSet(neighbor) > 0 then
-			one = MostCloseInsect(neighbor)
+		if one.X == 0 and one.Y == 0 then
+			ret = my.Direction
+		else
 			distance = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
 			direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
 			ret = power_Direction(distance,direction)
-		end if		
+			if CountAgtSet(neighbor) > 0 then
+				one = MostCloseInsect(neighbor)
+				if one.X == 0 and one.Y == 0 then
+					ret = my.Direction
+				else
+					distance = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+					direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+					ret = power_Direction(distance,direction)
+				end if
+			end if	
+		end if	
 	elseif CountAgtSet(neighbor) > 0 then		
 		one = MostCloseInsect(neighbor)
-		distance = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
-		direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
-		ret = power_Direction(distance,direction)
+		if one.X == 0 and one.Y == 0 then
+			ret = my.Direction
+		else
+			distance = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+			direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+			ret = power_Direction(distance,direction)
+		end if
 	end if
 
 	return ret
@@ -349,14 +457,16 @@ function MostCloseInsect(neighbor as AgtSet)as Agt{
 	dim distance as Double
 	dim tmp_dis as Double
 
+
 	distance = 20
+	ret = GetAgt(neighbor,0)
 	for each one in neighbor
 	tmp_dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
-		if tmp_dis < distance and one.Z== my.Z then
+		if tmp_dis <= distance and one.Z== my.Z then
 			ret = one
 		end if			
 	next one
-
+	
 	return ret
 }
 
@@ -365,12 +475,12 @@ function power_Direction(distance as Double,direction as Double) as Double{//Ž©•
 	dim y as Double
 	dim ret as Double
 
-	if distance < 1 then
+	if distance < 2 then
 		x = Cos(DegreeToRad(direction))
 		y = Sin(DegreeToRad(direction))
 
-		x = my.X + Cos(DegreeToRad(my.Direction)) - (x * 10) / distance + rnd()
-		y = my.Y + Sin(DegreeToRad(my.Direction)) - (y * 10) / distance + rnd()
+		x = my.X + Cos(DegreeToRad(my.Direction)) - (x * 10) / (distance/2) + rnd()
+		y = my.Y + Sin(DegreeToRad(my.Direction)) - (y * 10) / (distance/2) + rnd()
 
 		ret = GetDirection(my.X,my.Y,x,y,universe.map)
 	else
@@ -389,13 +499,20 @@ function power_Direction(distance as Double,direction as Double) as Double{//Ž©•
 Function check_obj() as Boolean{
 	dim tmp as AgtSet
 	dim ret as Boolean
+	dim one as Agt
+	dim flag as Boolean
 
-	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	ret = false
+	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1,universe.map.barrier)
+	
 	if CountAgtSet(tmp) > 0 then
-		ret = true
-	else
-		ret = false
+		for each one in tmp
+			if one.Z == my.Z then
+				ret = true
+			end if
+		next one
 	end if
+	
 	return ret
 }
 
@@ -505,94 +622,6 @@ Repeat_Simulation {
 
 
 //-------------------------------------------------------
-//  3 Dimension Map Display Definition Division
-//-------------------------------------------------------
-Map3D_Output {
-    Map3D_Name = "map";
-    Disable = Yes;
-    Background_Image_Display = No;
-    Background_Image_Type = Fixed_Value;
-    Background_Image_Folder_Name = "";
-    Background_Image_Folder_Variable_Name = Dummy;
-    Background_Color = -1;
-    FastDraw = Yes;
-    Line_Display = No;
-    Camera_Position_Type = Agent_Name;
-    Camera_Position_Agent_Name = Universe.CameraPointer;
-    Light_Position_Type = Coordinate;
-    Light_Position = 0.0,0.0,0.0;
-    Light_Position_Agent_Name = Dummy;
-    Output_Group_Name = "";
-    Font_Name = "Dialog";
-    Font_Char_Set = 81;
-    Font_Size = 12.0;
-    Font_Style = 0;
-    Font_Color = 0, 0, 0;
-    Font_Background_Color = 255, 255, 255;
-    Position_x = 1;
-    Position_y = 0;
-    Size_x = 771;
-    Size_y = 910;
-    Map_Cell_Size = -1;
-    Draw_Timing = Simulation_Step;
-    Draw_Interval = 1;
-    Space3D_Output {
-        Space_3D_Name = "map";
-        Space_Path_Name = Universe.map;
-        Layer = 0;
-        Space_3D_PositionD = 0.0,0.0,0.0;
-        Ruled_Line_Display = No;
-        Origin_Position = Left_Top;
-        Display_Object_Type = None;
-        Image_File_Path_Name = "";
-        Model_3D_File_Path_Name = "";
-        Agent3D_Output {
-                Agent_3D_Name = "insect";
-                Agent_Path_Name = Universe.map.insect;
-                Display_Object_Type = Image_File;
-                Display_Object_Image_Id = Sphere_Prism;
-                Model_3D_File_Path_Name = "";
-                Color_Type = None;
-                Color_Value = -52429;
-                Color_Variable_Path_Name = Universe.map.insect.ID;
-                Smooth_Movement = Yes;
-                Draw_line = No;
-                Line_AgtSet_Variable_Path_Name = "";
-                Line_Type = 1;
-                Line_Type_Variable_Path_Name = "";
-                Line_Arrow = 1;
-                Line_Arrow_Variable_Path_Name = "";
-                Line_Color = -16777216;
-                Line_Color_Variable_Path_Name = "";
-                Magnify_Value = 1.0;
-                Magnify_Variable_Path_Name = "";
-        }
-        Agent3D_Output {
-                Agent_3D_Name = "barrier";
-                Agent_Path_Name = Universe.map.barrier;
-                Display_Object_Type = Image_File;
-                Display_Object_Image_Id = Quadrartic_Prism;
-                Model_3D_File_Path_Name = "";
-                Color_Type = None;
-                Color_Value = -16777063;
-                Color_Variable_Path_Name = Universe.map.barrier.ID;
-                Smooth_Movement = No;
-                Draw_line = No;
-                Line_AgtSet_Variable_Path_Name = "";
-                Line_Type = 1;
-                Line_Type_Variable_Path_Name = "";
-                Line_Arrow = 1;
-                Line_Arrow_Variable_Path_Name = "";
-                Line_Color = -16777216;
-                Line_Color_Variable_Path_Name = "";
-                Magnify_Value = 1.0;
-                Magnify_Variable_Path_Name = "";
-        }
-    }
-}
-
-
-//-------------------------------------------------------
 // 2 Dimension Map Display Definition Division
 //-------------------------------------------------------
 Map_Output {
@@ -601,11 +630,11 @@ Map_Output {
     Title = "map";
     Disable = No;
     Background_Color = 255, 255, 255;
-    Position_x = 770;
-    Position_y = -1;
-    Size_x = 910;
-    Size_y = 911;
-    Map_Cell_Size = 2;
+    Position_x = 879;
+    Position_y = 0;
+    Size_x = 840;
+    Size_y = 910;
+    Map_Cell_Size = 1;
     Remarks = Yes;
     Legend_Pos = Top;
     Font_Name = "Dialog";
@@ -680,7 +709,7 @@ Map_Output {
         Line_Arrow_Variable = "";
         Line_Width_Variable = "";
         Line_Color_Variable = "";
-        Agent_Color = 0,0,153;
+        Agent_Color = 0,0,255;
         Marker_Id = 2;
         Effective_Figures = 0;
         Format_Id = 0;
@@ -706,7 +735,7 @@ Map_Output {
         Space_Color_Direct_RGB = No;
         Space_Draw_Range = 0.0, 1.0;
         Space_Color_Min = 255, 255, 255;
-        Space_Color_Max = 255, 255, 0;
+        Space_Color_Max = 204, 204, 0;
         Marker_Id = 6;
         Icon_Type = 0;
         Icon_Var_Name = "";
@@ -718,6 +747,94 @@ Map_Output {
         Space_Variable_Transparency_by_value = Yes;
         Space_Variable_Transparency_Value = 0.0;
         Space_Variable_Transparency_Variable_Name = "Universe.map.fin";
+    }
+}
+
+
+//-------------------------------------------------------
+//  3 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map3D_Output {
+    Map3D_Name = "map";
+    Disable = Yes;
+    Background_Image_Display = No;
+    Background_Image_Type = Fixed_Value;
+    Background_Image_Folder_Name = "";
+    Background_Image_Folder_Variable_Name = Dummy;
+    Background_Color = -1;
+    FastDraw = Yes;
+    Line_Display = No;
+    Camera_Position_Type = Mouse;
+    Camera_Position_Agent_Name = Universe.CameraPointer;
+    Light_Position_Type = Coordinate;
+    Light_Position = 0.0,0.0,0.0;
+    Light_Position_Agent_Name = Dummy;
+    Output_Group_Name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Position_x = 7;
+    Position_y = -4;
+    Size_x = 840;
+    Size_y = 910;
+    Map_Cell_Size = -1;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Space3D_Output {
+        Space_3D_Name = "map";
+        Space_Path_Name = Universe.map;
+        Layer = 0;
+        Space_3D_PositionD = 0.0,0.0,0.0;
+        Ruled_Line_Display = Yes;
+        Origin_Position = Left_Top;
+        Display_Object_Type = None;
+        Image_File_Path_Name = "";
+        Model_3D_File_Path_Name = "";
+        Agent3D_Output {
+                Agent_3D_Name = "insect";
+                Agent_Path_Name = Universe.map.insect;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Sphere_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -65536;
+                Color_Variable_Path_Name = Universe.map.insect.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+        Agent3D_Output {
+                Agent_3D_Name = "barrier";
+                Agent_Path_Name = Universe.map.barrier;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Quadrartic_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -16777012;
+                Color_Variable_Path_Name = Universe.map.barrier.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
     }
 }
 
@@ -750,14 +867,14 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 30;
-    Console_Position_y = 30;
+    Console_Position_x = 326;
+    Console_Position_y = 23;
     Console_Size_x = 607;
     Console_Size_y = 620;
-    Componen_Tree_Position_x = 45;
-    Componen_Tree_Position_y = 152;
-    Componen_Tree_Size_x = 301;
-    Componen_Tree_Size_y = 250;
+    Componen_Tree_Position_x = 840;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 840;
+    Componen_Tree_Size_y = 303;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -788,8 +905,8 @@ Window_Rectangle {
     Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
-    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
+    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
 
 
