@@ -15,9 +15,9 @@ UNIVERSE {
     Space map(0,0),Square_2D(100, 170, !Loop, North, 5, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
-            Dim X(0, 0) <1>  As Double = ();
-            Dim Y(0, 0) <1>  As Double = ();
-            Dim Z(0, 0) <1>  As Double = ();
+            Dim X(0, 0) <1>  As Double = (0.0);
+            Dim Y(0, 0) <1>  As Double = (0.0);
+            Dim Z(0, 0) <1>  As Double = (0.0);
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
@@ -245,7 +245,6 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 	   next i
 	  next j
 	 next k
-}
 #end_rule UNIVERSE
 
 
@@ -273,11 +272,14 @@ Agt_Step{
 		on_wall = walk_wall(on_wall)
 		draw_fin(my)
 	else
-		if check_obj() then
-			if Rnd() * 100 < 10 then
+		if contact_wall() then
+			if Rnd() * 100 < 1 then
 				on_wall = walk_wall(on_wall)
+				println("on_wall now")
 			elseif Rnd() * 100 < 5 then
-				my.direct = leave_wall()
+				//my.direct = leave_wall()
+				my.direct = Rnd() * 360
+				println("leave now")
 				if 	Forward(0.5) > 0 then
 					my.direct = Rnd() * 360
 				end if
@@ -286,6 +288,8 @@ Agt_Step{
 				PrintLn("follow now")
 				if 	Forward(0.5) > 0 then
 					my.direct = Rnd() * 360
+				elseif not contact_wall() then
+					my.direct = my.direct + Rnd() * 60 - 30
 				end if
 			end if
 		else
@@ -294,7 +298,7 @@ Agt_Step{
 			end if
 		end if
 	
-		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.6,universe.map.barrier)
+		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.7,universe.map.barrier)
 	  if(CountAgtSet(temp) > 0) then
 	  	for each one in temp
 	  		if one.Z == my.Z then
@@ -311,6 +315,25 @@ Agt_Step{
 		 draw_fin(my)
 		end if
 	end if
+}
+
+function contact_wall() as Boolean{
+	dim ret as Boolean
+	dim tmp as AgtSet
+	dim one as Agt
+	dim diff as Double
+
+	ret = false
+	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	if CountAgtSet(tmp) > 0 then
+		for Each one in tmp
+			diff = Abs(my.Z - one.Z)
+			if diff < 1 then
+				ret = true
+			end if
+		next one
+	end if
+	return ret
 }
 
 Function walk_wall(on_wall as Boolean) as Boolean{
@@ -394,7 +417,6 @@ function leave_wall() as Double{
 			if dis < obj_distance and one.Z == my.Z then
 				obj_direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
 				obj_distance = dis
-				my.state = 1
 			end if
 		next one
 		if my.state == 1 then
@@ -405,7 +427,56 @@ function leave_wall() as Double{
 	return ret
 }
 
-function follow_wall() as Double{
+Function follow_wall() as Double{
+	dim tmp as AgtSet
+	dim one as Agt
+	dim flag as Boolean
+	dim x as Double
+	dim y as Double
+	dim z as Double
+	dim ret as Double
+
+	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	one = MostCloseInsect(tmp)
+	if one.Z == my.Z then
+		x = Cos(DegreeToRad(my.Direction))
+		y = Sin(DegreeToRad(my.Direction))
+		if my.X < one.X - 0.5 then
+			if y > 0 then
+				ret = 90 + Rnd() * 10 - 5
+			else
+				ret = 270 + Rnd() * 10 - 5
+			end if
+		elseif my.X > one.X + 0.5 then
+			if y > 0 then
+				ret = 90 + Rnd() * 10 - 5
+			else
+				ret = 270 + Rnd() * 10 - 5
+			end if
+		elseif my.Y < one.Y - 0.5 then
+			if x > 0 then
+				ret = 0 + Rnd() * 10 - 5
+			else
+				ret = 180 + Rnd() * 10 - 5
+			end if
+		elseif my.Y > one.Y + 0.5 then
+			if x > 0 then
+				ret = 0 + Rnd() * 10 - 5
+			else
+				ret = 180 + Rnd() * 10 - 5
+			end if
+		else
+			PrintLn("follow miss!!")
+		end if
+	else
+		ret = my.Direction
+	end if
+
+	return ret
+}
+
+
+/*function follow_wall() as Double{
 	dim ret as Double
 	dim tmp as AgtSet
 	dim neighbor as AgtSet
@@ -449,7 +520,7 @@ function follow_wall() as Double{
 	end if
 
 	return ret
-}
+}*/
 
 function MostCloseInsect(neighbor as AgtSet)as Agt{
 	dim one as Agt
@@ -843,7 +914,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -867,8 +938,8 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 326;
-    Console_Position_y = 23;
+    Console_Position_x = 318;
+    Console_Position_y = 32;
     Console_Size_x = 607;
     Console_Size_y = 620;
     Componen_Tree_Position_x = 840;
@@ -902,7 +973,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
