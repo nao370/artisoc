@@ -1,0 +1,1127 @@
+//====================================================================/
+//　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　/
+// artisoc                                                            /
+//                                                                    /
+//====================================================================/
+
+Version = 4.0;
+
+
+
+//-------------------------------------------------------
+// Component Tree
+//-------------------------------------------------------
+UNIVERSE {
+    Space map(0,0),Square_2D(100, 170, !Loop, North, 5, Map_3D){
+        AgtType insect(0, 0)[1] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) <2>  As Double = (0.0);
+            Dim Y(0, 0) <2>  As Double = (0.0);
+            Dim Z(0, 0) <2>  As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+            Dim speed(0, 0) As Double = (0.0);
+            Dim position(0, 0)[3] As Double = (3*0.0);
+            Dim direct(0, 0) As Double = (0.0);
+            Dim state(0, 0) As Integer = (0);
+        }
+        AgtType barrier(0, 0)[0] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Z(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+        }
+        Dim fin(0, 0)[100][170][5] As Integer = (85000*0);
+        AgtType camera(0, 0)[1] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Z(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+        }
+    }
+    Dim CameraPointer(0, 0) As Agt = (0);
+    Dim num_fin(0, 0) As Integer = (0);
+}
+
+
+//-------------------------------------------------------
+// Agent Variable Initial Data
+//-------------------------------------------------------
+Initial_Value {
+}
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE
+Univ_Init{
+	/*make_rubble_Pillar(true,0.3)
+	make_rubble_Pillar(false,0.6)
+	make_rubble_box(1)
+	make_rubble_board(1)*/
+	ClearConsoleScreen()
+	make_rubble_mix(0.1)
+	println("start")
+	universe.CameraPointer = universe.map.camera(0)
+}
+
+Univ_Step_Begin{
+
+}
+
+Univ_Step_End{
+
+}
+
+Univ_Finish{
+
+}
+
+sub make_rubble_mix(rate as Double){
+	dim tmp_rate as Double
+	dim tmp_number as Integer
+	dim max as Integer
+	dim height as Integer
+	dim width as Integer
+	dim x as integer
+	dim y as integer
+	dim z as integer
+	dim r as Double
+
+	tmp_rate = 0
+	tmp_number = 0
+	height = GetHeightSpace(universe.map)
+	width = GetWidthSpace(universe.map)
+	max = height * width * 5
+
+	Do While tmp_rate < rate
+		x = Int(Rnd() * (width - 16))
+		y = Int(Rnd() * (height - 16))
+		z = Int(Rnd() * (5 - 4))
+		r = Rnd() * 100
+		if r < 25 then
+			make_rubble_board(x,y,z)
+		elseif r < 50 then
+			make_rubble_box(x,y,z)
+		elseif r < 75 then
+			make_rubble_Pillar(true,x,y,z)
+		else
+			make_rubble_Pillar(false,x,y,z)
+		end if
+		tmp_number = tmp_number + 64
+		tmp_rate = tmp_number / max
+	Loop
+}
+
+sub make_rubble_board(x as Integer, y as integer ,z as integer){
+	dim t as Integer
+	dim b as Integer
+	dim c as Integer
+	dim one as Agt
+	dim set as AgtSet
+	dim temp as AgtSet
+
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
+	if CountAgtSet(temp) == 0 then
+		set = CreateAgtMulti(universe.map.barrier,64)
+		for each one in set
+			t = GetAgtEntry(set,one)
+			c = t / 8
+			b = t Mod 8
+			one.X = x + b
+			one.Y = y + c
+			one.Z = z
+		next one
+	 end if
+}
+
+sub make_rubble_box(x as Integer,y as integer, z as integer){
+	dim t as Integer
+	dim a as Integer
+	dim b as Integer
+	dim c as Integer
+	dim one as Agt
+	dim set as AgtSet
+	dim temp as AgtSet
+
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
+	if CountAgtSet(temp) == 0 then
+		set = CreateAgtMulti(universe.map.barrier,64)
+		for each one in set
+			t = GetAgtEntry(set,one)
+			a = t  / 16 
+			b = t Mod (16)
+			c = b / 4
+			b = b Mod 4
+			one.X = x + b
+			one.Y = y + c
+			one.Z = z + a
+		next one
+	 end if
+}
+
+sub make_rubble_Pillar(side as Boolean,x as Integer,y as integer ,z as integer){
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+	dim t as Integer
+	dim c as Integer
+
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
+	if side then
+	//横長の柱を作る
+		if CountAgtSet(temp) == 0 then
+			set = CreateAgtMulti(universe.map.barrier,64)
+			for each one in set
+				t = GetAgtEntry(set,one)
+	  		a = t  / 32 
+	  		b = t Mod (32)
+	  		c = b / 16
+	  		b = b Mod 16
+	  		one.X = x + b
+	  		one.Y = y + c
+	  		one.Z = z + a
+	  	next one
+	  end if	 
+	else
+	//縦長の柱を作る
+		if CountAgtSet(temp) == 0 then
+			set = CreateAgtMulti(universe.map.barrier,64)
+  		for each one in set
+  			t = GetAgtEntry(set,one)
+  			a = t  / 32 
+  			b = t Mod (32)
+  			c = b / 2
+  			b = b Mod 2
+  			one.X = x + b
+  			one.Y = y + c
+  			one.Z = z + a
+  		next one
+  	end if
+	end if
+}
+
+sub make_N_rubble_3D(N as Integer, rate as Double){
+	dim i as integer
+	dim j as integer
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+	dim k as Integer
+	dim t as Integer
+	dim c as Integer
+
+	for k = 0 to 1 - N
+		for j = 0 to GetHeightSpace(universe.map) - N
+		for i = 0 to GetWidthSpace(universe.map) - N
+	  	if rnd()*100 < rate and (i > 5 or j > 5 or k > 5) then
+	  		MakeOneAgtSetAroundPosition(temp,universe.map,i,j,k,0,universe.map.barrier)
+	  		if CountAgtSet(temp) == 0 then
+	  			set = CreateAgtMulti(universe.map.barrier,(N^3))
+	  			for each one in set
+	  				t = GetAgtEntry(set,one)
+	  				a = t  / (N^2) 
+	  				b = t Mod (N^2)
+	  				c = b / N
+	  				b = b Mod N
+	  				one.X = i + b
+	  				one.Y = j + c
+	  				one.Z = k + a
+	  			next one
+	    	end if
+	    end if
+	   next i
+	  next j
+	 next k
+	 }
+#end_rule UNIVERSE
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.INSECT
+Agt_Init{
+my.Direction = rnd() * 360
+my.direct = Rnd() * 360
+}
+
+Agt_Step{
+	dim temp as AgtSet
+	dim flag as Boolean
+	dim wall as Boolean
+	dim on_wall as Boolean
+	dim switch as Integer
+
+	if my.state == 0 then
+		if contact_wall() then
+			if Rnd() * 100 < 5 then
+				climb_wall()
+				println("climb_wall")
+				my.state = 2
+			else
+				follow_wall()
+				println("follow_wall")
+				my.state = 1
+			end if
+		else
+			if search_down_wall() then
+				down_wall()
+				println("down_wall")
+				my.state = 2
+			else
+				println("here??")
+				Go(1)
+			end if
+		end if
+	elseif my.state == 1 then
+		if contact_wall() then
+			if Rnd() * 100 < 5 then
+				leave_wall()
+				println("leave_wall")
+				my.state = 0
+			else
+				go(1)
+			end if
+		else
+			println("here??")
+			my.Direction = Rnd() * 360
+			go(1)
+			my.state = 0
+		end if
+	elseif my.state == 2 then
+	println("まだ書いてない")
+		switch = switch_wall()
+		if switch == 1 then//そのまま
+			walk_wall()
+		elseif switch == 2 then//違う壁に
+			change_wall()
+		elseif switch == 3 then//壁から降りる
+			down_ground()
+			my.state = 0
+		elseif switch == 4 then//上に登
+			climb_ground()
+			my.state = 0
+		else
+			PrintLn("error")
+		end if 
+	else
+		println("error")
+	end if
+	println("my.state : "&my.state)
+/*	flag = false
+	on_wall = false
+	my.Direction = my.direct
+	if on_wall then
+		on_wall = walk_wall(on_wall)
+		draw_fin(my)
+	else
+		if contact_wall() then
+			if Rnd() * 100 < 1 then
+				on_wall = walk_wall(on_wall)
+				println("on_wall now")
+			elseif Rnd() * 100 < 5 then
+				//my.direct = leave_wall()
+				my.direct = Rnd() * 360
+				println("leave now")
+				if 	Forward(1) > 0 then
+					my.direct = Rnd() * 360
+				end if
+			else
+				my.direct = follow_wall()
+				PrintLn("follow now")
+				if 	Forward(1) > 0 then
+					my.direct = Rnd() * 360
+				end if
+			end if
+		else
+			if 	Forward(1) > 0 then
+				my.direct = Rnd() * 360
+			end if
+		end if
+	
+		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.7,universe.map.barrier)
+	  if(CountAgtSet(temp) > 0) then
+	  	for each one in temp
+	  		if one.Z == my.Z then
+	  			flag = true
+	  		end if
+	  	next one
+	  	if flag then
+	  		Forward(-1)
+	  		Turn(rnd()*90)
+	  	else
+	  		draw_fin(my)
+	    end if
+		else
+		 draw_fin(my)
+		end if
+	end if*/
+}
+
+sub Go (speed as Integer) {
+	dim temp as AgtSet
+	dim one as Agt
+	dim flag as Boolean
+	
+	if Forward(1) < 0 then
+		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.6,universe.map.barrier)
+		if(CountAgtSet(temp) > 0) then
+ 	 		for each one in temp
+ 	 			if one.Z == my.Z then
+ 	 				flag = true
+  			end if
+  		next one
+  		if flag then
+  			Forward(-0.9)
+  		else
+  			draw_fin(my)
+    	end if
+		else
+	 	draw_fin(my)
+		end if
+	else
+		my.Direction = Rnd() * 360
+	end if
+}
+
+sub climb_ground(){
+}
+
+sub down_ground(){
+}
+
+sub change_wall() {
+}
+
+Function switch_wall() as Integer{
+return 0
+}
+
+sub down_wall(){
+	dim x as Double
+	dim y as Double
+	dim one as Agt
+	dim tmp as AgtSet
+
+	x = Cos(DegreeToRad(my.Direction))
+	y = Sin(DegreeToRad(my.Direction))
+	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1,universe.map.barrier)
+	one = MostCloseInsect(tmp)
+
+	if my.X + x - one.X > 0.5 then
+		my.X = one.X + 0.5
+		my.Y = my.Y + y
+		my.Z = my.Z - Abs(my.X + x - one.X - 0.5)
+	elseif my.X + x - one.X < - 0.5 then
+		my.X = one.X - 0.5
+		my.Y = my.Y + y
+		my.Z = my.Z - Abs(my.X + x - one.X + 0.5)
+	elseif my.Y + y - one.Y > 0.5 then
+		my.Y = one.Y + 0.5
+		my.X = my.X + X
+		my.Z = my.Z - Abs(my.y + y - one.y + 0.5)
+	elseif my.Y + y - one.Y < -0.5 then
+		my.Y = one.Y - 0.5
+		my.X = my.X + X
+		my.Z = my.Z - Abs(my.y + y - one.y - 0.5)	
+	else
+		println("多分おかしい")
+	end if
+	
+}
+
+function search_down_wall() as Boolean{
+	dim x as Double
+	dim y as Double
+	dim tmp as AgtSet
+	dim one as Agt
+	dim ret as Boolean
+
+	x = Cos(DegreeToRad(my.Direction))
+	y = Sin(DegreeToRad(my.Direction))
+
+	if my.Z == 0 then
+		ret = false
+	else
+		MakeOneAgtSetAroundPosition(tmp,universe.map,(my.X + x),(my.Y + y),my.Z,1,universe.map.barrier)
+		if CountAgtSet(tmp) > 0 then//微妙にミスってる気がする
+			ret = false
+		else
+			ret = true
+		end if
+	end if
+	
+	return ret
+}
+
+sub climb_wall() {
+	dim tmp as AgtSet
+	dim one as Agt
+	dim x as Double
+	dim y as Double
+	dim z as Double
+
+	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	one = MostCloseInsect(tmp)
+	if one.Z == my.Z then
+		if my.X < one.X - 0.5 then
+			x = Cos(DegreeToRad(my.Direction))
+			y = Sin(DegreeToRad(my.Direction))
+			my.Y = my.Y + y
+			my.Z = My.Z + Abs(x)
+		elseif my.X > one.X + 0.5 then
+			x = Cos(DegreeToRad(my.Direction))
+			y = Sin(DegreeToRad(my.Direction))
+			my.Y = my.Y + y
+			my.Z = My.Z + Abs(x)
+		elseif my.Y < one.Y - 0.5 then
+			x = Cos(DegreeToRad(my.Direction))
+			y = Sin(DegreeToRad(my.Direction))
+			my.X = my.X + x
+			my.Z = My.Z + Abs(y)
+		elseif my.Y > one.Y + 0.5 then
+			x = Cos(DegreeToRad(my.Direction))
+			y = Sin(DegreeToRad(my.Direction))
+			my.X = my.X + x
+			my.Z = My.Z + Abs(y)
+		else
+			PrintLn("miss!!")
+			my.Z = my.Z + 0.5
+		end if
+	end if
+}
+
+function contact_wall() as Boolean{
+	dim ret as Boolean
+	dim tmp as AgtSet
+	dim one as Agt
+	dim diff as Double
+
+	ret = false
+	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	if CountAgtSet(tmp) > 0 then
+		for Each one in tmp
+			diff = Abs(my.Z - one.Z)
+			if diff < 1 then
+				ret = true
+			end if
+		next one
+	end if
+	return ret
+}
+
+sub walk_wall(){
+	dim tmp as AgtSet
+	dim one as Agt
+	dim flag as Boolean
+	dim ret as Boolean
+	dim x as Double
+	dim y as Double
+	dim z as Double
+
+		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+		one = MostCloseInsect(tmp)
+		x = GetHistory(my.X,2)
+		y = GetHistory(my.Y,2)
+		z = GetHistory(my.Z,2)
+		if x == my.X then
+			my.Y = my.Y + (my.Y - y)
+			my.Z = my.Z + (my.Z - z)
+		elseif y == my.Y then
+			my.X = my.X + (my.X - y)
+			my.Z = my.Z + (my.Z - z)		
+		else
+			println("miss in walk_wall")
+		end if
+		if contact_wall() then
+			flag = true
+		else
+			flag = false
+			my.Z = one.Z + 1
+		end if
+
+		flag = false
+		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+		one = MostCloseInsect(tmp)
+		if one.Z == my.Z then
+			if my.X < one.X - 0.5 then
+				x = Cos(DegreeToRad(my.Direction))
+				y = Sin(DegreeToRad(my.Direction))
+				my.Y = my.Y + y
+				my.Z = My.Z + Abs(x)
+			elseif my.X > one.X + 0.5 then
+				x = Cos(DegreeToRad(my.Direction))
+				y = Sin(DegreeToRad(my.Direction))
+				my.Y = my.Y + y
+				my.Z = My.Z + Abs(x)
+			elseif my.Y < one.Y - 0.5 then
+				x = Cos(DegreeToRad(my.Direction))
+				y = Sin(DegreeToRad(my.Direction))
+				my.X = my.X + x
+				my.Z = My.Z + Abs(y)
+			elseif my.Y > one.Y + 0.5 then
+				x = Cos(DegreeToRad(my.Direction))
+				y = Sin(DegreeToRad(my.Direction))
+				my.X = my.X + x
+				my.Z = My.Z + Abs(y)
+			else
+				PrintLn("miss!!")
+				my.Z = my.Z + 0.5
+			end if
+			if contact_wall() then
+				flag = true
+			else
+				flag = false
+				my.Z = one.Z + 1
+			end if
+		end if
+}
+
+sub leave_wall(){
+	dim tmp as AgtSet
+	dim ret as Double
+	dim dis as Double
+	dim obj_direction as Double
+	dim obj_distance as Double
+
+	MakeOneAgtSetAroundOwn(tmp,2,universe.map.barrier,false)
+	obj_distance = 1
+	for Each one in tmp
+		dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+		if dis < obj_distance and one.Z == my.Z then
+			obj_direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+			obj_distance = dis
+		end if
+	next one
+	if my.state == 1 then
+		my.Direction = (dis + 180 + Rnd() * 60 - 30) mod 360
+	end if
+
+	Forward(1)
+}
+
+sub follow_wall(){
+	dim tmp as AgtSet
+	dim one as Agt
+	dim flag as Boolean
+	dim x as Double
+	dim y as Double
+	dim z as Double
+	dim ret as Double
+
+	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	one = MostCloseInsect(tmp)
+	if one.Z == my.Z then
+		x = Cos(DegreeToRad(my.Direction))
+		y = Sin(DegreeToRad(my.Direction))
+		if my.X < one.X - 0.5 then
+			if y > 0 then
+				my.Direction = 90 + Rnd() * 2 -1
+			else
+				my.Direction = 270 + Rnd() * 2 - 1
+			end if
+		elseif my.X > one.X + 0.5 then
+			if y > 0 then
+				my.Direction = 90 + Rnd() * 2 - 1
+			else
+				my.Direction = 270 + Rnd() * 2 - 1
+			end if
+		elseif my.Y < one.Y - 0.5 then
+			if x > 0 then
+				my.Direction = 0 + Rnd() * 2 - 1
+			else
+				my.Direction = 180 + Rnd() * 2 - 1
+			end if
+		elseif my.Y > one.Y + 0.5 then
+			if x > 0 then
+				my.Direction = 0 + Rnd() * 2 - 1
+			else
+				my.Direction = 180 + Rnd() * 2 - 1
+			end if
+		else
+			PrintLn("follow miss!!")
+		end if
+	end if
+	
+	Forward(1)
+}
+
+function MostCloseInsect(neighbor as AgtSet)as Agt{
+	dim one as Agt
+	dim ret as Agt
+	dim distance as Double
+	dim tmp_dis as Double
+
+
+	distance = 20
+	ret = GetAgt(neighbor,0)
+	for each one in neighbor
+	tmp_dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
+		if tmp_dis <= distance and one.Z== my.Z then
+			ret = one
+		end if			
+	next one
+	
+	return ret
+}
+
+function power_Direction(distance as Double,direction as Double) as Double{//自分の向きと壁から受ける力で次の方向を決める
+	dim x as Double
+	dim y as Double
+	dim ret as Double
+
+	if distance < 2 then
+		x = Cos(DegreeToRad(direction))
+		y = Sin(DegreeToRad(direction))
+
+		x = my.X + Cos(DegreeToRad(my.Direction)) - (x * 10) / (distance/2) + rnd()
+		y = my.Y + Sin(DegreeToRad(my.Direction)) - (y * 10) / (distance/2) + rnd()
+
+		ret = GetDirection(my.X,my.Y,x,y,universe.map)
+	else
+		x = Cos(DegreeToRad(direction))
+		y = Sin(DegreeToRad(direction))
+
+		x = my.X + Cos(DegreeToRad(my.Direction)) + x * (distance/5) +Rnd()
+		y = my.Y + Sin(DegreeToRad(my.Direction)) + y * (distance/5) +Rnd()
+
+		ret = GetDirection(my.X,my.Y,x,y,universe.map)
+	end if
+
+	return direction+90
+}
+
+Function check_obj() as Boolean{
+	dim tmp as AgtSet
+	dim ret as Boolean
+	dim one as Agt
+	dim flag as Boolean
+
+	ret = false
+	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1,universe.map.barrier)
+	
+	if CountAgtSet(tmp) > 0 then
+		for each one in tmp
+			if one.Z == my.Z then
+				ret = true
+			end if
+		next one
+	end if
+	
+	return ret
+}
+
+sub draw_fin(one as agt){
+	dim px as Integer
+	dim py as Integer
+	dim pz as integer
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim tx as integer
+	dim ty as integer
+	dim tz as integer
+
+	 px = Int(one.X)
+	 py = Int(one.Y)
+	 tz = Int(one.Z)
+	// pz = Int(one.Z)
+
+	For i = -20 to 20
+	tx = px + i
+	for j = -20 to 20
+	ty = py + j
+//	for k = -20 to 20 
+//	tz = pz + k
+	if tx < GetWidthSpace(universe.map) and tx >= 0 then
+		if ty < GetHeightSpace(universe.map)  and ty >= 0 then
+//			if tz < 8 and tz >= 0 then
+				if universe.map.fin(tx,ty,tz) == 0 and i+j <= 20 and j - i <= 20 and i+j >= -20 and j - i >= -20  then
+					universe.map.fin(tx,ty,tz) = 1
+					universe.num_fin = universe.num_fin + 1
+				end if
+//			end if
+		end if
+	end if
+//	next k
+	next j
+	next i
+}
+#end_rule UNIVERSE.MAP.INSECT
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.BARRIER
+Agt_Init{
+
+}
+
+Agt_Step{
+
+}
+#end_rule UNIVERSE.MAP.BARRIER
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.CAMERA
+Agt_Init{
+
+}
+
+Agt_Step{
+	my.X = universe.map.insect(0).X -2
+	my.Y = universe.map.insect(0).Y
+	my.Z = universe.map.insect(0).Z+2
+}
+#end_rule UNIVERSE.MAP.CAMERA
+
+
+
+
+//-------------------------------------------------------
+// Simulation Definition Division
+//-------------------------------------------------------
+Single_Simulation {
+    Step_Max = 0;
+    Time_Max = 0;
+    End_Condition = "";
+    Exec_Wait = 0;
+    Exec_Wait_Max = 1000;
+    Random_Generator = Java_Standard;
+    Exec_Order = Random;
+    Exec_Order_Random_First_Step_Only = No;
+    Random_Seed = 0;
+    Redraw_Timing = Step;
+    Redraw_Interval = 1;
+    Garbage_Interval = 0;
+}
+
+
+//-------------------------------------------------------
+// Simulation Loop Definition Division
+//-------------------------------------------------------
+Repeat_Simulation {
+    Value_Change = None;
+    Initial_Value_Change_None {
+        Repeat_Max = 1;
+    }
+}
+
+
+//-------------------------------------------------------
+// 2 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map_Output {
+    Map_Space_Name = "Universe.map";
+    Map_Name = "map";
+    Title = "map";
+    Disable = No;
+    Background_Color = 255, 255, 255;
+    Position_x = 879;
+    Position_y = 0;
+    Size_x = 840;
+    Size_y = 910;
+    Map_Cell_Size = 1;
+    Remarks = Yes;
+    Legend_Pos = Top;
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    FastDraw = Yes;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Axis_Label = "", "";
+    Draw_Range = 0, 0, 100, 170;
+    Ruled_Line = No;
+    Text_Display = No;
+    Text_Display_Variable_Name = "";
+    Chess_Type_Display_Position = Yes;
+    Background_Transparent = No;
+    Target_Layer = 0;
+    Coordinate_Display = No;
+    Space_Kind = Square_2D;
+    BG_Pict = No;
+    BG_Type = 0;
+    BG_Var_Name = "";
+    BG_File_Name = "";
+    Origin_Position = 2;
+    Output_Group_Name = "";
+    Output {
+        Map_Element_Name = "insect";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.insect";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 255,0,0;
+        Marker_Id = 1;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.insect.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.insect.ID";
+    }
+    Output {
+        Map_Element_Name = "barrier";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.barrier";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 0,0,255;
+        Marker_Id = 2;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.barrier.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.barrier.ID";
+    }
+    Output {
+        Map_Element_Name = "fin";
+        Map_Element = Space_Variable;
+        Output_Expression = "Universe.map.fin";
+        Space_Color_Direct_RGB = No;
+        Space_Draw_Range = 0.0, 1.0;
+        Space_Color_Min = 255, 255, 255;
+        Space_Color_Max = 204, 204, 0;
+        Marker_Id = 6;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Space_Variable_Transparency_by_value = Yes;
+        Space_Variable_Transparency_Value = 0.0;
+        Space_Variable_Transparency_Variable_Name = "Universe.map.fin";
+    }
+}
+
+
+//-------------------------------------------------------
+//  3 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map3D_Output {
+    Map3D_Name = "map";
+    Disable = Yes;
+    Background_Image_Display = No;
+    Background_Image_Type = Fixed_Value;
+    Background_Image_Folder_Name = "";
+    Background_Image_Folder_Variable_Name = Dummy;
+    Background_Color = -1;
+    FastDraw = Yes;
+    Line_Display = No;
+    Camera_Position_Type = Mouse;
+    Camera_Position_Agent_Name = Universe.CameraPointer;
+    Light_Position_Type = Coordinate;
+    Light_Position = 0.0,0.0,0.0;
+    Light_Position_Agent_Name = Dummy;
+    Output_Group_Name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Position_x = 7;
+    Position_y = -4;
+    Size_x = 840;
+    Size_y = 910;
+    Map_Cell_Size = -1;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Space3D_Output {
+        Space_3D_Name = "map";
+        Space_Path_Name = Universe.map;
+        Layer = 0;
+        Space_3D_PositionD = 0.0,0.0,0.0;
+        Ruled_Line_Display = Yes;
+        Origin_Position = Left_Top;
+        Display_Object_Type = None;
+        Image_File_Path_Name = "";
+        Model_3D_File_Path_Name = "";
+        Agent3D_Output {
+                Agent_3D_Name = "insect";
+                Agent_Path_Name = Universe.map.insect;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Sphere_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -65536;
+                Color_Variable_Path_Name = Universe.map.insect.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+        Agent3D_Output {
+                Agent_3D_Name = "barrier";
+                Agent_Path_Name = Universe.map.barrier;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Quadrartic_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -16777012;
+                Color_Variable_Path_Name = Universe.map.barrier.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+    }
+}
+
+
+//-------------------------------------------------------
+// Control Panel Definition Division
+//-------------------------------------------------------
+Control_Panel {
+    Display_Area = 0, 0, 198, 66;
+    Display_Type = 0;
+}
+
+
+//-------------------------------------------------------
+// Space Initial Value Definition Divsion
+//-------------------------------------------------------
+Space_Initial {
+}
+
+
+//-------------------------------------------------------
+// Other Miscellaneous Data Definition Division
+//-------------------------------------------------------
+Others_Data {
+    Indent = 4;
+    Rule_Colored = Yes;
+    Rule_LineNo = Yes;
+    Window_Hide_Run = 1;
+    Debug_Position_x = 75;
+    Debug_Position_y = 75;
+    Debug_Size_x = 400;
+    Debug_Size_y = 200;
+    Console_Position_x = 318;
+    Console_Position_y = 32;
+    Console_Size_x = 607;
+    Console_Size_y = 620;
+    Componen_Tree_Position_x = 840;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 840;
+    Componen_Tree_Size_y = 303;
+    Console_Background_Color = 16777215;
+    Console_Foreground_Color = 255;
+    Console_DisplayLines_Max = 500;
+    plug_in_module_name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 0;
+    Font_Size = 14.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 0, 0, 0;
+}
+
+
+//-------------------------------------------------------
+// Network Information Definition Division
+//-------------------------------------------------------
+Network_Info {
+    Global_Space_Area = 0, 0, 100, 100;
+    Local_Space_Info {
+    }
+}
+
+
+//-------------------------------------------------------
+// Window Location Definition Division
+//-------------------------------------------------------
+Window_Rectangle {
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
+}
+
+
+//-------------------------------------------------------
+// Help Favorite Division
+//-------------------------------------------------------
+Help_Favorite {
+}
