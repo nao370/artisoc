@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(100, 170, !Loop, North, 5, Map_3D){
+    Space map(0,0),Square_2D(100, 170, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -35,7 +35,7 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[100][170][5] As Integer = (85000*0);
+        Dim fin(0, 0)[100][170][1] As Integer = (85000*0);
         AgtType camera(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -245,7 +245,7 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 	   next i
 	  next j
 	 next k
-	 }
+	
 #end_rule UNIVERSE
 
 
@@ -271,8 +271,6 @@ Agt_Step{
 		if contact_wall() then
 			if Rnd() * 100 < 5 then
 				climb_wall()
-				println("climb_wall")
-				my.state = 2
 			else
 				follow_wall()
 				println("follow_wall")
@@ -284,8 +282,7 @@ Agt_Step{
 				println("down_wall")
 				my.state = 2
 			else
-				println("here??")
-				Go(1)
+				Go(0.5)
 			end if
 		end if
 	elseif my.state == 1 then
@@ -295,16 +292,14 @@ Agt_Step{
 				println("leave_wall")
 				my.state = 0
 			else
-				go(1)
+				go(0.5)
 			end if
 		else
-			println("here??")
 			my.Direction = Rnd() * 360
-			go(1)
+			go(0.5)
 			my.state = 0
 		end if
 	elseif my.state == 2 then
-	println("‚Ü‚¾‘‚¢‚Ä‚È‚¢")
 		switch = switch_wall()
 		if switch == 1 then//‚»‚Ì‚Ü‚Ü
 			walk_wall()
@@ -323,63 +318,16 @@ Agt_Step{
 		println("error")
 	end if
 	println("my.state : "&my.state)
-/*	flag = false
-	on_wall = false
-	my.Direction = my.direct
-	if on_wall then
-		on_wall = walk_wall(on_wall)
-		draw_fin(my)
-	else
-		if contact_wall() then
-			if Rnd() * 100 < 1 then
-				on_wall = walk_wall(on_wall)
-				println("on_wall now")
-			elseif Rnd() * 100 < 5 then
-				//my.direct = leave_wall()
-				my.direct = Rnd() * 360
-				println("leave now")
-				if 	Forward(1) > 0 then
-					my.direct = Rnd() * 360
-				end if
-			else
-				my.direct = follow_wall()
-				PrintLn("follow now")
-				if 	Forward(1) > 0 then
-					my.direct = Rnd() * 360
-				end if
-			end if
-		else
-			if 	Forward(1) > 0 then
-				my.direct = Rnd() * 360
-			end if
-		end if
-	
-		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.7,universe.map.barrier)
-	  if(CountAgtSet(temp) > 0) then
-	  	for each one in temp
-	  		if one.Z == my.Z then
-	  			flag = true
-	  		end if
-	  	next one
-	  	if flag then
-	  		Forward(-1)
-	  		Turn(rnd()*90)
-	  	else
-	  		draw_fin(my)
-	    end if
-		else
-		 draw_fin(my)
-		end if
-	end if*/
 }
 
 sub Go (speed as Integer) {
 	dim temp as AgtSet
 	dim one as Agt
 	dim flag as Boolean
-	
-	if Forward(1) < 0 then
-		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.6,universe.map.barrier)
+
+	flag = false
+	if Forward(speed) < 0 then
+		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.71,universe.map.barrier)
 		if(CountAgtSet(temp) > 0) then
  	 		for each one in temp
  	 			if one.Z == my.Z then
@@ -387,7 +335,8 @@ sub Go (speed as Integer) {
   			end if
   		next one
   		if flag then
-  			Forward(-0.9)
+  			Forward(-speed)
+  			Turn(Rnd()*10 -5)
   		else
   			draw_fin(my)
     	end if
@@ -409,7 +358,39 @@ sub change_wall() {
 }
 
 Function switch_wall() as Integer{
-return 0
+	dim tmp as AgtSet
+	dim one as Agt
+	dim ret as Integer
+	dim x as Double
+	dim y as Double
+	dim z as Double
+	dim n_x as Double
+	dim n_y as Double
+	dim n_z as Double
+	
+	x = GetHistory(my.X,2)
+	y = GetHistory(my.Y,2)
+	z = GetHistory(my.Z,2)
+	n_x = my.X + (my.X - x)
+	n_y = my.y + (my.y - y)
+	n_z = my.z + (my.z - z)
+	MakeOneAgtSetAroundPosition(tmp,universe.map,n_x,n_y,0,1.2,universe.map.barrier)
+	one = MostCloseInsect(tmp)
+	println("my.X : " &my.X&"    my.Y : "&my.Y&"    my.Z"&my.Z)
+	println("n_x : "& n_x&"    n_y : "& n_y& "       n_z : "&n_z)
+	println("one_x : "&one.X&"    one_y : "&one.Y&"      one_z"&one.Z)
+
+	if n_Z > one.Z + 0.5 then
+		ret = 4 //“o‚é
+	elseif Abs(n_x - one.x) > 0.5 or Abs(n_y - one.y) > 0.5 then
+		ret = 2 //•Ç‚ðˆÚ‚é
+	elseif n_z < one.Z - 0.5 then
+		ret = 3 //•Ç‚©‚ç~‚è‚é
+	else
+		ret = 1 //•Ç‚ÉŽc‚è‘±‚¯‚é
+	end if
+	
+	return ret
 }
 
 sub down_wall(){
@@ -420,7 +401,7 @@ sub down_wall(){
 
 	x = Cos(DegreeToRad(my.Direction))
 	y = Sin(DegreeToRad(my.Direction))
-	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1,universe.map.barrier)
+	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1.2,universe.map.barrier)
 	one = MostCloseInsect(tmp)
 
 	if my.X + x - one.X > 0.5 then
@@ -458,7 +439,7 @@ function search_down_wall() as Boolean{
 	if my.Z == 0 then
 		ret = false
 	else
-		MakeOneAgtSetAroundPosition(tmp,universe.map,(my.X + x),(my.Y + y),my.Z,1,universe.map.barrier)
+		MakeOneAgtSetAroundPosition(tmp,universe.map,(my.X + x),(my.Y + y),my.Z,1.2,universe.map.barrier)
 		if CountAgtSet(tmp) > 0 then//”÷–­‚Éƒ~ƒX‚Á‚Ä‚é‹C‚ª‚·‚é
 			ret = false
 		else
@@ -476,32 +457,35 @@ sub climb_wall() {
 	dim y as Double
 	dim z as Double
 
-	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	println("climb_wall")
+	my.state = 2
+	MakeOneAgtSetAroundOwn(tmp,1.2,universe.map.barrier,false)
 	one = MostCloseInsect(tmp)
 	if one.Z == my.Z then
-		if my.X < one.X - 0.5 then
+		if my.X < one.X - 0.5 and Abs(my.Y - one.Y) < 0.5 then
 			x = Cos(DegreeToRad(my.Direction))
 			y = Sin(DegreeToRad(my.Direction))
-			my.Y = my.Y + y
+			my.Y = Abs(my.Y + y)
 			my.Z = My.Z + Abs(x)
-		elseif my.X > one.X + 0.5 then
+		elseif my.X > one.X + 0.5 and Abs(my.Y - one.Y) < 0.5 then
 			x = Cos(DegreeToRad(my.Direction))
 			y = Sin(DegreeToRad(my.Direction))
-			my.Y = my.Y + y
+			my.Y = Abs(my.Y + y)
 			my.Z = My.Z + Abs(x)
-		elseif my.Y < one.Y - 0.5 then
+		elseif my.Y < one.Y - 0.5  and Abs(my.X - one.X) < 0.5 then
 			x = Cos(DegreeToRad(my.Direction))
 			y = Sin(DegreeToRad(my.Direction))
-			my.X = my.X + x
+			my.X = abs(my.X + x)
 			my.Z = My.Z + Abs(y)
-		elseif my.Y > one.Y + 0.5 then
+		elseif my.Y > one.Y + 0.5 and Abs(my.X - one.X) < 0.5 then
 			x = Cos(DegreeToRad(my.Direction))
 			y = Sin(DegreeToRad(my.Direction))
-			my.X = my.X + x
+			my.X = abs(my.X + x)
 			my.Z = My.Z + Abs(y)
 		else
-			PrintLn("miss!!")
-			my.Z = my.Z + 0.5
+			PrintLn("•‚Ì”ÍˆÍ“ü‚Á‚½")
+			go(0.5)	
+			my.state = 0		
 		end if
 	end if
 }
@@ -513,7 +497,7 @@ function contact_wall() as Boolean{
 	dim diff as Double
 
 	ret = false
-	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	MakeOneAgtSetAroundOwn(tmp,1.2,universe.map.barrier,false)
 	if CountAgtSet(tmp) > 0 then
 		for Each one in tmp
 			diff = Abs(my.Z - one.Z)
@@ -528,68 +512,29 @@ function contact_wall() as Boolean{
 sub walk_wall(){
 	dim tmp as AgtSet
 	dim one as Agt
-	dim flag as Boolean
-	dim ret as Boolean
+	dim ret as Integer
 	dim x as Double
 	dim y as Double
 	dim z as Double
+	dim n_x as Double
+	dim n_y as Double
+	dim n_z as Double
 
-		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
-		one = MostCloseInsect(tmp)
-		x = GetHistory(my.X,2)
-		y = GetHistory(my.Y,2)
-		z = GetHistory(my.Z,2)
-		if x == my.X then
-			my.Y = my.Y + (my.Y - y)
-			my.Z = my.Z + (my.Z - z)
-		elseif y == my.Y then
-			my.X = my.X + (my.X - y)
-			my.Z = my.Z + (my.Z - z)		
-		else
-			println("miss in walk_wall")
-		end if
-		if contact_wall() then
-			flag = true
-		else
-			flag = false
-			my.Z = one.Z + 1
-		end if
-
-		flag = false
-		MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
-		one = MostCloseInsect(tmp)
-		if one.Z == my.Z then
-			if my.X < one.X - 0.5 then
-				x = Cos(DegreeToRad(my.Direction))
-				y = Sin(DegreeToRad(my.Direction))
-				my.Y = my.Y + y
-				my.Z = My.Z + Abs(x)
-			elseif my.X > one.X + 0.5 then
-				x = Cos(DegreeToRad(my.Direction))
-				y = Sin(DegreeToRad(my.Direction))
-				my.Y = my.Y + y
-				my.Z = My.Z + Abs(x)
-			elseif my.Y < one.Y - 0.5 then
-				x = Cos(DegreeToRad(my.Direction))
-				y = Sin(DegreeToRad(my.Direction))
-				my.X = my.X + x
-				my.Z = My.Z + Abs(y)
-			elseif my.Y > one.Y + 0.5 then
-				x = Cos(DegreeToRad(my.Direction))
-				y = Sin(DegreeToRad(my.Direction))
-				my.X = my.X + x
-				my.Z = My.Z + Abs(y)
-			else
-				PrintLn("miss!!")
-				my.Z = my.Z + 0.5
-			end if
-			if contact_wall() then
-				flag = true
-			else
-				flag = false
-				my.Z = one.Z + 1
-			end if
-		end if
+	x = GetHistory(my.X,2)
+	y = GetHistory(my.Y,2)
+	z = GetHistory(my.Z,2)
+	n_x = my.X + (my.X - x)
+	n_y = my.y + (my.y - y)
+	n_z = my.z + (my.z - z)
+	if x == my.X then
+		my.Y = my.Y + (my.Y - y)
+		my.Z = my.Z + (my.Z - z)
+	elseif y == my.Y then
+		my.X = my.X + (my.X - y)
+		my.Z = my.Z + (my.Z - z)		
+	else
+		println("miss in walk_wall")
+	end if
 }
 
 sub leave_wall(){
@@ -599,20 +544,21 @@ sub leave_wall(){
 	dim obj_direction as Double
 	dim obj_distance as Double
 
-	MakeOneAgtSetAroundOwn(tmp,2,universe.map.barrier,false)
-	obj_distance = 1
+	MakeOneAgtSetAroundOwn(tmp,1.2,universe.map.barrier,false)
+	obj_distance = 1.2
+	obj_direction = my.Direction
 	for Each one in tmp
 		dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
 		if dis < obj_distance and one.Z == my.Z then
-			obj_direction = GetDirection(my.X,my.Y,one.X,one.Y,universe.map)
+			obj_direction = GetDirection(one.X,one.Y,my.X,my.Y,universe.map)
 			obj_distance = dis
 		end if
 	next one
 	if my.state == 1 then
-		my.Direction = (dis + 180 + Rnd() * 60 - 30) mod 360
+		my.Direction = obj_direction + Rnd() * 10 -5
 	end if
 
-	Forward(1)
+	go(0.5)
 }
 
 sub follow_wall(){
@@ -624,7 +570,7 @@ sub follow_wall(){
 	dim z as Double
 	dim ret as Double
 
-	MakeOneAgtSetAroundOwn(tmp,1,universe.map.barrier,false)
+	MakeOneAgtSetAroundOwn(tmp,1.2,universe.map.barrier,false)
 	one = MostCloseInsect(tmp)
 	if one.Z == my.Z then
 		x = Cos(DegreeToRad(my.Direction))
@@ -658,7 +604,7 @@ sub follow_wall(){
 		end if
 	end if
 	
-	Forward(1)
+	go(0.5)
 }
 
 function MostCloseInsect(neighbor as AgtSet)as Agt{
@@ -713,7 +659,7 @@ Function check_obj() as Boolean{
 	dim flag as Boolean
 
 	ret = false
-	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1,universe.map.barrier)
+	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1.2,universe.map.barrier)
 	
 	if CountAgtSet(tmp) > 0 then
 		for each one in tmp
@@ -761,7 +707,6 @@ sub draw_fin(one as agt){
 //	next k
 	next j
 	next i
-}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -795,7 +740,6 @@ Agt_Step{
 	my.X = universe.map.insect(0).X -2
 	my.Y = universe.map.insect(0).Y
 	my.Z = universe.map.insect(0).Z+2
-}
 #end_rule UNIVERSE.MAP.CAMERA
 
 
@@ -1053,7 +997,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -1077,8 +1021,8 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 318;
-    Console_Position_y = 32;
+    Console_Position_x = 308;
+    Console_Position_y = 276;
     Console_Size_x = 607;
     Console_Size_y = 620;
     Componen_Tree_Position_x = 840;
@@ -1112,7 +1056,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
