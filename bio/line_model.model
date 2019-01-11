@@ -35,7 +35,7 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[100][170][1] As Integer = (85000*0);
+        Dim fin(0, 0)[100][170][1] As Integer = (17000*0);
         AgtType camera(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) As Double = (0.0);
@@ -68,7 +68,7 @@ Univ_Init{
 	make_rubble_box(1)
 	make_rubble_board(1)*/
 	ClearConsoleScreen()
-	make_rubble_mix(0.1)
+	make_rubble_mix(0.6)
 	println("start")
 	universe.CameraPointer = universe.map.camera(0)
 }
