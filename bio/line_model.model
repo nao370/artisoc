@@ -64,7 +64,7 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.3)
+	make_rubble_mix(0.01)
 	println("start")
 }
 
@@ -324,6 +324,7 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 // Agent Rule
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.INSECT
+Include "bend.inc"
 Agt_Init{
 my.Direction = rnd() * 360
 }
@@ -347,13 +348,6 @@ function determining_vector() as Double{
 	return 0
 }
 
-function is_bend() as Boolean{
-	return true
-}
-
-function determining_bend() as Double{
-	return 0
-}
 
 sub forward_step() {
 }
