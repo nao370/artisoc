@@ -21,10 +21,9 @@ UNIVERSE {
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
-            Dim speed(0, 0) As Double = (0.0);
-            Dim position(0, 0)[3] As Double = (3*0.0);
-            Dim direct(0, 0) As Double = (0.0);
-            Dim state(0, 0) As Integer = (0);
+            Dim next_vector(0, 0)[3][3][3] As Double = ();
+            Dim forward_vector(0, 0)[3] As Double = ();
+            Dim base_vector(0, 0)[3] As Double = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -325,16 +324,18 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.INSECT
 Include "bend.inc"
+Include "vector.inc"
+
 Agt_Init{
 my.Direction = rnd() * 360
 }
 
 Agt_Step{
 	if different_surface() then
-		my.Direction	 = determining_vector()
+		determining_vector()
 	else
 		if is_bend() then
-			my.Direction = determining_bend()
+			determining_bend()
 		end if
 	end if
 	forward_step()
@@ -344,12 +345,49 @@ function different_surface() as Boolean{
 	return true
 }
 
-function determining_vector() as Double{
+sub determining_vector(){
+	
+	calculate_vector()
+	select_vector()
+	
+}
+
+sub calculate_vector(){
+//my.next_vectorに3種類計算する．2種類しかないときは空いてるところに(0,0,0)を入れる
+	dim b_type as Integer
+	dim angle as Double
+
+	b_type = get_type_boundary()
+	angle = calculate_angle(b_type)
+
+	store_vector(b_type,angle)
+}
+
+sub store_vector(type as Integer,angle as Double){
+//ベクトルをそれぞれ計算して格納する．この時に行けないベクトルも削除する
+
+}
+
+function calculate_angle(type as Integer) as Double{
+//my.forward_vectorの境界線に垂直な成分と壁のベクトルのなす角を計算して角度を返す
+	return 0 
+}
+
+function get_type_boundary() as Integer{
+//境界線がX軸に平行ならば0 Y軸に平行なら1 Z軸に平行なら2を返す
+
 	return 0
 }
 
-
 sub forward_step() {
+}
+
+
+sub determining_bend(){
+	dim degree as double
+
+	degree = NormInv(Rnd(),0,30) + my.Direction
+	
 }
 #end_rule UNIVERSE.MAP.INSECT
 
@@ -641,7 +679,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -700,9 +738,9 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 1086, 311;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }

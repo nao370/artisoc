@@ -9,11 +9,3 @@ function is_bend() as Boolean{
 	
 	return ret
 }
-
-function determining_bend() as Double{
-	dim ret as Double
-
-	ret = NormInv(Rnd(),0,30) + my.Direction
-	
-	return ret
-}
