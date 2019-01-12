@@ -63,14 +63,9 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
-	/*make_rubble_Pillar(true,0.3)
-	make_rubble_Pillar(false,0.6)
-	make_rubble_box(1)
-	make_rubble_board(1)*/
 	ClearConsoleScreen()
-	make_rubble_mix(0.6)
+	make_rubble_mix(0.3)
 	println("start")
-	universe.CameraPointer = universe.map.camera(0)
 }
 
 Univ_Step_Begin{
@@ -95,55 +90,32 @@ sub make_rubble_mix(rate as Double){
 	dim y as integer
 	dim z as integer
 	dim r as Double
+	dim pattern as Integer
 
 	tmp_rate = 0
 	tmp_number = 0
 	height = GetHeightSpace(universe.map)
 	width = GetWidthSpace(universe.map)
-	max = height * width * 5
+	max = height * width * 16
 
 	Do While tmp_rate < rate
-		x = Int(Rnd() * (width - 16))
-		y = Int(Rnd() * (height - 16))
-		z = Int(Rnd() * (5 - 4))
+		x = Int(Rnd() * (width))
+		y = Int(Rnd() * (height))
+		z = Int(Rnd() * (16))
+		pattern = Int(Rnd() * 3)
 		r = Rnd() * 100
-		if r < 25 then
-			make_rubble_board(x,y,z)
-		elseif r < 50 then
-			make_rubble_box(x,y,z)
-		elseif r < 75 then
-			make_rubble_Pillar(true,x,y,z)
+		if r < 33 then
+			tmp_number = tmp_number + make_rubble_board(pattern,x,y,z)
+		elseif r < 66 then
+			tmp_number = tmp_number + make_rubble_box(x,y,z)
 		else
-			make_rubble_Pillar(false,x,y,z)
-		end if
-		tmp_number = tmp_number + 64
+			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
+		end if		
 		tmp_rate = tmp_number / max
 	Loop
 }
 
-sub make_rubble_board(x as Integer, y as integer ,z as integer){
-	dim t as Integer
-	dim b as Integer
-	dim c as Integer
-	dim one as Agt
-	dim set as AgtSet
-	dim temp as AgtSet
-
-	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
-	if CountAgtSet(temp) == 0 then
-		set = CreateAgtMulti(universe.map.barrier,64)
-		for each one in set
-			t = GetAgtEntry(set,one)
-			c = t / 8
-			b = t Mod 8
-			one.X = x + b
-			one.Y = y + c
-			one.Z = z
-		next one
-	 end if
-}
-
-sub make_rubble_box(x as Integer,y as integer, z as integer){
+function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as integer)as Integer{
 	dim t as Integer
 	dim a as Integer
 	dim b as Integer
@@ -151,24 +123,102 @@ sub make_rubble_box(x as Integer,y as integer, z as integer){
 	dim one as Agt
 	dim set as AgtSet
 	dim temp as AgtSet
+	dim ret as Integer
 
-	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
-	if CountAgtSet(temp) == 0 then
-		set = CreateAgtMulti(universe.map.barrier,64)
+	ret = 64
+	set = CreateAgtMulti(universe.map.barrier,64)
+	if pattern == 0 and x<= GetWidthSpace(universe.map) -8 and y <= GetHeightSpace(universe.map) - 8 then //…•½‚É’u‚­
 		for each one in set
 			t = GetAgtEntry(set,one)
-			a = t  / 16 
-			b = t Mod (16)
-			c = b / 4
-			b = b Mod 4
-			one.X = x + b
-			one.Y = y + c
-			one.Z = z + a
+			c = t / 8
+			b = t Mod 8
+			MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+			if is_void(temp,z) then
+				one.X = x + b
+				one.Y = y + c
+				one.Z = z
+			else
+				KillAgt(one)
+				ret = ret - 1
+			end if
 		next one
-	 end if
+	elseif pattern == 1 and y <= GetHeightSpace(universe.map) - 8 and z <= 16 - 8 then // c’·‚É’u‚­
+		for each one in set
+			t = GetAgtEntry(set,one)
+			a = t / 8
+			b = t Mod 8
+			MakeOneAgtSetAroundPosition(temp,universe.map,x,y+b,0,0,universe.map.barrier)
+			if is_void(temp,z+a) then
+				one.X = x
+				one.Y = y + b
+				one.Z = z + a
+			else
+				KillAgt(one)
+				ret = ret - 1
+			end if
+		next one
+	elseif pattern == 2 and x<= GetWidthSpace(universe.map) -8 and z <= 16 - 8 then // ‰¡’·‚É’u‚­
+		for each one in set
+			t = GetAgtEntry(set,one)
+			a = t / 8
+			b = t Mod 8
+			MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y,0,0,universe.map.barrier)
+			if is_void(temp,z+a) then
+				one.X = x + b
+				one.Y = y
+				one.Z = z + a
+			else
+				KillAgt(one)
+				ret = ret - 1
+			end if
+		next one
+	else
+		ret = 0
+	end if
+
+	return ret
 }
 
-sub make_rubble_Pillar(side as Boolean,x as Integer,y as integer ,z as integer){
+function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
+	dim t as Integer
+	dim a as Integer
+	dim b as Integer
+	dim c as Integer
+	dim one as Agt
+	dim set as AgtSet
+	dim temp as AgtSet
+	dim ret as integer
+
+	ret = 64
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
+	set = CreateAgtMulti(universe.map.barrier,64)
+	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 16 - 4 then
+		if CountAgtSet(temp) == 0 then
+			for each one in set
+				t = GetAgtEntry(set,one)
+				a = t  / 16 
+				b = t Mod (16)
+				c = b / 4
+				b = b Mod 4
+ 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+ 				if is_void(temp,z+a) then
+		  		one.X = x + b
+		  		one.Y = y + c
+		  		one.Z = z + a
+		  	else
+					KillAgt(one)
+					ret = ret - 1		  		
+		  	end if		  	
+			next one
+		 end if
+		else
+			ret = 0
+		end if
+
+		return ret
+}
+
+function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as integer)as Integer{
 	dim set as AgtSet
 	dim a as Integer
 	dim b as Integer
@@ -176,76 +226,95 @@ sub make_rubble_Pillar(side as Boolean,x as Integer,y as integer ,z as integer){
 	dim temp as AgtSet
 	dim t as Integer
 	dim c as Integer
+	dim ret as Integer
 
-	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,z,0,universe.map.barrier)
-	if side then
+	ret = 64
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
+	set = CreateAgtMulti(universe.map.barrier,64)
+	if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 16 -2  then
 	//‰¡’·‚Ì’Œ‚ðì‚é
 		if CountAgtSet(temp) == 0 then
-			set = CreateAgtMulti(universe.map.barrier,64)
 			for each one in set
 				t = GetAgtEntry(set,one)
 	  		a = t  / 32 
 	  		b = t Mod (32)
 	  		c = b / 16
 	  		b = b Mod 16
-	  		one.X = x + b
-	  		one.Y = y + c
-	  		one.Z = z + a
+ 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+ 				if is_void(temp,z+a) then
+		  		one.X = x + b
+		  		one.Y = y + c
+		  		one.Z = z + a
+		  	else
+					KillAgt(one)
+					ret = ret - 1		  		
+		  	end if
 	  	next one
 	  end if	 
-	else
+	elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 16 -2 then
 	//c’·‚Ì’Œ‚ðì‚é
 		if CountAgtSet(temp) == 0 then
-			set = CreateAgtMulti(universe.map.barrier,64)
   		for each one in set
   			t = GetAgtEntry(set,one)
   			a = t  / 32 
   			b = t Mod (32)
   			c = b / 2
   			b = b Mod 2
-  			one.X = x + b
-  			one.Y = y + c
-  			one.Z = z + a
+ 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+ 				if is_void(temp,z+a) then
+	  			one.X = x + b
+ 		 			one.Y = y + c
+ 		 			one.Z = z + a
+ 		 		else
+					KillAgt(one)
+					ret = ret - 1		  	 		 		
+ 		 		end if
   		next one
   	end if
+  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 16 - 16 then //—§‚Á‚Ä‚é’Œ‚ðì‚é
+		if CountAgtSet(temp) == 0 then
+  		for each one in set
+  			t = GetAgtEntry(set,one)
+  			a = t  / 4 
+  			b = t Mod (4)
+  			c = b / 2
+  			b = b Mod 2
+ 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+ 				if is_void(temp,z+a) then
+	  			one.X = x + b
+ 		 			one.Y = y + c
+ 		 			one.Z = z + a
+ 		 		else
+					KillAgt(one)
+					ret = ret - 1		  	 		 		
+ 		 		end if
+  		next one
+  	end if  
+  else
+  	ret = 0
 	end if
+
+	return ret
 }
 
-sub make_N_rubble_3D(N as Integer, rate as Double){
-	dim i as integer
-	dim j as integer
-	dim set as AgtSet
-	dim a as Integer
-	dim b as Integer
-	dim one as agt
-	dim temp as AgtSet
-	dim k as Integer
-	dim t as Integer
-	dim c as Integer
+function is_void(tmp as AgtSet,z as Integer)as Boolean{
+	dim one as Agt
+	dim ret as Boolean
 
-	for k = 0 to 1 - N
-		for j = 0 to GetHeightSpace(universe.map) - N
-		for i = 0 to GetWidthSpace(universe.map) - N
-	  	if rnd()*100 < rate and (i > 5 or j > 5 or k > 5) then
-	  		MakeOneAgtSetAroundPosition(temp,universe.map,i,j,k,0,universe.map.barrier)
-	  		if CountAgtSet(temp) == 0 then
-	  			set = CreateAgtMulti(universe.map.barrier,(N^3))
-	  			for each one in set
-	  				t = GetAgtEntry(set,one)
-	  				a = t  / (N^2) 
-	  				b = t Mod (N^2)
-	  				c = b / N
-	  				b = b Mod N
-	  				one.X = i + b
-	  				one.Y = j + c
-	  				one.Z = k + a
-	  			next one
-	    	end if
-	    end if
-	   next i
-	  next j
-	 next k
-	
+	ret = true
+	if CountAgtSet(tmp) == 0 then
+		ret = true
+	else
+		for each one in tmp
+			if one.Z == z then
+				ret = false
+				break
+			end if
+		next one
+	end if
+
+	return ret
+}
 #end_rule UNIVERSE
 
 
@@ -257,456 +326,37 @@ sub make_N_rubble_3D(N as Integer, rate as Double){
 #begin_rule UNIVERSE.MAP.INSECT
 Agt_Init{
 my.Direction = rnd() * 360
-my.direct = Rnd() * 360
 }
 
 Agt_Step{
-	dim temp as AgtSet
-	dim flag as Boolean
-	dim wall as Boolean
-	dim on_wall as Boolean
-	dim switch as Integer
-
-	if my.state == 0 then
-		if contact_wall() then
-			if Rnd() * 100 < 5 then
-				climb_wall()
-			else
-				follow_wall()
-				println("follow_wall")
-				my.state = 1
-			end if
-		else
-			if search_down_wall() then
-				down_wall()
-				println("down_wall")
-				my.state = 2
-			else
-				Go(0.5)
-			end if
-		end if
-	elseif my.state == 1 then
-		if contact_wall() then
-			if Rnd() * 100 < 5 then
-				leave_wall()
-				println("leave_wall")
-				my.state = 0
-			else
-				go(0.5)
-			end if
-		else
-			my.Direction = Rnd() * 360
-			go(0.5)
-			my.state = 0
-		end if
-	elseif my.state == 2 then
-		switch = switch_wall()
-		if switch == 1 then//‚»‚Ì‚Ü‚Ü
-			walk_wall()
-		elseif switch == 2 then//ˆá‚¤•Ç‚É
-			change_wall()
-		elseif switch == 3 then//•Ç‚©‚ç~‚è‚é
-			down_ground()
-			my.state = 0
-		elseif switch == 4 then//ã‚É“o
-			climb_ground()
-			my.state = 0
-		else
-			PrintLn("error")
-		end if 
+	if different_surface() then
+		my.Direction	 = determining_vector()
 	else
-		println("error")
-	end if
-	println("my.state : "&my.state)
-}
-
-sub Go (speed as Integer) {
-	dim temp as AgtSet
-	dim one as Agt
-	dim flag as Boolean
-
-	flag = false
-	if Forward(speed) < 0 then
-		MakeOneAgtSetAroundPosition(temp,universe.map,my.X,my.Y,my.Z,0.71,universe.map.barrier)
-		if(CountAgtSet(temp) > 0) then
- 	 		for each one in temp
- 	 			if one.Z == my.Z then
- 	 				flag = true
-  			end if
-  		next one
-  		if flag then
-  			Forward(-speed)
-  			Turn(Rnd()*10 -5)
-  		else
-  			draw_fin(my)
-    	end if
-		else
-	 	draw_fin(my)
-		end if
-	else
-		my.Direction = Rnd() * 360
-	end if
-}
-
-sub climb_ground(){
-}
-
-sub down_ground(){
-}
-
-sub change_wall() {
-}
-
-Function switch_wall() as Integer{
-	dim tmp as AgtSet
-	dim one as Agt
-	dim ret as Integer
-	dim x as Double
-	dim y as Double
-	dim z as Double
-	dim n_x as Double
-	dim n_y as Double
-	dim n_z as Double
-	
-	x = GetHistory(my.X,2)
-	y = GetHistory(my.Y,2)
-	z = GetHistory(my.Z,2)
-	n_x = my.X + (my.X - x)
-	n_y = my.y + (my.y - y)
-	n_z = my.z + (my.z - z)
-	MakeOneAgtSetAroundPosition(tmp,universe.map,n_x,n_y,0,1.2,universe.map.barrier)
-	one = MostCloseInsect(tmp)
-	println("my.X : " &my.X&"    my.Y : "&my.Y&"    my.Z"&my.Z)
-	println("n_x : "& n_x&"    n_y : "& n_y& "       n_z : "&n_z)
-	println("one_x : "&one.X&"    one_y : "&one.Y&"      one_z"&one.Z)
-
-	if n_Z > one.Z + 0.5 then
-		ret = 4 //“o‚é
-	elseif Abs(n_x - one.x) > 0.5 or Abs(n_y - one.y) > 0.5 then
-		ret = 2 //•Ç‚ðˆÚ‚é
-	elseif n_z < one.Z - 0.5 then
-		ret = 3 //•Ç‚©‚ç~‚è‚é
-	else
-		ret = 1 //•Ç‚ÉŽc‚è‘±‚¯‚é
-	end if
-	
-	return ret
-}
-
-sub down_wall(){
-	dim x as Double
-	dim y as Double
-	dim one as Agt
-	dim tmp as AgtSet
-
-	x = Cos(DegreeToRad(my.Direction))
-	y = Sin(DegreeToRad(my.Direction))
-	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1.2,universe.map.barrier)
-	one = MostCloseInsect(tmp)
-
-	if my.X + x - one.X > 0.5 then
-		my.X = one.X + 0.5
-		my.Y = my.Y + y
-		my.Z = my.Z - Abs(my.X + x - one.X - 0.5)
-	elseif my.X + x - one.X < - 0.5 then
-		my.X = one.X - 0.5
-		my.Y = my.Y + y
-		my.Z = my.Z - Abs(my.X + x - one.X + 0.5)
-	elseif my.Y + y - one.Y > 0.5 then
-		my.Y = one.Y + 0.5
-		my.X = my.X + X
-		my.Z = my.Z - Abs(my.y + y - one.y + 0.5)
-	elseif my.Y + y - one.Y < -0.5 then
-		my.Y = one.Y - 0.5
-		my.X = my.X + X
-		my.Z = my.Z - Abs(my.y + y - one.y - 0.5)	
-	else
-		println("‘½•ª‚¨‚©‚µ‚¢")
-	end if
-	
-}
-
-function search_down_wall() as Boolean{
-	dim x as Double
-	dim y as Double
-	dim tmp as AgtSet
-	dim one as Agt
-	dim ret as Boolean
-
-	x = Cos(DegreeToRad(my.Direction))
-	y = Sin(DegreeToRad(my.Direction))
-
-	if my.Z == 0 then
-		ret = false
-	else
-		MakeOneAgtSetAroundPosition(tmp,universe.map,(my.X + x),(my.Y + y),my.Z,1.2,universe.map.barrier)
-		if CountAgtSet(tmp) > 0 then//”÷–­‚Éƒ~ƒX‚Á‚Ä‚é‹C‚ª‚·‚é
-			ret = false
-		else
-			ret = true
+		if is_bend() then
+			my.Direction = determining_bend()
 		end if
 	end if
-	
-	return ret
+	forward_step()
 }
 
-sub climb_wall() {
-	dim tmp as AgtSet
-	dim one as Agt
-	dim x as Double
-	dim y as Double
-	dim z as Double
-
-	println("climb_wall")
-	my.state = 2
-	MakeOneAgtSetAroundOwn(tmp,1.2,universe.map.barrier,false)
-	one = MostCloseInsect(tmp)
-	if one.Z == my.Z then
-		if my.X < one.X - 0.5 and Abs(my.Y - one.Y) < 0.5 then
-			x = Cos(DegreeToRad(my.Direction))
-			y = Sin(DegreeToRad(my.Direction))
-			my.Y = Abs(my.Y + y)
-			my.Z = My.Z + Abs(x)
-		elseif my.X > one.X + 0.5 and Abs(my.Y - one.Y) < 0.5 then
-			x = Cos(DegreeToRad(my.Direction))
-			y = Sin(DegreeToRad(my.Direction))
-			my.Y = Abs(my.Y + y)
-			my.Z = My.Z + Abs(x)
-		elseif my.Y < one.Y - 0.5  and Abs(my.X - one.X) < 0.5 then
-			x = Cos(DegreeToRad(my.Direction))
-			y = Sin(DegreeToRad(my.Direction))
-			my.X = abs(my.X + x)
-			my.Z = My.Z + Abs(y)
-		elseif my.Y > one.Y + 0.5 and Abs(my.X - one.X) < 0.5 then
-			x = Cos(DegreeToRad(my.Direction))
-			y = Sin(DegreeToRad(my.Direction))
-			my.X = abs(my.X + x)
-			my.Z = My.Z + Abs(y)
-		else
-			PrintLn("•‚Ì”ÍˆÍ“ü‚Á‚½")
-			go(0.5)	
-			my.state = 0		
-		end if
-	end if
+function different_surface() as Boolean{
+	return true
 }
 
-function contact_wall() as Boolean{
-	dim ret as Boolean
-	dim tmp as AgtSet
-	dim one as Agt
-	dim diff as Double
-
-	ret = false
-	MakeOneAgtSetAroundOwn(tmp,1.2,universe.map.barrier,false)
-	if CountAgtSet(tmp) > 0 then
-		for Each one in tmp
-			diff = Abs(my.Z - one.Z)
-			if diff < 1 then
-				ret = true
-			end if
-		next one
-	end if
-	return ret
+function determining_vector() as Double{
+	return 0
 }
 
-sub walk_wall(){
-	dim tmp as AgtSet
-	dim one as Agt
-	dim ret as Integer
-	dim x as Double
-	dim y as Double
-	dim z as Double
-	dim n_x as Double
-	dim n_y as Double
-	dim n_z as Double
-
-	x = GetHistory(my.X,2)
-	y = GetHistory(my.Y,2)
-	z = GetHistory(my.Z,2)
-	n_x = my.X + (my.X - x)
-	n_y = my.y + (my.y - y)
-	n_z = my.z + (my.z - z)
-	if x == my.X then
-		my.Y = my.Y + (my.Y - y)
-		my.Z = my.Z + (my.Z - z)
-	elseif y == my.Y then
-		my.X = my.X + (my.X - y)
-		my.Z = my.Z + (my.Z - z)		
-	else
-		println("miss in walk_wall")
-	end if
+function is_bend() as Boolean{
+	return true
 }
 
-sub leave_wall(){
-	dim tmp as AgtSet
-	dim ret as Double
-	dim dis as Double
-	dim obj_direction as Double
-	dim obj_distance as Double
-
-	MakeOneAgtSetAroundOwn(tmp,1.2,universe.map.barrier,false)
-	obj_distance = 1.2
-	obj_direction = my.Direction
-	for Each one in tmp
-		dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
-		if dis < obj_distance and one.Z == my.Z then
-			obj_direction = GetDirection(one.X,one.Y,my.X,my.Y,universe.map)
-			obj_distance = dis
-		end if
-	next one
-	if my.state == 1 then
-		my.Direction = obj_direction + Rnd() * 10 -5
-	end if
-
-	go(0.5)
+function determining_bend() as Double{
+	return 0
 }
 
-sub follow_wall(){
-	dim tmp as AgtSet
-	dim one as Agt
-	dim flag as Boolean
-	dim x as Double
-	dim y as Double
-	dim z as Double
-	dim ret as Double
-
-	MakeOneAgtSetAroundOwn(tmp,1.2,universe.map.barrier,false)
-	one = MostCloseInsect(tmp)
-	if one.Z == my.Z then
-		x = Cos(DegreeToRad(my.Direction))
-		y = Sin(DegreeToRad(my.Direction))
-		if my.X < one.X - 0.5 then
-			if y > 0 then
-				my.Direction = 90 + Rnd() * 2 -1
-			else
-				my.Direction = 270 + Rnd() * 2 - 1
-			end if
-		elseif my.X > one.X + 0.5 then
-			if y > 0 then
-				my.Direction = 90 + Rnd() * 2 - 1
-			else
-				my.Direction = 270 + Rnd() * 2 - 1
-			end if
-		elseif my.Y < one.Y - 0.5 then
-			if x > 0 then
-				my.Direction = 0 + Rnd() * 2 - 1
-			else
-				my.Direction = 180 + Rnd() * 2 - 1
-			end if
-		elseif my.Y > one.Y + 0.5 then
-			if x > 0 then
-				my.Direction = 0 + Rnd() * 2 - 1
-			else
-				my.Direction = 180 + Rnd() * 2 - 1
-			end if
-		else
-			PrintLn("follow miss!!")
-		end if
-	end if
-	
-	go(0.5)
+sub forward_step() {
 }
-
-function MostCloseInsect(neighbor as AgtSet)as Agt{
-	dim one as Agt
-	dim ret as Agt
-	dim distance as Double
-	dim tmp_dis as Double
-
-
-	distance = 20
-	ret = GetAgt(neighbor,0)
-	for each one in neighbor
-	tmp_dis = MeasureDistance(my.X,my.Y,one.X,one.Y,universe.map)
-		if tmp_dis <= distance and one.Z== my.Z then
-			ret = one
-		end if			
-	next one
-	
-	return ret
-}
-
-function power_Direction(distance as Double,direction as Double) as Double{//Ž©•ª‚ÌŒü‚«‚Æ•Ç‚©‚çŽó‚¯‚é—Í‚ÅŽŸ‚Ì•ûŒü‚ðŒˆ‚ß‚é
-	dim x as Double
-	dim y as Double
-	dim ret as Double
-
-	if distance < 2 then
-		x = Cos(DegreeToRad(direction))
-		y = Sin(DegreeToRad(direction))
-
-		x = my.X + Cos(DegreeToRad(my.Direction)) - (x * 10) / (distance/2) + rnd()
-		y = my.Y + Sin(DegreeToRad(my.Direction)) - (y * 10) / (distance/2) + rnd()
-
-		ret = GetDirection(my.X,my.Y,x,y,universe.map)
-	else
-		x = Cos(DegreeToRad(direction))
-		y = Sin(DegreeToRad(direction))
-
-		x = my.X + Cos(DegreeToRad(my.Direction)) + x * (distance/5) +Rnd()
-		y = my.Y + Sin(DegreeToRad(my.Direction)) + y * (distance/5) +Rnd()
-
-		ret = GetDirection(my.X,my.Y,x,y,universe.map)
-	end if
-
-	return direction+90
-}
-
-Function check_obj() as Boolean{
-	dim tmp as AgtSet
-	dim ret as Boolean
-	dim one as Agt
-	dim flag as Boolean
-
-	ret = false
-	MakeOneAgtSetAroundPosition(tmp,universe.map,my.X,my.Y,my.Z,1.2,universe.map.barrier)
-	
-	if CountAgtSet(tmp) > 0 then
-		for each one in tmp
-			if one.Z == my.Z then
-				ret = true
-			end if
-		next one
-	end if
-	
-	return ret
-}
-
-sub draw_fin(one as agt){
-	dim px as Integer
-	dim py as Integer
-	dim pz as integer
-	dim i as Integer
-	dim j as Integer
-	dim k as Integer
-	dim tx as integer
-	dim ty as integer
-	dim tz as integer
-
-	 px = Int(one.X)
-	 py = Int(one.Y)
-	 tz = Int(one.Z)
-	// pz = Int(one.Z)
-
-	For i = -20 to 20
-	tx = px + i
-	for j = -20 to 20
-	ty = py + j
-//	for k = -20 to 20 
-//	tz = pz + k
-	if tx < GetWidthSpace(universe.map) and tx >= 0 then
-		if ty < GetHeightSpace(universe.map)  and ty >= 0 then
-//			if tz < 8 and tz >= 0 then
-				if universe.map.fin(tx,ty,tz) == 0 and i+j <= 20 and j - i <= 20 and i+j >= -20 and j - i >= -20  then
-					universe.map.fin(tx,ty,tz) = 1
-					universe.num_fin = universe.num_fin + 1
-				end if
-//			end if
-		end if
-	end if
-//	next k
-	next j
-	next i
 #end_rule UNIVERSE.MAP.INSECT
 
 
