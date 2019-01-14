@@ -331,7 +331,7 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 	end if
 
 	return ret
-	}
+	
 #end_rule UNIVERSE
 
 
@@ -373,12 +373,12 @@ sub forward_step() {
 
 	step_direction()
 	
-	Do Until is_step()
+	if is_step() then
 		my.tmp_position(0) = my.X
 		my.tmp_position(1) = my.Y
 		my.tmp_position(2) = my.Z
 		back_step()
-	Loop
+	end if
 }
 
 sub step_direction(){
@@ -628,26 +628,98 @@ sub back_step(){
 		my.X = pre_x + k(2) * u(0)
 		my.y = pre_x + k(2) * u(1)
 		my.z = pre_x + k(2) * u(2)
+
+		if not is_step() then
+			my.X = pre_x + k(1) * u(0)
+			my.y = pre_x + k(1) * u(1)
+			my.z = pre_x + k(1) * u(2)
+
+			if not is_step() then
+				my.X = pre_x + k(0) * u(0)
+				my.y = pre_x + k(0) * u(1)
+				my.z = pre_x + k(0) * u(2)
+			end if
+		end if
 	elseif k(0) < k(2) and k(2) < k(1) then
 		my.X = pre_x + k(1) * u(0)
 		my.y = pre_x + k(1) * u(1)
 		my.z = pre_x + k(1) * u(2)
+
+		if not is_step() then
+			my.X = pre_x + k(2) * u(0)
+			my.y = pre_x + k(2) * u(1)
+			my.z = pre_x + k(2) * u(2)
+
+			if not is_step() then
+				my.X = pre_x + k(0) * u(0)
+				my.y = pre_x + k(0) * u(1)
+				my.z = pre_x + k(0) * u(2)
+			end if
+		end if
 	elseif k(1) < k(0) and k(0) < k(2) then
 		my.X = pre_x + k(2) * u(0)
 		my.y = pre_x + k(2) * u(1)
 		my.z = pre_x + k(2) * u(2)
+
+		if not is_step() then
+			my.X = pre_x + k(0) * u(0)
+			my.y = pre_x + k(0) * u(1)
+			my.z = pre_x + k(0) * u(2)
+
+			if not is_step() then
+				my.X = pre_x + k(1) * u(0)
+				my.y = pre_x + k(1) * u(1)
+				my.z = pre_x + k(1) * u(2)
+			end if
+		end if
 	elseif k(1) < k(2) and k(2) < k(0) then
 		my.X = pre_x + k(0) * u(0)
 		my.y = pre_x + k(0) * u(1)
 		my.z = pre_x + k(0) * u(2)
+
+		if not is_step() then
+			my.X = pre_x + k(2) * u(0)
+			my.y = pre_x + k(2) * u(1)
+			my.z = pre_x + k(2) * u(2)
+
+			if not is_step() then
+				my.X = pre_x + k(1) * u(0)
+				my.y = pre_x + k(1) * u(1)
+				my.z = pre_x + k(1) * u(2)
+			end if
+		end if
 	elseif k(2) < k(0) and k(0) < k(1) then
 		my.X = pre_x + k(1) * u(0)
 		my.y = pre_x + k(1) * u(1)
 		my.z = pre_x + k(1) * u(2)
+
+		if not is_step() then
+			my.X = pre_x + k(0) * u(0)
+			my.y = pre_x + k(0) * u(1)
+			my.z = pre_x + k(0) * u(2)
+
+			if not is_step() then
+				my.X = pre_x + k(2) * u(0)
+				my.y = pre_x + k(2) * u(1)
+				my.z = pre_x + k(2) * u(2)
+			end if
+		end if
 	else			
 		my.X = pre_x + k(0) * u(0)
 		my.y = pre_x + k(0) * u(1)
 		my.z = pre_x + k(0) * u(2)
+
+		if not is_step() then
+			my.X = pre_x + k(1) * u(0)
+			my.y = pre_x + k(1) * u(1)
+			my.z = pre_x + k(1) * u(2)
+
+			if not is_step() then
+				my.X = pre_x + k(2) * u(0)
+				my.y = pre_x + k(2) * u(1)
+				my.z = pre_x + k(2) * u(2)
+			end if
+		end if
 	end if
 }
 
@@ -1412,7 +1484,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - y )^2 )
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
-	return ret
+	return re
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1686,7 +1758,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -1745,7 +1817,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
