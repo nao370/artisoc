@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(100, 170, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(80, 120, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -39,17 +39,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[100][170][1] As Integer = (17000*0);
-        AgtType camera(0, 0)[1] {
-            Dim ID(0, 0) As Integer = (0);
-            Dim X(0, 0) As Double = (0.0);
-            Dim Y(0, 0) As Double = (0.0);
-            Dim Z(0, 0) As Double = (0.0);
-            Dim Layer(0, 0) As Integer = (0);
-            Dim Direction(0, 0) As Double = (0.0);
-            Dim Angle(0, 0) As Double = (0.0);
-        }
-        Dim is_void(0, 0)[100][170][1] As Boolean = (17000*0);
+        Dim fin(0, 0)[80][120][1] As Integer = (9600*0);
+        Dim is_void(0, 0)[80][120][1] As Boolean = (9600*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) As Integer = (0);
@@ -60,9 +51,8 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
-    UNIVERSE.MAP.IS_VOID = 1(17000*0);
-    UNIVERSE.MAP.INSECT.X = 1(0.0);
-    UNIVERSE.MAP.INSECT.Y = 1(0.0);
+    UNIVERSE.MAP.INSECT.X = 1(1.0);
+    UNIVERSE.MAP.INSECT.Y = 1(1.0);
     UNIVERSE.MAP.INSECT.Z = 1(0.0);
     UNIVERSE.MAP.INSECT.LAYER = 1(0);
     UNIVERSE.MAP.INSECT.DIRECTION = 1(0.0);
@@ -84,7 +74,7 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.01)
+	make_rubble_mix(0.1)
 	println("start")
 }
 
@@ -341,7 +331,7 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 	end if
 
 	return ret
-}
+	}
 #end_rule UNIVERSE
 
 
@@ -357,7 +347,9 @@ Include "surface.inc"
 Include "calculate.inc"
 */
 Agt_Init{
-my.Direction = 60 + rnd()* 10 -5 
+my.Direction = 60 + rnd()* 10 -5
+my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
+my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 }
 
 Agt_Step{
@@ -369,6 +361,11 @@ Agt_Step{
 		end if
 	end if
 	forward_step()
+
+	PrintLn("myX is "&my.X)
+	PrintLn("myY is "&my.Y)
+	PrintLn("myZ is "&my.Z)
+			
 }
 
 
@@ -376,7 +373,7 @@ sub forward_step() {
 
 	step_direction()
 	
-	Do Until step_direction()
+	Do Until is_step()
 		my.tmp_position(0) = my.X
 		my.tmp_position(1) = my.Y
 		my.tmp_position(2) = my.Z
@@ -427,54 +424,86 @@ function is_step() as Boolean{
 					ret = true
 				end if
 			else
-				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
-					ret = false
-				else
+				if nz == 0 then
 					ret = true
+				else
+					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
+						ret = false
+					else
+						ret = true
+					end if
 				end if
 			end if
 		else
 			if my.Z > nz then
-				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
-					ret = false
-				else
+				if ny == 0 then
 					ret = true
+				else
+					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
+						ret = false
+					else
+						ret = true
+					end if
 				end if
 			else
-				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
-					ret = false
-				else
+				if nz == 0 or ny == 0 then
 					ret = true
+				else
+					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
+						ret = false
+					else
+						ret = true
+					end if
 				end if
 			end if		
 		end if
 	else
 		if my.Y > ny then	
 			if my.Z > nz then
-				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz+1) then
-					ret = false
-				else
+				if  nz == 0 then
 					ret = true
+				else
+					if universe.map.is_void(nx-1,ny,nz) then
+						ret = false
+					else
+						if universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz+1) then
+							ret = false
+						else
+							ret = true
+						end if
+					end if
 				end if
 			else
-				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
-					ret = false
-				else
+				if  nx == 0 or nz == 0 then
 					ret = true
+				else
+					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
+						ret = false
+					else
+						ret = true
+					end if
 				end if
 			end if
 		else
 			if my.Z > nz then
-				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
-					ret = false
-				else
+				if nx == 0 or ny == 0 then
 					ret = true
+				else
+					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
+						ret = false
+					else
+						ret = true
+					end if
 				end if
 			else
-				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
-					ret = false
-				else
+				if nx == 0 or ny == 0 or nz == 0 then
 					ret = true
+				else
+					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
+						ret = false
+					else
+						ret = true
+					end if
 				end if
 			end if		
 		end if	
@@ -856,10 +885,17 @@ function is_appear_surface() as Boolean{
 	ny = Int(my.Y)
 	nz = Int(my.Z)
 	nx = Int(my.X)
+		PrintLn("myX is "&my.X)
+	PrintLn("myY is "&my.Y)
+	PrintLn("myZ is "&my.Z)
+		
+	PrintLn("nx "&nx)
+		PrintLn("ny "&ny)
+			PrintLn("nz "&nz)
 
-	if nx==0 or ny ==0 or nz == 0 or nx == GetWidthSpace(universe.map) - 1 or ny == GetheightSpace(universe.map) - 1 then
+/*	if nx==0 or ny ==0 or nz == 0 or nx == GetWidthSpace(universe.map) - 1 or ny == GetheightSpace(universe.map) - 1 then
 		return false
-	end if
+	end if*/
 
 	if axis == 0 then
 		if nx == my.X then
@@ -884,85 +920,93 @@ function is_appear_surface() as Boolean{
 			ret = false
 		end if
 	elseif axis == 1 then
-		if nx == my.X then
-			if my.forward_vector(0) > 0 then
-				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx+1,ny+1,nz) then
-					ret = true
-					my.angle_surface = 90
-					my.b_type = 1
-				else
-					ret = false
-				end if
-			else
-				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx-1,ny+1,nz) then
-					ret = true
-					my.angle_surface = 270
-					my.b_type = 1
-				else
-					ret = false
-				end if
-			end if
-		elseif ny == my.Y then
-			if my.forward_vector(1) > 0 then
-				if universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx+1,ny,nz) then
-					ret = true
-					my.angle_surface = 270
-					my.b_type = 0
-				else
-					ret = false
-				end if
-			else
-				if universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx+1,ny-1,nz) then
-					ret = true
-					my.angle_surface = 90
-					my.b_type = 0
-				else
-					ret = false
-				end if
-			end if
-		else
+		if nx == 0 or ny == 0 or nx == GetWidthSpace(universe.map) - 1 or ny == GetheightSpace(universe.map) - 1 then
 			ret = false
+		else
+			if nx == my.X then
+				if my.forward_vector(0) > 0 then
+					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx+1,ny+1,nz) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type = 1
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx-1,ny+1,nz) then
+						ret = true
+						my.angle_surface = 270
+						my.b_type = 1
+					else
+						ret = false
+					end if
+				end if
+			elseif ny == my.Y then
+				if my.forward_vector(1) > 0 then
+					if universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx+1,ny,nz) then
+						ret = true
+						my.angle_surface = 270
+						my.b_type = 0
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx+1,ny-1,nz) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type = 0
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if
 		end if
 	elseif axis == 2 then	
-		if nx == my.X then
-			if my.forward_vector(0) > 0 then
-				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx+1,ny,nz+1) then
-					ret = true
-					my.angle_surface = 90
-					my.b_type =2
-				else
-					ret = false
-				end if
-			else
-				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx-1,ny,nz+1) then
-					ret = true
-					my.angle_surface = 270
-					my.b_type = 2
-				else
-					ret = false
-				end if
-			end if
-		elseif nz == my.Z then
-			if my.forward_vector(2) > 0 then
-				if universe.map.is_void(nx,ny,nz+1) or universe.map.is_void(nx+1,ny,nz+1) then
-					ret = true
-					my.angle_surface = 270
-					my.b_type = 0
-				else
-					ret = false
-				end if
-			else
-				if universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx+1,ny,nz-1) then
-					ret = true
-					my.angle_surface = 90
-					my.b_type = 0
-				else
-					ret = false
-				end if
-			end if
-		else
+		if nx == 0 or nz == 0 or nx == GetWidthSpace(universe.map) -1 then
 			ret = false
-		end if	
+		else
+			if nx == my.X then
+				if my.forward_vector(0) > 0 then
+					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx+1,ny,nz+1) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =2
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx-1,ny,nz+1) then
+						ret = true
+						my.angle_surface = 270
+						my.b_type = 2
+					else
+						ret = false
+					end if
+				end if
+			elseif nz == my.Z then
+				if my.forward_vector(2) > 0 then
+					if universe.map.is_void(nx,ny,nz+1) or universe.map.is_void(nx+1,ny,nz+1) then
+						ret = true
+						my.angle_surface = 270
+						my.b_type = 0
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx+1,ny,nz-1) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type = 0
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if	
+		end if
 	elseif axis == 3 then
 		if ny == my.Y then
 			if my.forward_vector(1) > 0 then
@@ -984,47 +1028,51 @@ function is_appear_surface() as Boolean{
 			end if
 		else
 			ret = false
-		end if	
+		end if
 	elseif axis == 4 then
-		if ny == my.y then
-			if my.forward_vector(1) > 0 then
-				if universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny+1,nz+1) then
-					ret = true
-					my.angle_surface = 90
-					my.b_type =2
-				else
-					ret = false
-				end if
-			else
-				if universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny-1,nz+1) then
-					ret = true
-					my.angle_surface = 270
-					my.b_type =2
-				else
-					ret = false
-				end if
-			end if
-		elseif nz == my.Z then
-			if my.forward_vector(2) > 0 then
-				if universe.map.is_void(nx,ny,nz+1) or universe.map.is_void(nx,ny+1,nz) then
-					ret = true
-					my.angle_surface = 270
-					my.b_type =1
-				else
-					ret = false
-				end if
-			else
-				if universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx,ny+1,nz-1) then
-					ret = true
-					my.angle_surface = 90
-					my.b_type =1
-				else
-					ret = false
-				end if
-			end if
-		else
+		if ny == 0 or nz == 0 or ny == GetHeightSpace(universe.map) -1 then
 			ret = false
-		end if		
+		else
+			if ny == my.y then
+				if my.forward_vector(1) > 0 then
+					if universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny+1,nz+1) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =2
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny-1,nz+1) then
+						ret = true
+						my.angle_surface = 270
+						my.b_type =2
+					else
+						ret = false
+					end if
+				end if
+			elseif nz == my.Z then
+				if my.forward_vector(2) > 0 then
+					if universe.map.is_void(nx,ny,nz+1) or universe.map.is_void(nx,ny+1,nz) then
+						ret = true
+						my.angle_surface = 270
+						my.b_type =1
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx,ny+1,nz-1) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =1
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if		
+		end if
 	else
 		if nz == my.Z then
 			if my.forward_vector(1) > 0 then
@@ -1064,148 +1112,172 @@ function is_disappear_surface() as Boolean{
 	nz = Int(my.Z)
 	nx = Int(my.X)
 
-	if nx==0 or ny ==0 or nz == 0 or nx == GetWidthSpace(universe.map) - 1 or ny == GetheightSpace(universe.map) - 1 then
+/*	if nx==0 or ny ==0 or nz == 0 or nx == GetWidthSpace(universe.map) - 1 or ny == GetheightSpace(universe.map) - 1 then
 		return false
-	end if
+	end if*/
 
 
 	if axis == 0 then
 		if nx == my.X then
-			if not universe.map.is_void(nx,ny,nz-my.normal_vector(2)) then
-				ret = true
-				my.angle_surface = -1
-				my.b_type = 5
+			if nz == 0 or ny == 0 then
+				ret = false
 			else
-				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
+				if not universe.map.is_void(nx,ny,nz-my.normal_vector(2)) then
 					ret = true
 					my.angle_surface = -1
 					my.b_type = 5
 				else
-				 ret = false
+					if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type = 5
+					else
+					 ret = false
+					end if
 				end if
 			end if
 		else
 			ret = false
 		end if
 	elseif axis == 1 then
-		if nx == my.X then
-			if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) then
-				ret = true
-				if my.normal_vector(2) * my.forward_vector(0) > 0  then
-					my.angle_surface = 270
-				else
-					my.angle_surface = 90
-				end if
-				my.b_type = 1
-			else
-				ret = false
-			end if
-		elseif ny == my.Y then
-			if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) then
-				ret = true
-				if my.normal_vector(2) > 0 * my.forward_vector(1) > 0 then
-					my.angle_surface = 270
-				else
-					my.angle_surface = 90
-				end if
-				my.b_type = 0
-			else
-				ret = false
-			end if
-		else
+		if nz == 0 then
 			ret = false
+		else
+			if nx == my.X then
+				if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) then
+					ret = true
+					if my.normal_vector(2) * my.forward_vector(0) > 0  then
+						my.angle_surface = 270
+					else
+						my.angle_surface = 90
+					end if
+					my.b_type = 1
+				else
+					ret = false
+				end if
+			elseif ny == my.Y then
+				if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) then
+					ret = true
+					if my.normal_vector(2) > 0 * my.forward_vector(1) > 0 then
+						my.angle_surface = 270
+					else
+						my.angle_surface = 90
+					end if
+					my.b_type = 0
+				else
+					ret = false
+				end if
+			else
+				ret = false
+			end if
 		end if
 	elseif axis == 2 then
-		if nx == my.X then
-			if not universe.map.is_void(nx,ny - my.normal_vector(1),nz) then
-				ret = true
-				if my.normal_vector(1) * my.forward_vector(0) > 0  then
-					my.angle_surface = 270
-				else
-					my.angle_surface = 90
-				end if
-				my.b_type = 2
-			else
-				ret = false
-			end if
-		elseif nz == my.Z then
-			if not universe.map.is_void(nx,ny - my.normal_vector(1),nz) then
-				ret = true
-				if my.normal_vector(1) > 0 * my.forward_vector(2) > 0 then
-					my.angle_surface = 270
-				else
-					my.angle_surface = 90
-				end if
-				my.b_type = 0
-			else
-				ret = false
-			end if
-		else
+		if ny == 0 then
 			ret = false
-		end if	
-	elseif axis == 3 then
-		if nx == my.X then
-			if not universe.map.is_void(nx,ny,nz-my.normal_vector(2)) then
-				ret = true
-				my.angle_surface = -1
-				my.b_type = 5
+		else
+			if nx == my.X then
+				if not universe.map.is_void(nx,ny - my.normal_vector(1),nz) then
+					ret = true
+					if my.normal_vector(1) * my.forward_vector(0) > 0  then
+						my.angle_surface = 270
+					else
+						my.angle_surface = 90
+					end if
+					my.b_type = 2
+				else
+					ret = false
+				end if
+			elseif nz == my.Z then
+				if not universe.map.is_void(nx,ny - my.normal_vector(1),nz) then
+					ret = true
+					if my.normal_vector(1) > 0 * my.forward_vector(2) > 0 then
+						my.angle_surface = 270
+					else
+						my.angle_surface = 90
+					end if
+					my.b_type = 0
+				else
+					ret = false
+				end if
 			else
-				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
+				ret = false
+			end if	
+		end if
+	elseif axis == 3 then
+		if nz == 0 or ny ==0 then
+			ret = false
+		else
+			if nx == my.X then
+				if not universe.map.is_void(nx,ny,nz-my.normal_vector(2)) then
 					ret = true
 					my.angle_surface = -1
 					my.b_type = 5
 				else
-					ret = false
+					if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type = 5
+					else
+						ret = false
+					end if
 				end if
+			else
+				ret = false
 			end if
-		else
-			ret = false
 		end if
 	elseif axis == 4 then
-		if ny == my.Y then
-			if not universe.map.is_void(nx-my.normal_vector(0),ny,nz) then
-				ret = true
-				if my.normal_vector(0) * my.forward_vector(1) > 0  then
-					my.angle_surface = 270
-				else
-					my.angle_surface = 90
-				end if
-				my.b_type = 2
-			else
-				ret = false
-			end if
-		elseif nz == my.Z then
-			if not universe.map.is_void(nx - my.normal_vector(0),ny,nz) then
-				ret = true
-				if my.normal_vector(0) > 0 * my.forward_vector(2) > 0 then
-					my.angle_surface = 270
-				else
-					my.angle_surface = 90
-				end if
-				my.b_type = 1
-			else
-				ret = false
-			end if
-		else
+		if nx == 0 then
 			ret = false
-		end if	
-	else
-		if nx == my.X then
-			if not universe.map.is_void(nx,ny,nz-my.normal_vector(2)) then
-				ret = true
-				my.angle_surface = -1
-				my.b_type = 5
+		else
+			if ny == my.Y then
+				if not universe.map.is_void(nx-my.normal_vector(0),ny,nz) then
+					ret = true
+					if my.normal_vector(0) * my.forward_vector(1) > 0  then
+						my.angle_surface = 270
+					else
+						my.angle_surface = 90
+					end if
+					my.b_type = 2
+				else
+					ret = false
+				end if
+			elseif nz == my.Z then
+				if not universe.map.is_void(nx - my.normal_vector(0),ny,nz) then
+					ret = true
+					if my.normal_vector(0) > 0 * my.forward_vector(2) > 0 then
+						my.angle_surface = 270
+					else
+						my.angle_surface = 90
+					end if
+					my.b_type = 1
+				else
+					ret = false
+				end if
 			else
-				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
+				ret = false
+			end if	
+		end if
+	else
+		if nz == 0 or ny == 0 then
+			ret = false
+		else
+			if nx == my.X then
+				if not universe.map.is_void(nx,ny,nz-my.normal_vector(2)) then
 					ret = true
 					my.angle_surface = -1
 					my.b_type = 5
 				else
-					ret = false
+					if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type = 5
+					else
+						ret = false
+					end if
 				end if
+			else
+				ret = false
 			end if
-		else
-			ret = false
 		end if
 	end if		
 	
@@ -1290,7 +1362,6 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
 	return ret
-}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1308,23 +1379,6 @@ Agt_Step{
 
 }
 #end_rule UNIVERSE.MAP.BARRIER
-
-
-
-
-//-------------------------------------------------------
-// Agent Rule
-//-------------------------------------------------------
-#begin_rule UNIVERSE.MAP.CAMERA
-Agt_Init{
-
-}
-
-Agt_Step{
-	my.X = universe.map.insect(0).X -2
-	my.Y = universe.map.insect(0).Y
-	my.Z = universe.map.insect(0).Z+2
-#end_rule UNIVERSE.MAP.CAMERA
 
 
 
@@ -1385,7 +1439,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 100, 170;
+    Draw_Range = 0, 0, 80, 120;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
@@ -1605,8 +1659,8 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 801;
-    Console_Position_y = -9;
+    Console_Position_x = 797;
+    Console_Position_y = 67;
     Console_Size_x = 607;
     Console_Size_y = 620;
     Componen_Tree_Position_x = 840;
@@ -1642,7 +1696,7 @@ Network_Info {
 Window_Rectangle {
     Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Artisoc_Help_Window, 419, 36, 879, 306;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
