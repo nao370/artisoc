@@ -331,6 +331,7 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 	end if
 
 	return ret
+	}
 #end_rule UNIVERSE
 
 
@@ -553,10 +554,20 @@ sub back_step(){
 	dim pre_z as Double
 	dim u(3) as Double
 	dim k(3) as Double
-		
+
+	println("¡‚¢‚éêŠ")
+	println("x ;" & my.X)
+	println("y ;" & my.y)
+	println("z ;" & my.z)
+			
 	pre_x = my.tmp_position(0)
 	pre_y = my.tmp_position(1)
 	pre_z = my.tmp_position(2)
+
+	println("‚³‚Á‚«‚¢‚½êŠ")
+	println("x ;" & pre_x)
+	println("y ;" & pre_y)
+	println("z ;" & pre_z)
 
 	k(0) = 1
 	k(1) = 1
