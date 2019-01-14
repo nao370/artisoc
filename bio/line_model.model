@@ -15,9 +15,9 @@ UNIVERSE {
     Space map(0,0),Square_2D(100, 170, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
-            Dim X(0, 0) <2>  As Double = (0.0);
+            Dim X(0, 0) <2>  As Double = ();
             Dim Y(0, 0) <2>  As Double = (0.0);
-            Dim Z(0, 0) <2>  As Double = (0.0);
+            Dim Z(0, 0) <2>  As Double = ();
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
@@ -27,7 +27,8 @@ UNIVERSE {
             Dim angle_surface(0, 0) As Double = (0.0);
             Dim b_type(0, 0) As Integer = (0);
             Dim matrix(0, 0)[3][3][3] As Double = (27*0.0);
-            Dim normal_vector(0, 0)[3] As Double = (3*0.0);
+            Dim normal_vector(0, 0)[3] As Double = ();
+            Dim tmp_position(0, 0)[3] As Double = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -60,7 +61,20 @@ UNIVERSE {
 //-------------------------------------------------------
 Initial_Value {
     UNIVERSE.MAP.IS_VOID = 1(17000*0);
+    UNIVERSE.MAP.INSECT.X = 1(0.0);
+    UNIVERSE.MAP.INSECT.Y = 1(0.0);
+    UNIVERSE.MAP.INSECT.Z = 1(0.0);
+    UNIVERSE.MAP.INSECT.LAYER = 1(0);
+    UNIVERSE.MAP.INSECT.DIRECTION = 1(0.0);
     UNIVERSE.MAP.INSECT.ANGLE = 1(0.0);
+    UNIVERSE.MAP.INSECT.NEXT_VECTOR = 1(27*0.0);
+    UNIVERSE.MAP.INSECT.FORWARD_VECTOR = 1(3*0.0);
+    UNIVERSE.MAP.INSECT.BASE_VECTOR = 1(3*0.0);
+    UNIVERSE.MAP.INSECT.ANGLE_SURFACE = 1(0.0);
+    UNIVERSE.MAP.INSECT.B_TYPE = 1(0);
+    UNIVERSE.MAP.INSECT.MATRIX = 1(27*0.0);
+    UNIVERSE.MAP.INSECT.NORMAL_VECTOR = 1(2*0.0, 1.0);
+    UNIVERSE.MAP.INSECT.TMP_POSITION = 1(3*0.0);
 }
 
 
@@ -344,9 +358,6 @@ Include "calculate.inc"
 
 Agt_Init{
 my.Direction = rnd() * 360
-my.normal_vector(0) = 0
-my.normal_vector(1) = 0
-my.normal_vector(2) = 1
 }
 
 Agt_Step{
@@ -362,6 +373,192 @@ Agt_Step{
 
 
 sub forward_step() {
+
+	step_direction()
+	
+	Do Until step_direction()
+		my.tmp_position(0) = my.X
+		my.tmp_position(1) = my.Y
+		my.tmp_position(2) = my.Z
+		back_step()
+	Loop
+}
+
+sub step_direction(){
+	my.X = my.X + my.forward_vector(0)
+	my.Y = my.Y + my.forward_vector(1)
+	my.Z = my.Z + my.forward_vector(2)
+
+}
+
+function is_step() as Boolean{
+	dim nx as Integer
+	dim ny as Integer
+	dim nz as Integer
+	dim diff_x as Double
+	dim diff_y as Double
+	dim diff_z as Double
+	dim ret as Boolean
+		
+	nx = Int(my.X)
+	ny = Int(my.Y)
+	nz = Int(my.Z)
+
+	diff_x = my.X - nx
+	diff_y = my.y - ny
+	diff_z = my.z - nz
+
+	if diff_x >= 0.5 then
+		nx = nx + 1
+	end if
+	if diff_y >= 0.5 then
+		ny = ny + 1
+	end if			
+	if diff_z >= 0.5 then
+		nz = nz + 1
+	end if
+
+	if my.X > nx then
+		if my.Y > ny then	
+			if my.Z > nz then
+				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz+1) then
+					ret = false
+				else
+					ret = true
+				end if
+			else
+				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
+					ret = false
+				else
+					ret = true
+				end if
+			end if
+		else
+			if my.Z > nz then
+				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
+					ret = false
+				else
+					ret = true
+				end if
+			else
+				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
+					ret = false
+				else
+					ret = true
+				end if
+			end if		
+		end if
+	else
+		if my.Y > ny then	
+			if my.Z > nz then
+				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz+1) then
+					ret = false
+				else
+					ret = true
+				end if
+			else
+				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
+					ret = false
+				else
+					ret = true
+				end if
+			end if
+		else
+			if my.Z > nz then
+				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
+					ret = false
+				else
+					ret = true
+				end if
+			else
+				if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
+					ret = false
+				else
+					ret = true
+				end if
+			end if		
+		end if	
+	end if	
+
+	return ret
+}
+
+sub back_step(){
+	dim nx as Integer
+	dim ny as Integer
+	dim nz as Integer
+	dim diff_x as Double
+	dim diff_y as Double
+	dim diff_z as Double
+	dim pre_x as Double
+	dim pre_y as Double
+	dim pre_z as Double
+	dim u(3) as Double
+	dim k(3) as Double
+		
+	pre_x = my.tmp_position(0)
+	pre_y = my.tmp_position(1)
+	pre_z = my.tmp_position(2)
+
+	u(0) = my.X - pre_x
+	u(1) = my.y - pre_y
+	u(2) = my.z - pre_z
+
+	nx = Int(my.X)
+	ny = Int(my.Y)
+	nz = Int(my.Z)
+
+	diff_x = my.X - nx
+	diff_y = my.y - ny
+	diff_z = my.z - nz
+
+	if diff_x >= 0.5 then
+		nx = nx + 1
+	end if
+	if diff_y >= 0.5 then
+		ny = ny + 1
+	end if			
+	if diff_z >= 0.5 then
+		nz = nz + 1
+	end if
+
+	k(0) = ( nx - my.X ) / u(0)
+	k(1) = ( ny - my.y ) / u(1)
+	k(2) = ( nz - my.z ) / u(2)
+
+	if k(0) >= 1 then
+		k(0) = 0
+	elseif k(1) >= 1 then
+		k(1) = 0
+	elseif k(2) >= 2 then
+		k(2) = 0
+	end if
+
+	if k(0) < k(1) and k(1) < k(2) then
+		my.X = pre_x + k(2) * u(0)
+		my.y = pre_x + k(2) * u(1)
+		my.z = pre_x + k(2) * u(2)
+	elseif k(0) < k(2) and k(2) < k(1) then
+		my.X = pre_x + k(1) * u(0)
+		my.y = pre_x + k(1) * u(1)
+		my.z = pre_x + k(1) * u(2)
+	elseif k(1) < k(0) and k(0) < k(2) then
+		my.X = pre_x + k(2) * u(0)
+		my.y = pre_x + k(2) * u(1)
+		my.z = pre_x + k(2) * u(2)
+	elseif k(1) < k(2) and k(2) < k(0) then
+		my.X = pre_x + k(0) * u(0)
+		my.y = pre_x + k(0) * u(1)
+		my.z = pre_x + k(0) * u(2)
+	elseif k(2) < k(0) and k(0) < k(1) then
+		my.X = pre_x + k(1) * u(0)
+		my.y = pre_x + k(1) * u(1)
+		my.z = pre_x + k(1) * u(2)
+	else			
+		my.X = pre_x + k(0) * u(0)
+		my.y = pre_x + k(0) * u(1)
+		my.z = pre_x + k(0) * u(2)
+	end if
 }
 
 
@@ -722,7 +919,7 @@ Network_Info {
 Window_Rectangle {
     Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 1435, 385;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
