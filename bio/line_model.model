@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(40, 80, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(20, 40, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -39,8 +39,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[40][80][1] As Integer = (3200*0);
-        Dim is_void(0, 0)[40][80][1] As Boolean = (3200*0);
+        Dim fin(0, 0)[20][40][1] As Integer = (3200*0);
+        Dim is_void(0, 0)[20][40][16] As Boolean = ();
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) As Integer = (0);
@@ -74,8 +74,55 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.1)
+	make_rubble_mix(0.2)
+//	make_void()
+	write_void()
+	println("")
 	println("start")
+}
+
+sub make_void(){
+dim i as Integer
+dim j as Integer
+dim k as Integer
+dim one as Agt
+dim tmp as AgtSet
+
+MakeAgtSet(tmp,universe.map.barrier)
+
+for each one in tmp
+	i = one.X
+	j = one.Y
+	k = one.Z
+	if not SpecifyKillAgt(one) then
+		universe.map.is_void(i,j,k) = true
+	end if
+next one
+
+
+/*for k = 0 to 16
+for j = 0 to GetHeightSpace(universe.map) -1
+for i = 0 to GetWidthSpace(universe.map) -1
+next i
+next j
+next k
+*/
+}
+
+sub write_void(){
+dim i as Integer
+dim j as Integer
+
+for j = 0 to GetHeightSpace(universe.map) -1
+for i = 0 to GetWidthSpace(universe.map) -1
+if universe.map.is_void(i,j,0) then
+print("■")
+else
+print("□")
+end if
+next i
+println("")
+next j
 }
 
 Univ_Step_Begin{
@@ -137,7 +184,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 
 	ret = 64
 	set = CreateAgtMulti(universe.map.barrier,64)
-	if pattern == 0 and x<= GetWidthSpace(universe.map) -8 and y <= GetHeightSpace(universe.map) - 8 then //水平に置く
+	if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //水平に置く
 		for each one in set
 			t = GetAgtEntry(set,one)
 			c = t / 8
@@ -147,13 +194,13 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				one.X = x + b
 				one.Y = y + c
 				one.Z = z
-				universe.map.is_void(one.x,one.y,one.z) = true
+				universe.map.is_void(x+b,y+c,z) = true
 			else
 				KillAgt(one)
 				ret = ret - 1
 			end if
 		next one
-	elseif pattern == 1 and y <= GetHeightSpace(universe.map) - 8 and z <= 16 - 8 then // 縦長に置く
+	elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 16 - 8 then // 縦長に置く
 		for each one in set
 			t = GetAgtEntry(set,one)
 			a = t / 8
@@ -163,23 +210,23 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				one.X = x
 				one.Y = y + b
 				one.Z = z + a
-				universe.map.is_void(one.x,one.y,one.z) = true
+				universe.map.is_void(x,y+b,z+a) = true
 			else
 				KillAgt(one)
 				ret = ret - 1
 			end if
 		next one
-	elseif pattern == 2 and x<= GetWidthSpace(universe.map) -8 and z <= 16 - 8 then // 横長に置く
+	elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 16 - 8 then // 横長に置く
 		for each one in set
 			t = GetAgtEntry(set,one)
 			a = t / 8
-			b = t Mod 8
-			MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y,0,0,universe.map.barrier)
+			c = t Mod 8
+			MakeOneAgtSetAroundPosition(temp,universe.map,x+c,y,0,0,universe.map.barrier)
 			if is_void(temp,z+a) then
-				one.X = x + b
+				one.X = x + c
 				one.Y = y
 				one.Z = z + a
-				universe.map.is_void(one.x,one.y,one.z) = true
+				universe.map.is_void(x+c,y,z+a) = true
 			else
 				KillAgt(one)
 				ret = ret - 1
@@ -218,7 +265,7 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 		  		one.X = x + b
 		  		one.Y = y + c
 		  		one.Z = z + a
-		  		universe.map.is_void(one.x,one.y,one.z) = true
+		  		universe.map.is_void(x+b,y+c,z+a) = true
 		  	else
 					KillAgt(one)
 					ret = ret - 1		  		
@@ -259,7 +306,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		  		one.X = x + b
 		  		one.Y = y + c
 		  		one.Z = z + a
-		  		universe.map.is_void(one.x,one.y,one.z) = true
+		  		universe.map.is_void(x+b,y+c,z+a) = true
 		  	else
 					KillAgt(one)
 					ret = ret - 1		  		
@@ -280,7 +327,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	  			one.X = x + b
  		 			one.Y = y + c
  		 			one.Z = z + a
- 		 			universe.map.is_void(one.x,one.y,one.z) = true
+ 		 			universe.map.is_void(x+b,y+c,z+a) = true
  		 		else
 					KillAgt(one)
 					ret = ret - 1		  	 		 		
@@ -300,7 +347,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	  			one.X = x + b
  		 			one.Y = y + c
  		 			one.Z = z + a
- 		 			universe.map.is_void(one.x,one.y,one.z) = true
+ 		 			universe.map.is_void(x+b,y+c,z+a) = true
  		 		else
 					KillAgt(one)
 					ret = ret - 1		  	 		 		
@@ -373,7 +420,7 @@ sub forward_step() {
 
 	step_direction()
 	
-	if is_step() then
+	if not is_step() then
 		my.tmp_position(0) = my.X
 		my.tmp_position(1) = my.Y
 		my.tmp_position(2) = my.Z
@@ -580,9 +627,9 @@ sub back_step(){
 	println("y ;" & pre_y)
 	println("z ;" & pre_z)
 
-	k(0) = 1
-	k(1) = 1
-	k(2) = 1
+	k(0) = 0
+	k(1) = 0
+	k(2) = 0
 
 	u(0) = my.X - pre_x
 	u(1) = my.y - pre_y
@@ -620,9 +667,13 @@ sub back_step(){
 		k(0) = 0
 	elseif k(1) >= 1 then
 		k(1) = 0
-	elseif k(2) >= 2 then
+	elseif k(2) >= 1 then
 		k(2) = 0
 	end if
+
+	println("")
+	println("k(0)" & k(0)&"   k(1) ;"&k(1)&"    k(2);"&k(2))
+		println("")
 
 	if k(0) < k(1) and k(1) < k(2) then
 		my.X = pre_x + k(2) * u(0)
@@ -1484,7 +1535,8 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - y )^2 )
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
-	return re
+	return ret
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1545,10 +1597,10 @@ Map_Output {
     Title = "map";
     Disable = No;
     Background_Color = 255, 255, 255;
-    Position_x = 819;
-    Position_y = -2;
-    Size_x = 840;
-    Size_y = 910;
+    Position_x = 0;
+    Position_y = 0;
+    Size_x = 1920;
+    Size_y = 909;
     Map_Cell_Size = 1;
     Remarks = Yes;
     Legend_Pos = Top;
@@ -1562,7 +1614,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 40, 80;
+    Draw_Range = 0, 0, 20, 40;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
@@ -1782,10 +1834,10 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1362;
-    Console_Position_y = 273;
-    Console_Size_x = 607;
-    Console_Size_y = 620;
+    Console_Position_x = 884;
+    Console_Position_y = -3;
+    Console_Size_x = 920;
+    Console_Size_y = 909;
     Componen_Tree_Position_x = 841;
     Componen_Tree_Position_y = 0;
     Componen_Tree_Size_x = 839;
@@ -1819,7 +1871,7 @@ Network_Info {
 Window_Rectangle {
     Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 1297, 326;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
