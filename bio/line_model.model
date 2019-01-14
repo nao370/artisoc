@@ -39,8 +39,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[20][40][1] As Integer = (3200*0);
-        Dim is_void(0, 0)[20][40][16] As Boolean = ();
+        Dim fin(0, 0)[20][40][1] As Integer = (800*0);
+        Dim is_void(0, 0)[20][40][16] As Boolean = (12800*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) As Integer = (0);
@@ -74,39 +74,11 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.2)
+	make_rubble_mix(0.3)
 //	make_void()
 	write_void()
 	println("")
 	println("start")
-}
-
-sub make_void(){
-dim i as Integer
-dim j as Integer
-dim k as Integer
-dim one as Agt
-dim tmp as AgtSet
-
-MakeAgtSet(tmp,universe.map.barrier)
-
-for each one in tmp
-	i = one.X
-	j = one.Y
-	k = one.Z
-	if not SpecifyKillAgt(one) then
-		universe.map.is_void(i,j,k) = true
-	end if
-next one
-
-
-/*for k = 0 to 16
-for j = 0 to GetHeightSpace(universe.map) -1
-for i = 0 to GetWidthSpace(universe.map) -1
-next i
-next j
-next k
-*/
 }
 
 sub write_void(){
@@ -181,6 +153,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	dim set as AgtSet
 	dim temp as AgtSet
 	dim ret as Integer
+	dim flag as Boolean
 
 	ret = 64
 	set = CreateAgtMulti(universe.map.barrier,64)
@@ -195,11 +168,24 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				one.Y = y + c
 				one.Z = z
 				universe.map.is_void(x+b,y+c,z) = true
+				if z == 0 then
+					flag = true
+				else
+					if universe.map.is_void(x+b,y+c,z) then
+						flag = true
+					end if
+				end if
 			else
-				KillAgt(one)
+				DelAgt(one)
 				ret = ret - 1
 			end if
 		next one
+		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
 	elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 16 - 8 then // c’·‚É’u‚­
 		for each one in set
 			t = GetAgtEntry(set,one)
@@ -211,11 +197,24 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				one.Y = y + b
 				one.Z = z + a
 				universe.map.is_void(x,y+b,z+a) = true
+				if z+a == 0 then
+					flag = true
+				else
+					if universe.map.is_void(x,y+b,z+a) then
+						flag = true
+					end if
+				end if
 			else
-				KillAgt(one)
+				delagt(one)
 				ret = ret - 1
 			end if
 		next one
+		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
 	elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 16 - 8 then // ‰¡’·‚É’u‚­
 		for each one in set
 			t = GetAgtEntry(set,one)
@@ -227,11 +226,24 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				one.Y = y
 				one.Z = z + a
 				universe.map.is_void(x+c,y,z+a) = true
+				if z+a == 0 then
+					flag = true
+				else
+					if universe.map.is_void(x+c,y,z+a) then
+						flag = true
+					end if
+				end if
 			else
-				KillAgt(one)
+				delagt(one)
 				ret = ret - 1
 			end if
 		next one
+		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
 	else
 		ret = 0
 	end if
@@ -248,6 +260,7 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	dim set as AgtSet
 	dim temp as AgtSet
 	dim ret as integer
+	dim flag as Boolean
 
 	ret = 64
 	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
@@ -266,11 +279,24 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 		  		one.Y = y + c
 		  		one.Z = z + a
 		  		universe.map.is_void(x+b,y+c,z+a) = true
+		  		if z+a == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z+a) then
+							flag = true
+						end if
+					end if
 		  	else
-					KillAgt(one)
+					delagt(one)
 					ret = ret - 1		  		
 		  	end if		  	
 			next one
+			if  not flag then
+				for each one in set
+					DelAgt(one)
+				next one
+				ret = 0
+			end if
 		 end if
 		else
 			ret = 0
@@ -288,6 +314,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	dim t as Integer
 	dim c as Integer
 	dim ret as Integer
+	dim flag as Boolean
 
 	ret = 64
 	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
@@ -307,11 +334,24 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		  		one.Y = y + c
 		  		one.Z = z + a
 		  		universe.map.is_void(x+b,y+c,z+a) = true
+		  		if z+a == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z+a) then
+							flag = true
+						end if
+					end if
 		  	else
-					KillAgt(one)
+					delagt(one)
 					ret = ret - 1		  		
 		  	end if
 	  	next one
+	  	if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
 	  end if	 
 	elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 16 -2 then
 	//c’·‚Ì’Œ‚ðì‚é
@@ -328,11 +368,24 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
  		 			one.Y = y + c
  		 			one.Z = z + a
  		 			universe.map.is_void(x+b,y+c,z+a) = true
+ 		 			if z+a == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z+a) then
+							flag = true
+						end if
+					end if
  		 		else
-					KillAgt(one)
+					delagt(one)
 					ret = ret - 1		  	 		 		
  		 		end if
   		next one
+  		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
   	end if
   elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 16 - 16 then //—§‚Á‚Ä‚é’Œ‚ðì‚é
 		if CountAgtSet(temp) == 0 then
@@ -348,11 +401,24 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
  		 			one.Y = y + c
  		 			one.Z = z + a
  		 			universe.map.is_void(x+b,y+c,z+a) = true
+ 		 			if z+a == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z+a) then
+							flag = true
+						end if
+					end if
  		 		else
-					KillAgt(one)
+					delagt(one)
 					ret = ret - 1		  	 		 		
  		 		end if
   		next one
+  		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
   	end if  
   else
   	ret = 0
@@ -1536,7 +1602,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
 	return ret
-	
+	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1597,10 +1663,10 @@ Map_Output {
     Title = "map";
     Disable = No;
     Background_Color = 255, 255, 255;
-    Position_x = 0;
-    Position_y = 0;
-    Size_x = 1920;
-    Size_y = 909;
+    Position_x = 1369;
+    Position_y = 37;
+    Size_x = 551;
+    Size_y = 872;
     Map_Cell_Size = 1;
     Remarks = Yes;
     Legend_Pos = Top;
@@ -1871,7 +1937,7 @@ Network_Info {
 Window_Rectangle {
     Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 1297, 326;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
