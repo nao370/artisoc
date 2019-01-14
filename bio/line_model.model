@@ -331,7 +331,6 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 	end if
 
 	return ret
-	}
 #end_rule UNIVERSE
 
 
@@ -425,7 +424,12 @@ function is_step() as Boolean{
 				end if
 			else
 				if nz == 0 then
-					ret = true
+					//ret = true
+					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) then
+						ret = false
+					else
+						ret = true
+					end if
 				else
 					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
 						ret = false
@@ -437,7 +441,12 @@ function is_step() as Boolean{
 		else
 			if my.Z > nz then
 				if ny == 0 then
-					ret = true
+					//ret = true
+					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny,nz+1) then
+						ret = false
+					else
+						ret = true
+					end if
 				else
 					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
 						ret = false
@@ -447,7 +456,12 @@ function is_step() as Boolean{
 				end if
 			else
 				if nz == 0 or ny == 0 then
-					ret = true
+					//ret = true
+					if universe.map.is_void(nx+1,ny,nz) then
+						ret = false
+					else
+						ret = true
+					end if
 				else
 					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
 						ret = false
@@ -460,8 +474,13 @@ function is_step() as Boolean{
 	else
 		if my.Y > ny then	
 			if my.Z > nz then
-				if  nz == 0 then
-					ret = true
+				if  nx == 0 then
+					//ret = true
+					if universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz+1) then
+						ret = false
+					else
+						ret = true
+					end if
 				else
 					if universe.map.is_void(nx-1,ny,nz) then
 						ret = false
@@ -475,7 +494,12 @@ function is_step() as Boolean{
 				end if
 			else
 				if  nx == 0 or nz == 0 then
-					ret = true
+					//ret = true
+					if universe.map.is_void(nx,ny+1,nz) then
+						ret = false
+					else
+						ret = true
+					end if
 				else
 					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
 						ret = false
@@ -487,7 +511,12 @@ function is_step() as Boolean{
 		else
 			if my.Z > nz then
 				if nx == 0 or ny == 0 then
-					ret = true
+					//ret = true
+					if universe.map.is_void(nx,ny,nz+1) then
+						ret = false
+					else
+						ret = true
+					end if
 				else
 					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
 						ret = false
@@ -712,13 +741,13 @@ sub store_vector(type as Integer,angle as Double){
 		end if
 	else
 		if type == 0 then
-			my.forward_vector(0,0) = 1
-			my.forward_vector(0,1) = 0
-			my.forward_vector(0,2) = 0
+			my.next_vector(0,0) = 1
+			my.next_vector(0,1) = 0
+			my.next_vector(0,2) = 0
 
-			my.forward_vector(1,0) = -1
-			my.forward_vector(1,1) = 0
-			my.forward_vector(1,2) = 0
+			my.next_vector(1,0) = -1
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
 			
 			u(0) = 1
 			u(1) = 0
@@ -731,17 +760,17 @@ sub store_vector(type as Integer,angle as Double){
 			x(2) = my.matrix(2,0) * my.forward_vector(0) + my.matrix(2,1) * my.forward_vector(1) + my.matrix(2,2) * my.forward_vector(2)
 
 			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
-			my.forward_vector(2,0) = x(0) / length
-			my.forward_vector(2,1) = x(1) / length
-			my.forward_vector(2,2) = x(2) / length
+			my.next_vector(2,0) = x(0) / length
+			my.next_vector(2,1) = x(1) / length
+			my.next_vector(2,2) = x(2) / length
 		elseif type == 1 then
-			my.forward_vector(0,0) = 0
-			my.forward_vector(0,1) = 1
-			my.forward_vector(0,2) = 0
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 1
+			my.next_vector(0,2) = 0
 
-			my.forward_vector(1,0) = 0
-			my.forward_vector(1,1) = -1
-			my.forward_vector(1,2) = 0
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = -1
+			my.next_vector(1,2) = 0
 			
 			u(0) = 0
 			u(1) = 1
@@ -754,17 +783,17 @@ sub store_vector(type as Integer,angle as Double){
 			x(2) = my.matrix(2,0) * my.forward_vector(0) + my.matrix(2,1) * my.forward_vector(1) + my.matrix(2,2) * my.forward_vector(2)
 
 			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
-			my.forward_vector(2,0) = x(0) / length
-			my.forward_vector(2,1) = x(1) / length
-			my.forward_vector(2,2) = x(2) / length
+			my.next_vector(2,0) = x(0) / length
+			my.next_vector(2,1) = x(1) / length
+			my.next_vector(2,2) = x(2) / length
 		elseif type == 2 then
-			my.forward_vector(0,0) = 0
-			my.forward_vector(0,1) = 0
-			my.forward_vector(0,2) = 1
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			my.next_vector(0,2) = 1
 
-			my.forward_vector(1,0) = 0
-			my.forward_vector(1,1) = 0
-			my.forward_vector(1,2) = -1
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = -1
 			
 			u(0) = 0
 			u(1) = 0
@@ -777,9 +806,9 @@ sub store_vector(type as Integer,angle as Double){
 			x(2) = my.matrix(2,0) * my.forward_vector(0) + my.matrix(2,1) * my.forward_vector(1) + my.matrix(2,2) * my.forward_vector(2)
 
 			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
-			my.forward_vector(2,0) = x(0) / length
-			my.forward_vector(2,1) = x(1) / length
-			my.forward_vector(2,2) = x(2) / length		
+			my.next_vector(2,0) = x(0) / length
+			my.next_vector(2,1) = x(1) / length
+			my.next_vector(2,2) = x(2) / length		
 		else
 			PrintLn("type miss")
 		end if
@@ -1362,6 +1391,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
 	return ret
+	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1422,8 +1452,8 @@ Map_Output {
     Title = "map";
     Disable = No;
     Background_Color = 255, 255, 255;
-    Position_x = 879;
-    Position_y = 0;
+    Position_x = 819;
+    Position_y = -2;
     Size_x = 840;
     Size_y = 910;
     Map_Cell_Size = 1;
@@ -1659,13 +1689,13 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 797;
-    Console_Position_y = 67;
+    Console_Position_x = 1362;
+    Console_Position_y = 273;
     Console_Size_x = 607;
     Console_Size_y = 620;
-    Componen_Tree_Position_x = 840;
+    Componen_Tree_Position_x = 841;
     Componen_Tree_Position_y = 0;
-    Componen_Tree_Size_x = 840;
+    Componen_Tree_Size_x = 839;
     Componen_Tree_Size_y = 303;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
@@ -1696,7 +1726,7 @@ Network_Info {
 Window_Rectangle {
     Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 419, 36, 879, 306;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
