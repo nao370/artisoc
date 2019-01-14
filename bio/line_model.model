@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(80, 120, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(40, 80, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -39,8 +39,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[80][120][1] As Integer = (9600*0);
-        Dim is_void(0, 0)[80][120][1] As Boolean = (9600*0);
+        Dim fin(0, 0)[40][80][1] As Integer = (3200*0);
+        Dim is_void(0, 0)[40][80][1] As Boolean = (3200*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) As Integer = (0);
@@ -415,6 +415,17 @@ function is_step() as Boolean{
 		nz = nz + 1
 	end if
 
+	PrintLn("is_step")
+	PrintLn("nx = "&nx)
+		PrintLn("ny = "&ny)
+			PrintLn("nz = "&nz)
+			println("")
+
+	PrintLn("my_x = "&my.x)
+		PrintLn("my_y = "&my.Y)
+			PrintLn("my_z = "&my.Z)
+	PrintLn("")
+
 	if my.X > nx then
 		if my.Y > ny then	
 			if my.Z > nz then
@@ -560,9 +571,9 @@ sub back_step(){
 	println("y ;" & my.y)
 	println("z ;" & my.z)
 			
-	pre_x = my.tmp_position(0)
-	pre_y = my.tmp_position(1)
-	pre_z = my.tmp_position(2)
+	pre_x = GetHistory(my.X,1)
+	pre_y = GetHistory(my.y,1)
+	pre_z = GetHistory(my.z,1)
 
 	println("Ç≥Ç¡Ç´Ç¢ÇΩèÍèä")
 	println("x ;" & pre_x)
@@ -1402,7 +1413,6 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
 	return ret
-	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1480,7 +1490,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 80, 120;
+    Draw_Range = 0, 0, 40, 80;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
