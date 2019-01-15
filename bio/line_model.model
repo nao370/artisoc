@@ -717,44 +717,6 @@ sub back_step(){
 		end if
 	next i
 
-/*	diff_x = my.X - nx
-	diff_y = my.y - ny
-	diff_z = my.z - nz
-
-	if diff_x >= 0.5 then
-		nx = nx + 1
-	end if
-	if diff_y >= 0.5 then
-		ny = ny + 1
-	end if			
-	if diff_z >= 0.5 then
-		nz = nz + 1
-	end if
-
-	if u(0) != 0 then
-		k(0) = ( nx - my.X ) / u(0)
-	end if
-	if u(1) != 0 then
-		k(1) = ( ny - my.y ) / u(1)
-	end if
-	if u(2) != 0 then
-		k(2) = ( nz - my.z ) / u(2)
-	end if
-
-	if k(0) >= 1 then
-		k(0) = 0
-	elseif k(1) >= 1 then
-		k(1) = 0
-	elseif k(2) >= 1 then
-		k(2) = 0
-	end if*/
-
-	println("")
-	println("pren(0)" & pre_n(0)&"   pren(1) ;"&pre_n(1)&"    pren(2);"&pre_n(2))
-		println("")
-		println("n(0)" & n(0)&"   n(1) ;"&n(1)&"    n(2);"&n(2))
-		println("")
-
 	if k(0) < k(1) and k(1) < k(2) then
 		my.X = pre(0) + k(2) * u(0)
 		my.y = pre(1) + k(2) * u(1)
@@ -1038,6 +1000,11 @@ sub store_vector(type as Integer,angle as Double){
 			PrintLn("type miss")
 		end if
 	end if
+
+	println("vector is")
+	println("x : "&my.next_vector(2,0)&"  y : "&my.next_vector(2,1)&"   z : "&my.next_vector(2,2))
+	println("length is"&length)
+	println("")
 }
 
 sub calculate_matrix(){
@@ -1104,7 +1071,8 @@ function direction_type() as Integer{
 	x = my.forward_vector(0)
 	y = my.forward_vector(1)
 	z = my.forward_vector(2)
-	
+
+	ret = -1
 	if x==0 then
 		if y == 0 then
 			ret = 5
@@ -1565,6 +1533,9 @@ sub select_vector(){
 		my.forward_vector(1) = my.next_vector(2,1)
 		my.forward_vector(2) = my.next_vector(2,2)	
 	end if
+
+	println("my.forward_vector is")
+	println("x : "&my.forward_vector(0)&"     y : "&my.forward_vector(1)&"       z : "&my.forward_vector(2))
 }
 
 function calclator_sum_diff()as Double{
@@ -1616,6 +1587,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
 	return ret
+	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1913,8 +1885,8 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1215;
-    Console_Position_y = -8;
+    Console_Position_x = 1193;
+    Console_Position_y = 4;
     Console_Size_x = 920;
     Console_Size_y = 909;
     Componen_Tree_Position_x = 689;
