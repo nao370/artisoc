@@ -21,12 +21,12 @@ UNIVERSE {
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
-            Dim next_vector(0, 0)[3][3] As Double = ();
+            Dim next_vector(0, 0)[3][3] As Double = (9*0.0);
             Dim forward_vector(0, 0)[3] As Double = (3*0.0);
             Dim base_vector(0, 0)[3] As Double = (3*0.0);
             Dim angle_surface(0, 0) As Double = (0.0);
             Dim b_type(0, 0) As Integer = (0);
-            Dim matrix(0, 0)[3][3] As Double = ();
+            Dim matrix(0, 0)[3][3] As Double = (9*0.0);
             Dim normal_vector(0, 0)[3] As Double = (3*0.0);
             Dim tmp_position(0, 0)[3] As Double = (3*0.0);
         }
@@ -1572,7 +1572,7 @@ function calclator_sum_diff()as Double{
 	dim i as Integer
 
 	diff = 0
-	for i = 0 to 3
+	for i = 0 to 2
 		diff = diff + Sqr( ( my.base_vector(0) - my.next_vector(i,0) )^2 + ( my.base_vector(1) - my.next_vector(i,1) )^2 + ( my.base_vector(2) - my.next_vector(i,2) )^2 )
 	next i
 
@@ -1616,7 +1616,6 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
 	return ret
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1914,8 +1913,8 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1163;
-    Console_Position_y = -11;
+    Console_Position_x = 1215;
+    Console_Position_y = -8;
     Console_Size_x = 920;
     Console_Size_y = 909;
     Componen_Tree_Position_x = 689;
