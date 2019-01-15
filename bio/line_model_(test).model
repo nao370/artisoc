@@ -929,6 +929,10 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 0
 			u(2) = 0
 
+			my.next_vector(2,0) = my.forward_vector(0)
+			my.next_vector(2,1) = my.forward_vector(2)
+			my.next_vector(2,2) = my.forward_vector(1)
+/*
 			calculate_matrix()
 
 			x(0) = my.matrix(0,0) * my.forward_vector(0) + my.matrix(0,1) * my.forward_vector(1) + my.matrix(0,2) * my.forward_vector(2)
@@ -938,7 +942,7 @@ sub store_vector(type as Integer,angle as Double){
 			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
 			my.next_vector(2,0) = x(0) / length
 			my.next_vector(2,1) = x(1) / length
-			my.next_vector(2,2) = x(2) / length
+			my.next_vector(2,2) = x(2) / length*/
 		elseif type == 1 then
 			my.next_vector(0,0) = 0
 			my.next_vector(0,1) = 1
@@ -952,6 +956,10 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 1
 			u(2) = 0
 
+			my.next_vector(2,0) = my.forward_vector(2)
+			my.next_vector(2,1) = my.forward_vector(1)
+			my.next_vector(2,2) = my.forward_vector(0)
+/*
 			calculate_matrix()
 
 			x(0) = my.matrix(0,0) * my.forward_vector(0) + my.matrix(0,1) * my.forward_vector(1) + my.matrix(0,2) * my.forward_vector(2)
@@ -961,7 +969,7 @@ sub store_vector(type as Integer,angle as Double){
 			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
 			my.next_vector(2,0) = x(0) / length
 			my.next_vector(2,1) = x(1) / length
-			my.next_vector(2,2) = x(2) / length
+			my.next_vector(2,2) = x(2) / length*/
 		elseif type == 2 then
 			my.next_vector(0,0) = 0
 			my.next_vector(0,1) = 0
@@ -975,7 +983,11 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 0
 			u(2) = 1
 
-			calculate_matrix()
+			my.next_vector(2,0) = my.forward_vector(1)
+			my.next_vector(2,1) = my.forward_vector(0)
+			my.next_vector(2,2) = my.forward_vector(2)
+
+			/*calculate_matrix()
 
 			x(0) = my.matrix(0,0) * my.forward_vector(0) + my.matrix(0,1) * my.forward_vector(1) + my.matrix(0,2) * my.forward_vector(2)
 			x(1) = my.matrix(1,0) * my.forward_vector(0) + my.matrix(1,1) * my.forward_vector(1) + my.matrix(1,2) * my.forward_vector(2)
@@ -984,7 +996,7 @@ sub store_vector(type as Integer,angle as Double){
 			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
 			my.next_vector(2,0) = x(0) / length
 			my.next_vector(2,1) = x(1) / length
-			my.next_vector(2,2) = x(2) / length		
+			my.next_vector(2,2) = x(2) / length		*/
 		else
 			PrintLn("type miss")
 		end if
