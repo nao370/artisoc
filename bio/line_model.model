@@ -21,12 +21,12 @@ UNIVERSE {
             Dim Layer(0, 0) As Integer = (0);
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
-            Dim next_vector(0, 0)[3][3][3] As Double = (27*0.0);
+            Dim next_vector(0, 0)[3][3] As Double = ();
             Dim forward_vector(0, 0)[3] As Double = (3*0.0);
             Dim base_vector(0, 0)[3] As Double = (3*0.0);
             Dim angle_surface(0, 0) As Double = (0.0);
             Dim b_type(0, 0) As Integer = (0);
-            Dim matrix(0, 0)[3][3][3] As Double = (27*0.0);
+            Dim matrix(0, 0)[3][3] As Double = ();
             Dim normal_vector(0, 0)[3] As Double = (3*0.0);
             Dim tmp_position(0, 0)[3] As Double = (3*0.0);
         }
@@ -57,12 +57,10 @@ Initial_Value {
     UNIVERSE.MAP.INSECT.LAYER = 1(0);
     UNIVERSE.MAP.INSECT.DIRECTION = 1(0.0);
     UNIVERSE.MAP.INSECT.ANGLE = 1(0.0);
-    UNIVERSE.MAP.INSECT.NEXT_VECTOR = 1(27*0.0);
     UNIVERSE.MAP.INSECT.FORWARD_VECTOR = 1(3*0.0);
     UNIVERSE.MAP.INSECT.BASE_VECTOR = 1(3*0.0);
     UNIVERSE.MAP.INSECT.ANGLE_SURFACE = 1(0.0);
     UNIVERSE.MAP.INSECT.B_TYPE = 1(0);
-    UNIVERSE.MAP.INSECT.MATRIX = 1(27*0.0);
     UNIVERSE.MAP.INSECT.NORMAL_VECTOR = 1(2*0.0, 1.0);
     UNIVERSE.MAP.INSECT.TMP_POSITION = 1(3*0.0);
 }
@@ -714,6 +712,7 @@ sub back_step(){
 			if n(i) > pre_n(i) then
 				k(i) = (n(i) - pre(i)) / u(i)
 			else
+				k(i) = (pre_n(i) - pre(i)) / u(i)
 			end if
 		end if
 	next i
@@ -990,13 +989,13 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(2,1) = x(1) / length
 			my.next_vector(2,2) = x(2) / length
 		elseif type == 1 then
-			my.next_vector(1,0) = 0
-			my.next_vector(1,1) = 1
-			my.next_vector(1,2) = 0
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 1
+			my.next_vector(0,2) = 0
 
-			my.next_vector(2,0) = 0
-			my.next_vector(2,1) = -1
-			my.next_vector(2,2) = 0
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = -1
+			my.next_vector(1,2) = 0
 			
 			u(0) = 0
 			u(1) = 1
@@ -1009,9 +1008,9 @@ sub store_vector(type as Integer,angle as Double){
 			x(2) = my.matrix(2,0) * my.forward_vector(0) + my.matrix(2,1) * my.forward_vector(1) + my.matrix(2,2) * my.forward_vector(2)
 
 			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
-			my.next_vector(3,0) = x(0) / length
-			my.next_vector(3,1) = x(1) / length
-			my.next_vector(3,2) = x(2) / length
+			my.next_vector(2,0) = x(0) / length
+			my.next_vector(2,1) = x(1) / length
+			my.next_vector(2,2) = x(2) / length
 		elseif type == 2 then
 			my.next_vector(0,0) = 0
 			my.next_vector(0,1) = 0
@@ -1043,7 +1042,7 @@ sub store_vector(type as Integer,angle as Double){
 
 sub calculate_matrix(){
 	dim theta as Double
-	dim n as Double
+	dim n(3) as Double
 
 	theta = DegreeToRad(my.angle_surface)
 	if my.b_type == 0 then
@@ -1051,13 +1050,13 @@ sub calculate_matrix(){
 		n(1) = 0
 		n(2) = 0
 	elseif my.b_type == 1 then
-		n(0) = 1
-		n(1) = 0
+		n(0) = 0
+		n(1) = 1
 		n(2) = 0	
 	else
-		n(0) = 1
+		n(0) = 0
 		n(1) = 0
-		n(2) = 0	
+		n(2) = 1	
 	end if
 
 	my.matrix(0,0) = Cos(theta) + (n(0)^2) * (1 - Cos(theta))
@@ -1915,12 +1914,12 @@ Others_Data {
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 884;
-    Console_Position_y = -3;
+    Console_Position_x = 1163;
+    Console_Position_y = -11;
     Console_Size_x = 920;
     Console_Size_y = 909;
-    Componen_Tree_Position_x = 841;
-    Componen_Tree_Position_y = 0;
+    Componen_Tree_Position_x = 689;
+    Componen_Tree_Position_y = 808;
     Componen_Tree_Size_x = 839;
     Componen_Tree_Size_y = 303;
     Console_Background_Color = 16777215;
