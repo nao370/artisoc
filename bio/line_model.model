@@ -200,7 +200,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				if z+a == 0 then
 					flag = true
 				else
-					if universe.map.is_void(x,y+b,z+a) then
+					if universe.map.is_void(x,y+b,z) then
 						flag = true
 					end if
 				end if
@@ -229,7 +229,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				if z+a == 0 then
 					flag = true
 				else
-					if universe.map.is_void(x+c,y,z+a) then
+					if universe.map.is_void(x+c,y,z) then
 						flag = true
 					end if
 				end if
@@ -282,7 +282,7 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 		  		if z+a == 0 then
 						flag = true
 					else
-						if universe.map.is_void(x+b,y+c,z+a) then
+						if universe.map.is_void(x+b,y+c,z) then
 							flag = true
 						end if
 					end if
@@ -337,7 +337,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		  		if z+a == 0 then
 						flag = true
 					else
-						if universe.map.is_void(x+b,y+c,z+a) then
+						if universe.map.is_void(x+b,y+c,z) then
 							flag = true
 						end if
 					end if
@@ -371,7 +371,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
  		 			if z+a == 0 then
 						flag = true
 					else
-						if universe.map.is_void(x+b,y+c,z+a) then
+						if universe.map.is_void(x+b,y+c,z) then
 							flag = true
 						end if
 					end if
@@ -404,7 +404,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
  		 			if z+a == 0 then
 						flag = true
 					else
-						if universe.map.is_void(x+b,y+c,z+a) then
+						if universe.map.is_void(x+b,y+c,z) then
 							flag = true
 						end if
 					end if
@@ -667,45 +667,58 @@ function is_step() as Boolean{
 }
 
 sub back_step(){
-	dim nx as Integer
-	dim ny as Integer
-	dim nz as Integer
+	dim n(3) as Integer
 	dim diff_x as Double
 	dim diff_y as Double
 	dim diff_z as Double
-	dim pre_x as Double
-	dim pre_y as Double
-	dim pre_z as Double
+	dim pre(3) as Double
 	dim u(3) as Double
 	dim k(3) as Double
+	dim pre_n(3) as Double
+	dim i as Integer
 
 	println("¡‚¢‚éêŠ")
 	println("x ;" & my.X)
 	println("y ;" & my.y)
 	println("z ;" & my.z)
 			
-	pre_x = GetHistory(my.X,1)
-	pre_y = GetHistory(my.y,1)
-	pre_z = GetHistory(my.z,1)
+	pre(0) = GetHistory(my.X,1)
+	pre(1) = GetHistory(my.y,1)
+	pre(2) = GetHistory(my.z,1)
 
 	println("‚³‚Á‚«‚¢‚½êŠ")
-	println("x ;" & pre_x)
-	println("y ;" & pre_y)
-	println("z ;" & pre_z)
+	println("x ;" & pre(0))
+	println("y ;" & pre(1))
+	println("z ;" & pre(2))
 
 	k(0) = 0
 	k(1) = 0
 	k(2) = 0
 
-	u(0) = my.X - pre_x
-	u(1) = my.y - pre_y
-	u(2) = my.z - pre_z
+	u(0) = my.forward_vector(0)//my.X - pre_x
+	u(1) = my.forward_vector(1)//my.y - pre_y
+	u(2) = my.forward_vector(2)//my.z - pre_z
 
-	nx = Int(my.X)
-	ny = Int(my.Y)
-	nz = Int(my.Z)
+	n(0) = Int(my.X)
+	n(1) = Int(my.Y)
+	n(2) = Int(my.Z)
 
-	diff_x = my.X - nx
+	pre_n(0) = Int(pre(0))
+	pre_n(1) = Int(pre(1))
+	pre_n(2) = Int(pre(2))
+
+	for i = 0 to 2
+		if n(i) == pre_n(i) then
+			k(i) = 0
+		else
+			if n(i) > pre_n(i) then
+				k(i) = (n(i) - pre(i)) / u(i)
+			else
+			end if
+		end if
+	next i
+
+/*	diff_x = my.X - nx
 	diff_y = my.y - ny
 	diff_z = my.z - nz
 
@@ -735,106 +748,108 @@ sub back_step(){
 		k(1) = 0
 	elseif k(2) >= 1 then
 		k(2) = 0
-	end if
+	end if*/
 
 	println("")
-	println("k(0)" & k(0)&"   k(1) ;"&k(1)&"    k(2);"&k(2))
+	println("pren(0)" & pre_n(0)&"   pren(1) ;"&pre_n(1)&"    pren(2);"&pre_n(2))
+		println("")
+		println("n(0)" & n(0)&"   n(1) ;"&n(1)&"    n(2);"&n(2))
 		println("")
 
 	if k(0) < k(1) and k(1) < k(2) then
-		my.X = pre_x + k(2) * u(0)
-		my.y = pre_x + k(2) * u(1)
-		my.z = pre_x + k(2) * u(2)
+		my.X = pre(0) + k(2) * u(0)
+		my.y = pre(1) + k(2) * u(1)
+		my.z = pre(2) + k(2) * u(2)
 
 		if not is_step() then
-			my.X = pre_x + k(1) * u(0)
-			my.y = pre_x + k(1) * u(1)
-			my.z = pre_x + k(1) * u(2)
+			my.X = pre(0) + k(1) * u(0)
+			my.y = pre(1) + k(1) * u(1)
+			my.z = pre(2) + k(1) * u(2)
 
 			if not is_step() then
-				my.X = pre_x + k(0) * u(0)
-				my.y = pre_x + k(0) * u(1)
-				my.z = pre_x + k(0) * u(2)
+				my.X = pre(0) + k(0) * u(0)
+				my.y = pre(1) + k(0) * u(1)
+				my.z = pre(2) + k(0) * u(2)
 			end if
 		end if
 	elseif k(0) < k(2) and k(2) < k(1) then
-		my.X = pre_x + k(1) * u(0)
-		my.y = pre_x + k(1) * u(1)
-		my.z = pre_x + k(1) * u(2)
+		my.X = pre(0) + k(1) * u(0)
+		my.y = pre(1) + k(1) * u(1)
+		my.z = pre(2) + k(1) * u(2)
 
 		if not is_step() then
-			my.X = pre_x + k(2) * u(0)
-			my.y = pre_x + k(2) * u(1)
-			my.z = pre_x + k(2) * u(2)
+			my.X = pre(0) + k(2) * u(0)
+			my.y = pre(1) + k(2) * u(1)
+			my.z = pre(2) + k(2) * u(2)
 
 			if not is_step() then
-				my.X = pre_x + k(0) * u(0)
-				my.y = pre_x + k(0) * u(1)
-				my.z = pre_x + k(0) * u(2)
+				my.X = pre(0) + k(0) * u(0)
+				my.y = pre(1) + k(0) * u(1)
+				my.z = pre(2) + k(0) * u(2)
 			end if
 		end if
 	elseif k(1) < k(0) and k(0) < k(2) then
-		my.X = pre_x + k(2) * u(0)
-		my.y = pre_x + k(2) * u(1)
-		my.z = pre_x + k(2) * u(2)
+		my.X = pre(0) + k(2) * u(0)
+		my.y = pre(1) + k(2) * u(1)
+		my.z = pre(2) + k(2) * u(2)
 
 		if not is_step() then
-			my.X = pre_x + k(0) * u(0)
-			my.y = pre_x + k(0) * u(1)
-			my.z = pre_x + k(0) * u(2)
+			my.X = pre(0) + k(0) * u(0)
+			my.y = pre(1) + k(0) * u(1)
+			my.z = pre(2) + k(0) * u(2)
 
 			if not is_step() then
-				my.X = pre_x + k(1) * u(0)
-				my.y = pre_x + k(1) * u(1)
-				my.z = pre_x + k(1) * u(2)
+				my.X = pre(0) + k(1) * u(0)
+				my.y = pre(1) + k(1) * u(1)
+				my.z = pre(2) + k(1) * u(2)
 			end if
 		end if
 	elseif k(1) < k(2) and k(2) < k(0) then
-		my.X = pre_x + k(0) * u(0)
-		my.y = pre_x + k(0) * u(1)
-		my.z = pre_x + k(0) * u(2)
+		my.X = pre(0) + k(0) * u(0)
+		my.y = pre(1) + k(0) * u(1)
+		my.z = pre(2) + k(0) * u(2)
 
 		if not is_step() then
-			my.X = pre_x + k(2) * u(0)
-			my.y = pre_x + k(2) * u(1)
-			my.z = pre_x + k(2) * u(2)
+			my.X = pre(0) + k(2) * u(0)
+			my.y = pre(1) + k(2) * u(1)
+			my.z = pre(2) + k(2) * u(2)
 
 			if not is_step() then
-				my.X = pre_x + k(1) * u(0)
-				my.y = pre_x + k(1) * u(1)
-				my.z = pre_x + k(1) * u(2)
+				my.X = pre(0) + k(1) * u(0)
+				my.y = pre(1) + k(1) * u(1)
+				my.z = pre(2) + k(1) * u(2)
 			end if
 		end if
 	elseif k(2) < k(0) and k(0) < k(1) then
-		my.X = pre_x + k(1) * u(0)
-		my.y = pre_x + k(1) * u(1)
-		my.z = pre_x + k(1) * u(2)
+		my.X = pre(0) + k(1) * u(0)
+		my.y = pre(1) + k(1) * u(1)
+		my.z = pre(2) + k(1) * u(2)
 
 		if not is_step() then
-			my.X = pre_x + k(0) * u(0)
-			my.y = pre_x + k(0) * u(1)
-			my.z = pre_x + k(0) * u(2)
+			my.X = pre(0) + k(0) * u(0)
+			my.y = pre(1) + k(0) * u(1)
+			my.z = pre(2) + k(0) * u(2)
 
 			if not is_step() then
-				my.X = pre_x + k(2) * u(0)
-				my.y = pre_x + k(2) * u(1)
-				my.z = pre_x + k(2) * u(2)
+				my.X = pre(0) + k(2) * u(0)
+				my.y = pre(1) + k(2) * u(1)
+				my.z = pre(2) + k(2) * u(2)
 			end if
 		end if
 	else			
-		my.X = pre_x + k(0) * u(0)
-		my.y = pre_x + k(0) * u(1)
-		my.z = pre_x + k(0) * u(2)
+		my.X = pre(0) + k(0) * u(0)
+		my.y = pre(1) + k(0) * u(1)
+		my.z = pre(2) + k(0) * u(2)
 
 		if not is_step() then
-			my.X = pre_x + k(1) * u(0)
-			my.y = pre_x + k(1) * u(1)
-			my.z = pre_x + k(1) * u(2)
+			my.X = pre(0) + k(1) * u(0)
+			my.y = pre(1) + k(1) * u(1)
+			my.z = pre(2) + k(1) * u(2)
 
 			if not is_step() then
-				my.X = pre_x + k(2) * u(0)
-				my.y = pre_x + k(2) * u(1)
-				my.z = pre_x + k(2) * u(2)
+				my.X = pre(0) + k(2) * u(0)
+				my.y = pre(1) + k(2) * u(1)
+				my.z = pre(2) + k(2) * u(2)
 			end if
 		end if
 	end if
@@ -975,13 +990,13 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(2,1) = x(1) / length
 			my.next_vector(2,2) = x(2) / length
 		elseif type == 1 then
-			my.next_vector(0,0) = 0
-			my.next_vector(0,1) = 1
-			my.next_vector(0,2) = 0
-
 			my.next_vector(1,0) = 0
-			my.next_vector(1,1) = -1
+			my.next_vector(1,1) = 1
 			my.next_vector(1,2) = 0
+
+			my.next_vector(2,0) = 0
+			my.next_vector(2,1) = -1
+			my.next_vector(2,2) = 0
 			
 			u(0) = 0
 			u(1) = 1
@@ -994,9 +1009,9 @@ sub store_vector(type as Integer,angle as Double){
 			x(2) = my.matrix(2,0) * my.forward_vector(0) + my.matrix(2,1) * my.forward_vector(1) + my.matrix(2,2) * my.forward_vector(2)
 
 			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
-			my.next_vector(2,0) = x(0) / length
-			my.next_vector(2,1) = x(1) / length
-			my.next_vector(2,2) = x(2) / length
+			my.next_vector(3,0) = x(0) / length
+			my.next_vector(3,1) = x(1) / length
+			my.next_vector(3,2) = x(2) / length
 		elseif type == 2 then
 			my.next_vector(0,0) = 0
 			my.next_vector(0,1) = 0
@@ -1602,7 +1617,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
 	return ret
-	}
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -1811,7 +1826,7 @@ Map3D_Output {
     Font_Background_Color = 255, 255, 255;
     Position_x = 7;
     Position_y = -4;
-    Size_x = 840;
+    Size_x = 856;
     Size_y = 910;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
@@ -1876,7 +1891,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -1896,7 +1911,7 @@ Others_Data {
     Rule_Colored = Yes;
     Rule_LineNo = Yes;
     Window_Hide_Run = 1;
-    Debug_Position_x = 75;
+    Debug_Position_x = 76;
     Debug_Position_y = 75;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
@@ -1935,7 +1950,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
