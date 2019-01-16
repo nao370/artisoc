@@ -449,10 +449,6 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 	}
 
 
-
-
-	
-	
 #end_rule UNIVERSE
 
 
@@ -656,7 +652,11 @@ function is_step_new() as Boolean{
 			end if
 		else
 			if nz == 0 and my.normal_vector(2) > 0 then
-				ret = true
+				if universe.map.is_void(nx+1,ny+1,nz) then
+					ret = false
+				else
+					ret = true
+				end if
 			else
 				if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then
 				//xŽ²•ûŒü‚É–S‚­‚È‚é
@@ -1708,13 +1708,20 @@ function is_appear_surface() as Boolean{
 					ret = false
 				end if
 			else
-				if universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx,ny+1,nz-1) then
+				if nz == 0 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =1
 					my.normal_vector(2) = 1
 				else
-					ret = false
+					if universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx,ny+1,nz-1) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =1
+						my.normal_vector(2) = 1
+					else
+						ret = false
+					end if
 				end if
 			end if
 		else
@@ -2022,8 +2029,7 @@ function is_disappear_surface() as Boolean{
 		end if
 	end if		
 	
-	return ret
-	}
+	return re
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -2052,7 +2058,7 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 1;
+    Exec_Wait = 2;
     Exec_Wait_Max = 1000;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
