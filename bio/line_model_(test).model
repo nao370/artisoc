@@ -1926,7 +1926,7 @@ function is_disappear_surface() as Boolean{
 			if not (ny == 0 and my.normal_vector(1) > 0) then
 				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
 					if not (nz == 0 and my.normal_vector(2) > 0) then
-						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny - my.normal_vector(1),nz - my.normal_vector(2)) then
+						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny - my.normal_vector(1),nz - my.normal_vector(2)) then
 							ret = true
 							my.b_type = 5
 							my.normal_vector(0) = my.forward_vector(0)
@@ -2048,7 +2048,7 @@ function is_disappear_surface() as Boolean{
 			if not (nx == 0 and my.normal_vector(0) > 0) then
 				if not universe.map.is_void(nx-my.normal_vector(0),ny,nz) then
 					if not (nz == 0 and my.normal_vector(2) > 0) then
-						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx- my.normal_vector(0),ny,nz - my.normal_vector(2)) then
+						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx- my.normal_vector(0),ny,nz - my.normal_vector(2)) then
 							ret = true
 							my.b_type = 4
 							my.normal_vector(1) = my.forward_vector(1)
@@ -2132,7 +2132,7 @@ function is_disappear_surface() as Boolean{
 			if not (ny == 0 and my.normal_vector(1) > 0) then
 				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
 					if not (nx == 0 and my.normal_vector(0) > 0) then
-						if not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny - my.normal_vector(1),nz) then
+						if not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny - my.normal_vector(1),nz) then
 							ret = true
 							my.b_type = 3
 							my.normal_vector(2) = my.forward_vector(2)
