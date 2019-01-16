@@ -472,6 +472,7 @@ Agt_Step{
 
 	if different_surface() then
 		determining_vector()
+		delete_normal_vector()
 	else
 		if is_bend() then
 			determining_bend()
@@ -487,6 +488,29 @@ Agt_Step{
 	PrintLn("normalY is "&my.normal_vector(1))
 	PrintLn("normalZ is "&my.normal_vector(2))
 			
+}
+
+sub delete_normal_vector(){
+	dim type as Integer
+
+	type = my.do_type
+
+	if type == 0 then
+		my.normal_vector(0) = 0
+	elseif type == 1 then
+		my.normal_vector(0) = 0
+		my.normal_vector(1) = 0
+	elseif type == 2 then
+		my.normal_vector(0) = 0
+		my.normal_vector(2) = 0
+	elseif type == 3 then
+		my.normal_vector(1) = 0
+	elseif type == 4 then
+		my.normal_vector(1) = 0
+		my.normal_vector(2) = 0
+	else
+		my.normal_vector(2) = 0
+	end if
 }
 
 
@@ -551,7 +575,10 @@ function is_step_new() as Boolean{
 					ret = true
 					my.normal_vector(1) = 0
 				else
-					ret = false
+					if // 軸に沿ってて外向きの時の場合分け
+					else
+						ret = false
+					end if
 				end if
 			elseif not(nz == 0 and my.normal_vector(2) > 0) then
 				if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then
@@ -560,7 +587,10 @@ function is_step_new() as Boolean{
 						ret = true
 						my.normal_vector(0) = 0
 					else
+						if // 軸に沿ってて外向きの時の場合分け
+					else
 						ret = false
+					end if
 					end if
 				else
 					ret = true
@@ -576,7 +606,10 @@ function is_step_new() as Boolean{
 						ret = true
 						my.normal_vector(2) = 0
 					else
+						if // 軸に沿ってて外向きの時の場合分け
+					else
 						ret = false
+					end if
 					end if
 				else
 					ret = true
@@ -680,7 +713,10 @@ function is_step_new() as Boolean{
 					ret = true
 					my.normal_vector(0) = 0
 				else
-					ret = false
+					if // 軸に沿ってて外向きの時の場合分け
+					else
+						ret = false
+					end if
 				end if
 			elseif not(nz == 0 and my.normal_vector(2) > 0) then
 				if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny+1,nz-my.normal_vector(2))) then
@@ -689,7 +725,10 @@ function is_step_new() as Boolean{
 						ret = true
 						my.normal_vector(2) = 0
 					else
-						ret = false
+						if // 軸に沿ってて外向きの時の場合分け
+						else
+							ret = false
+						end if
 					end if
 				else
 					ret = true
@@ -705,7 +744,10 @@ function is_step_new() as Boolean{
 						ret = true
 						my.normal_vector(2) = 0
 					else
-						ret = false
+						if // 軸に沿ってて外向きの時の場合分け
+						else
+							ret = false
+						end if
 					end if
 				else
 					ret = true
@@ -769,7 +811,10 @@ function is_step_new() as Boolean{
 					ret = true
 					my.normal_vector(0) = 0
 				else
-					ret = false
+					if // 軸に沿ってて外向きの時の場合分け
+					else
+						ret = false
+					end if
 				end if
 			elseif not(ny == 0 and my.normal_vector(1) > 0) then
 				if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz+1)) then
@@ -778,7 +823,10 @@ function is_step_new() as Boolean{
 						ret = true
 						my.normal_vector(1) = 0
 					else
-						ret = false
+						if // 軸に沿ってて外向きの時の場合分け
+						else
+							ret = false
+						end if
 					end if
 				else
 					ret = true
@@ -794,7 +842,10 @@ function is_step_new() as Boolean{
 						ret = true
 						my.normal_vector(2) = 0
 					else
-						ret = false
+						if // 軸に沿ってて外向きの時の場合分け
+						else
+							ret = false
+						end if
 					end if
 				else
 					ret = true
