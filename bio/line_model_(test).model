@@ -30,6 +30,7 @@ UNIVERSE {
             Dim normal_vector(0, 0)[3] As Double = (3*0.0);
             Dim tmp_position(0, 0)[3] As Double = (3*0.0);
             Dim do_type(0, 0) <1>  As Integer = (0);
+            Dim ap_or_dis(0, 0) As Integer = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -447,6 +448,12 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 
 	return ret
 	}
+
+
+
+
+	
+	
 #end_rule UNIVERSE
 
 
@@ -466,6 +473,7 @@ my.Direction = 60 + rnd()* 10 -5
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 my.do_type = 1
+my.ap_or_dis = 1
 }
 
 Agt_Step{
@@ -531,6 +539,16 @@ sub step_direction(){
 	my.Y = my.Y + my.forward_vector(1)
 	my.Z = my.Z + my.forward_vector(2)
 
+	if my.X < 0 then
+		my.X = 0
+	end if
+	if my.y < 0 then
+		my.y = 0
+	end if
+	if my.z < 0 then
+		my.z = 0
+	end if
+
 }
 
 function is_step_new() as Boolean{
@@ -571,18 +589,27 @@ function is_step_new() as Boolean{
 		elseif not (ny == 0 and my.normal_vector(1) > 0) then
 			if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny-my.normal_vector(1),nz)) then
 			//yの方向にあった壁がなくなる
-				if nx == my.x then
-					ret = true
-					my.normal_vector(1) = 0
-				else
-					if nz == 0 and my.normal_vector(2) > 0 then
-						ret = false
+				if nz == 0 and my.normal_vector(2) > 0 then
+					if nx == my.x then
+						ret = true
+						my.normal_vector(0) = 0
 					else
-						if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then// 軸に沿ってて外向きの時の場合分け
+						ret = false
+					end if
+				else
+					if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then// 軸に沿ってて外向きの時の場合分け
+						if (my.forward_vector(0) > 0 and universe.map.is_void(nx,ny-my.normal_vector(1),nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and universe.map.is_void(nx+1,ny-my.normal_vector(1),nz-my.normal_vector(2))) then
 							ret = true
 						else
-							ret = false
+							if nx == my.x then
+								ret = true
+								my.normal_vector(0) = 0
+							else
+								ret = false
+							end if
 						end if
+					else
+						ret = false
 					end if
 				end if
 			elseif not(nz == 0 and my.normal_vector(2) > 0) then
@@ -708,18 +735,27 @@ function is_step_new() as Boolean{
 		elseif not (nx == 0 and my.normal_vector(0) > 0) then
 			if (my.forward_vector(1) > 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz)) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx-my.normal_vector(0),ny+1,nz)) then
 			//xの方向にあった壁がなくなる
-				if ny == my.y then
-					ret = true
-					my.normal_vector(0) = 0
-				else
-					if nz == 0 and my.normal_vector(2) > 0 then
-						ret = false
+				if nz == 0 and my.normal_vector(2) > 0 then
+					if ny == my.y then
+						ret = true
+						my.normal_vector(1) = 0
 					else
-						if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then// 軸に沿ってて外向きの時の場合分け
+						ret = false
+					end if
+				else
+					if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny+1,nz-my.normal_vector(2))) then// 軸に沿ってて外向きの時の場合分け
+						if (my.forward_vector(1) > 0 and universe.map.is_void(nx-my.normal_vector(0),ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and universe.map.is_void(nx-my.normal_vector(0),ny+1,nz-my.normal_vector(2))) then
 							ret = true
 						else
-							ret = false
+							if ny == my.y then
+								ret = true
+								my.normal_vector(1) = 0
+							else
+								ret = false
+							end if
 						end if
+					else
+						ret = false
 					end if
 				end if
 			elseif not(nz == 0 and my.normal_vector(2) > 0) then
@@ -805,18 +841,27 @@ function is_step_new() as Boolean{
 		elseif not (nx == 0 and my.normal_vector(0) > 0) then
 			if (my.forward_vector(2) > 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz+1)) then
 			//xの方向にあった壁がなくなる
-				if nz == my.z then
-					ret = true
-					my.normal_vector(0) = 0
-				else
-					if ny == 0 and my.normal_vector(1) > 0 then
-						ret =false
+				if ny == 0 and my.normal_vector(1) > 0 then
+					if nz == my.z then
+						ret = true
+						my.normal_vector(2) = 0
 					else
-						if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx+1,ny-my.normal_vector(2),nz)) then// 軸に沿ってて外向きの時の場合分け
+						ret = false
+					end if
+				else
+					if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz+1)) then// 軸に沿ってて外向きの時の場合分け
+						if (my.forward_vector(2) > 0 and universe.map.is_void(nx-my.normal_vector(0),ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and universe.map.is_void(nx-my.normal_vector(0),ny-my.normal_vector(1),nz+1)) then
 							ret = true
 						else
-							ret = false
+							if nz == my.z then
+								ret = true
+								my.normal_vector(2) = 0
+							else
+								ret = false
+							end if
 						end if
+					else
+						ret = false
 					end if
 				end if
 			elseif not(ny == 0 and my.normal_vector(1) > 0) then
@@ -1204,6 +1249,7 @@ sub store_vector(type as Integer,angle as Double){
 	dim x(3) as Double
 	dim u(3) as Integer
 	dim length as Double
+	dim k as Integer
 
 	type = my.b_type
 	angle = my.angle_surface
@@ -1214,62 +1260,29 @@ sub store_vector(type as Integer,angle as Double){
 	if type > 2 then
 	//±の障害物見てベクトルの方向を決める
 		if type == 3 then
-			if universe.map.is_void(my.X,my.Y+1,my.Z) then
-				my.next_vector(0,0) = 0
-				my.next_vector(0,1) = -1
-				my.next_vector(0,2) = 0
-			else
-				my.next_vector(0,0) = 0
-				my.next_vector(0,1) = 1
-				my.next_vector(0,2) = 0
-			end if
-			if universe.map.is_void(my.X+1,my.Y,my.Z) then
-				my.next_vector(1,0) = -1
-				my.next_vector(1,1) = 0
-				my.next_vector(1,2) = 0
-			else
-				my.next_vector(1,0) = 1
-				my.next_vector(1,1) = 0
-				my.next_vector(1,2) = 0
-			end if
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = my.ap_or_dis * my.normal_vector(1)
+			my.next_vector(0,2) = 0
+
+			my.next_vector(1,0) = my.ap_or_dis * my.normal_vector(0)
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
 		elseif type == 4 then
-			if universe.map.is_void(my.X,my.Y,my.Z+1) then
-				my.next_vector(0,0) = 0
-				my.next_vector(0,1) = 0
-				my.next_vector(0,2) = -1
-			else
-				my.next_vector(0,0) = 0
-				my.next_vector(0,1) = 0
-				my.next_vector(0,2) = 1
-			end if
-			if universe.map.is_void(my.X+1,my.Y,my.Z) then
-				my.next_vector(1,0) = -1
-				my.next_vector(1,1) = 0
-				my.next_vector(1,2) = 0
-			else
-				my.next_vector(1,0) = 1
-				my.next_vector(1,1) = 0
-				my.next_vector(1,2) = 0
-			end if
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			my.next_vector(0,2) = my.ap_or_dis * my.normal_vector(2)
+
+			my.next_vector(1,0) = my.ap_or_dis * my.normal_vector(0)
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
 		elseif type == 5 then
-			if universe.map.is_void(my.X,my.Y+1,my.Z) then
-				my.next_vector(0,0) = 0
-				my.next_vector(0,1) = -1
-				my.next_vector(0,2) = 0
-			else
-				my.next_vector(0,0) = 0
-				my.next_vector(0,1) = 1
-				my.next_vector(0,2) = 0
-			end if
-			if universe.map.is_void(my.X,my.Y,my.Z+1) then
-				my.next_vector(1,0) = 0
-				my.next_vector(1,1) = 0
-				my.next_vector(1,2) = -1
-			else
-				my.next_vector(1,0) = 0
-				my.next_vector(1,1) = 0
-				my.next_vector(1,2) = 1
-			end if
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			my.next_vector(0,2) = my.ap_or_dis * my.normal_vector(2)
+
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = my.ap_or_dis * my.normal_vector(1)
+			my.next_vector(1,2) = 0
 		else
 			println("type miss")
 		end if
@@ -1288,8 +1301,10 @@ sub store_vector(type as Integer,angle as Double){
 			u(2) = 0
 
 			my.next_vector(2,0) = my.forward_vector(0)
-			my.next_vector(2,1) = my.forward_vector(2)
-			my.next_vector(2,2) = my.forward_vector(1)
+			my.next_vector(2,1) = my.forward_vector(2) * my.normal_vector(1) * my.ap_or_dis
+			my.next_vector(2,2) = my.forward_vector(1) * my.normal_vector(2) * my.ap_or_dis
+
+			println("angle is "& angle)
 /*
 			calculate_matrix()
 
@@ -1314,9 +1329,9 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 1
 			u(2) = 0
 
-			my.next_vector(2,0) = my.forward_vector(2)
+			my.next_vector(2,0) = my.forward_vector(2) * my.normal_vector(0) * my.ap_or_dis
 			my.next_vector(2,1) = my.forward_vector(1)
-			my.next_vector(2,2) = my.forward_vector(0)
+			my.next_vector(2,2) = my.forward_vector(0) * my.normal_vector(2) * my.ap_or_dis
 /*
 			calculate_matrix()
 
@@ -1341,8 +1356,8 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 0
 			u(2) = 1
 
-			my.next_vector(2,0) = my.forward_vector(1)
-			my.next_vector(2,1) = my.forward_vector(0)
+			my.next_vector(2,0) = my.forward_vector(1) * my.normal_vector(0) * my.ap_or_dis
+			my.next_vector(2,1) = my.forward_vector(0) * my.normal_vector(1) * my.ap_or_dis
 			my.next_vector(2,2) = my.forward_vector(2)
 
 			/*calculate_matrix()
@@ -1538,10 +1553,18 @@ function is_bend() as Boolean{
 
 function different_surface() as Boolean{
 	dim ret  as Boolean
-	if is_appear_surface() or is_disappear_surface() then
+	dim a as Integer
+	dim b as Integer
+
+	ret = false
+	if is_disappear_surface()  then
+		my.ap_or_dis = -1
 		ret = true
 	else
-		ret = false
+		if is_appear_surface() then
+			my.ap_or_dis = 1
+			ret = true
+		end if
 	end if
 	
 	return ret
@@ -1775,7 +1798,7 @@ function is_appear_surface() as Boolean{
 		end if		
 	else
 		if nz == my.Z then
-			if my.forward_vector(1) > 0 then
+			if my.forward_vector(2) > 0 then
 				if universe.map.is_void(my.X,my.Y,my.Z+1) then
 					ret = true
 					my.angle_surface = -1
@@ -1820,11 +1843,11 @@ function is_disappear_surface() as Boolean{
 				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
 					if not (nz == 0 and my.normal_vector(2) > 0) then
 						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny - my.normal_vector(1),nz - my.normal_vector(2)) then
-							ret = false
-						else
 							ret = true
 							my.b_type = 5
 							my.normal_vector(0) = my.forward_vector(0)
+						else
+						 ret = false
 						end if
 					else
 						ret = true
@@ -1942,11 +1965,11 @@ function is_disappear_surface() as Boolean{
 				if not universe.map.is_void(nx-my.normal_vector(0),ny,nz) then
 					if not (nz == 0 and my.normal_vector(2) > 0) then
 						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx- my.normal_vector(0),ny,nz - my.normal_vector(2)) then
-							ret = false
-						else
 							ret = true
 							my.b_type = 4
 							my.normal_vector(1) = my.forward_vector(1)
+						else
+						 ret = false
 						end if
 					else
 						ret = true
@@ -2026,11 +2049,11 @@ function is_disappear_surface() as Boolean{
 				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
 					if not (nx == 0 and my.normal_vector(0) > 0) then
 						if not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny - my.normal_vector(1),nz) then
-							ret = false
-						else
 							ret = true
 							my.b_type = 3
 							my.normal_vector(2) = my.forward_vector(2)
+						else
+						 ret = false
 						end if
 					else
 						ret = true
@@ -2069,7 +2092,6 @@ function is_disappear_surface() as Boolean{
 	end if		
 	
 	return ret
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
