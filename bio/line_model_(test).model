@@ -74,8 +74,7 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.1)
-//	make_void()
+//	make_rubble_mix(0.1)
 	write_void()
 	println("")
 	println("start")
@@ -136,9 +135,9 @@ sub make_rubble_mix(rate as Double){
 		if r < 33 then
 			tmp_number = tmp_number + make_rubble_board(pattern,x,y,z)
 		elseif r < 66 then
-			tmp_number = tmp_number + make_rubble_box(x,y,z)
+//			tmp_number = tmp_number + make_rubble_box(x,y,z)
 		else
-			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
+//			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
 		end if		
 		tmp_rate = tmp_number / max
 	Loop
@@ -469,7 +468,7 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 //Include "calculate.inc"
 
 Agt_Init{
-my.Direction = 60 + rnd()* 10 -5
+my.Direction = 60
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 my.do_type = 1
@@ -495,6 +494,10 @@ Agt_Step{
 	PrintLn("normalX is "&my.normal_vector(0))
 	PrintLn("normalY is "&my.normal_vector(1))
 	PrintLn("normalZ is "&my.normal_vector(2))
+
+	println("do_type"& my.do_type)
+	println("b_type"& my.b_type)
+	println("")
 			
 }
 
@@ -567,17 +570,6 @@ function is_step_new() as Boolean{
 
 	type = my.do_type
 
-	PrintLn("is_step")
-	PrintLn("nx = "&nx)
-		PrintLn("ny = "&ny)
-			PrintLn("nz = "&nz)
-			println("")
-
-	PrintLn("my_x = "&my.x)
-		PrintLn("my_y = "&my.Y)
-			PrintLn("my_z = "&my.Z)
-	PrintLn("")
-
 	if type == 0 then
 		if (my.forward_vector(0) > 0 and universe.map.is_void(nx+1,ny,nz)) or (my.forward_vector(0) < 0 and universe.map.is_void(nx,ny,nz) ) then
 		//xé≤ï˚å¸Ç…è·äQï®Ç™Ç†ÇÈ
@@ -587,7 +579,7 @@ function is_step_new() as Boolean{
 				ret = false
 			end if
 		elseif not (ny == 0 and my.normal_vector(1) > 0) then
-			if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny-my.normal_vector(1),nz)) then
+			if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) then
 			//yÇÃï˚å¸Ç…Ç†Ç¡ÇΩï«Ç™Ç»Ç≠Ç»ÇÈ
 				if nz == 0 and my.normal_vector(2) > 0 then
 					if nx == my.x then
@@ -597,8 +589,8 @@ function is_step_new() as Boolean{
 						ret = false
 					end if
 				else
-					if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then// é≤Ç…âàÇ¡ÇƒÇƒäOå¸Ç´ÇÃéûÇÃèÍçáï™ÇØ
-						if (my.forward_vector(0) > 0 and universe.map.is_void(nx,ny-my.normal_vector(1),nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and universe.map.is_void(nx+1,ny-my.normal_vector(1),nz-my.normal_vector(2))) then
+					if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) then// é≤Ç…âàÇ¡ÇƒÇƒäOå¸Ç´ÇÃéûÇÃèÍçáï™ÇØ
+						if (my.forward_vector(0) > 0 and universe.map.is_void(nx,ny-my.normal_vector(1),nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and universe.map.is_void(nx,ny-my.normal_vector(1),nz-my.normal_vector(2))) then
 							ret = true
 						else
 							if nx == my.x then
@@ -613,7 +605,7 @@ function is_step_new() as Boolean{
 					end if
 				end if
 			elseif not(nz == 0 and my.normal_vector(2) > 0) then
-				if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then
+				if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) then
 				//ZÇÃï˚å¸Ç…Ç†Ç¡ÇΩï«Ç™Ç»Ç≠Ç»ÇÈ
 					if nx == my.x then
 						ret = true
@@ -629,7 +621,7 @@ function is_step_new() as Boolean{
 			end if
 		else
 			if not(nz == 0 and my.normal_vector(2) > 0) then
-				if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then
+				if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) then
 				//ZÇÃï˚å¸Ç…Ç†Ç¡ÇΩï«Ç™Ç»Ç≠Ç»ÇÈ
 					if nx == my.x then
 						ret = true
@@ -665,7 +657,7 @@ function is_step_new() as Boolean{
 			else
 				if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny,nz-my.normal_vector(2))) then
 				//xé≤ï˚å¸Ç…ñSÇ≠Ç»ÇÈ
-					if nx == my.X or my.y == ny then
+					if my.y == ny then
 						ret = true
 						my.normal_vector(0) = 0
 					else
@@ -673,7 +665,7 @@ function is_step_new() as Boolean{
 					end if
 				elseif (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny+1,nz-my.normal_vector(2))) then
 				//yé≤ï˚å¸Ç…ñSÇ≠Ç»ÇÈ
-					if ny == my.y or my.x == nx then
+					if my.x == nx then
 						ret = true
 						my.normal_vector(1) = 0
 					else
@@ -705,7 +697,7 @@ function is_step_new() as Boolean{
 			else
 				if (my.forward_vector(0) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(0) < 0 and not universe.map.is_void(nx+1,ny-my.normal_vector(1),nz)) then
 				//xé≤ï˚å¸Ç…ñSÇ≠Ç»ÇÈ
-					if nx == my.X or my.Z == nz  then
+					if my.Z == nz  then
 						ret = true
 						my.normal_vector(0) = 0
 					else
@@ -713,7 +705,7 @@ function is_step_new() as Boolean{
 					end if
 				elseif (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz+1)) then
 				//zé≤ï˚å¸Ç…ñSÇ≠Ç»ÇÈ
-					if nz == my.Z or my.x == nx then
+					if my.x == nx then
 						ret = true
 						my.normal_vector(2) = 0
 					else
@@ -733,7 +725,7 @@ function is_step_new() as Boolean{
 				ret = false
 			end if
 		elseif not (nx == 0 and my.normal_vector(0) > 0) then
-			if (my.forward_vector(1) > 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz)) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx-my.normal_vector(0),ny+1,nz)) then
+			if (my.forward_vector(1) > 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz)) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz)) then
 			//xÇÃï˚å¸Ç…Ç†Ç¡ÇΩï«Ç™Ç»Ç≠Ç»ÇÈ
 				if nz == 0 and my.normal_vector(2) > 0 then
 					if ny == my.y then
@@ -743,8 +735,8 @@ function is_step_new() as Boolean{
 						ret = false
 					end if
 				else
-					if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny+1,nz-my.normal_vector(2))) then// é≤Ç…âàÇ¡ÇƒÇƒäOå¸Ç´ÇÃéûÇÃèÍçáï™ÇØ
-						if (my.forward_vector(1) > 0 and universe.map.is_void(nx-my.normal_vector(0),ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and universe.map.is_void(nx-my.normal_vector(0),ny+1,nz-my.normal_vector(2))) then
+					if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) then// é≤Ç…âàÇ¡ÇƒÇƒäOå¸Ç´ÇÃéûÇÃèÍçáï™ÇØ
+						if (my.forward_vector(1) > 0 and universe.map.is_void(nx-my.normal_vector(0),ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and universe.map.is_void(nx-my.normal_vector(0),ny,nz-my.normal_vector(2))) then
 							ret = true
 						else
 							if ny == my.y then
@@ -759,7 +751,7 @@ function is_step_new() as Boolean{
 					end if
 				end if
 			elseif not(nz == 0 and my.normal_vector(2) > 0) then
-				if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny+1,nz-my.normal_vector(2))) then
+				if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) then
 				//ZÇÃï˚å¸Ç…Ç†Ç¡ÇΩï«Ç™Ç»Ç≠Ç»ÇÈ
 					if ny == my.y then
 						ret = true
@@ -775,7 +767,7 @@ function is_step_new() as Boolean{
 			end if
 		else
 			if not(nz == 0 and my.normal_vector(2) > 0) then
-				if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny+1,nz-my.normal_vector(2))) then
+				if (my.forward_vector(1) > 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx,ny,nz-my.normal_vector(2))) then
 				//ZÇÃï˚å¸Ç…Ç†Ç¡ÇΩï«Ç™Ç»Ç≠Ç»ÇÈ
 					if ny == my.y then
 						ret = true
@@ -811,7 +803,7 @@ function is_step_new() as Boolean{
 			else
 				if (my.forward_vector(1) > 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz)) or (my.forward_vector(1) < 0 and not universe.map.is_void(nx-my.normal_vector(0),ny+1,nz)) then
 				//yé≤ï˚å¸Ç…ñSÇ≠Ç»ÇÈ
-					if ny == my.y or my.Z == nz then
+					if my.Z == nz then
 						ret = true
 						my.normal_vector(1) = 0
 					else
@@ -819,7 +811,7 @@ function is_step_new() as Boolean{
 					end if
 				elseif (my.forward_vector(2) > 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx-my.normal_vector(0),ny,nz+1)) then
 				//zé≤ï˚å¸Ç…ñSÇ≠Ç»ÇÈ
-					if nz == my.Z or my.y == ny then
+					if my.y == ny then
 						ret = true
 						my.normal_vector(2) = 0
 					else
@@ -849,7 +841,7 @@ function is_step_new() as Boolean{
 						ret = false
 					end if
 				else
-					if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz+1)) then// é≤Ç…âàÇ¡ÇƒÇƒäOå¸Ç´ÇÃéûÇÃèÍçáï™ÇØ
+					if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) then// é≤Ç…âàÇ¡ÇƒÇƒäOå¸Ç´ÇÃéûÇÃèÍçáï™ÇØ
 						if (my.forward_vector(2) > 0 and universe.map.is_void(nx-my.normal_vector(0),ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and universe.map.is_void(nx-my.normal_vector(0),ny-my.normal_vector(1),nz+1)) then
 							ret = true
 						else
@@ -865,7 +857,7 @@ function is_step_new() as Boolean{
 					end if
 				end if
 			elseif not(ny == 0 and my.normal_vector(1) > 0) then
-				if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz+1)) then
+				if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) then
 				//yÇÃï˚å¸Ç…Ç†Ç¡ÇΩï«Ç™Ç»Ç≠Ç»ÇÈ
 					if nz == my.z then
 						ret = true
@@ -881,7 +873,7 @@ function is_step_new() as Boolean{
 			end if
 		else
 			if not(ny == 0 and my.normal_vector(1) > 0) then
-				if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz+1)) then
+				if (my.forward_vector(2) > 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) or (my.forward_vector(2) < 0 and not universe.map.is_void(nx,ny-my.normal_vector(1),nz)) then
 				//ZÇÃï˚å¸Ç…Ç†Ç¡ÇΩï«Ç™Ç»Ç≠Ç»ÇÈ
 					if nz == my.z then
 						ret = true
@@ -901,171 +893,6 @@ function is_step_new() as Boolean{
 	return ret
 }
 
-function is_step() as Boolean{
-	dim nx as Integer
-	dim ny as Integer
-	dim nz as Integer
-	dim diff_x as Double
-	dim diff_y as Double
-	dim diff_z as Double
-	dim ret as Boolean
-		
-	nx = Int(my.X)
-	ny = Int(my.Y)
-	nz = Int(my.Z)
-
-	diff_x = my.X - nx
-	diff_y = my.y - ny
-	diff_z = my.z - nz
-
-	if diff_x >= 0.5 then
-		nx = nx + 1
-	end if
-	if diff_y >= 0.5 then
-		ny = ny + 1
-	end if			
-	if diff_z >= 0.5 then
-		nz = nz + 1
-	end if
-
-	PrintLn("is_step")
-	PrintLn("nx = "&nx)
-		PrintLn("ny = "&ny)
-			PrintLn("nz = "&nz)
-			println("")
-
-	PrintLn("my_x = "&my.x)
-		PrintLn("my_y = "&my.Y)
-			PrintLn("my_z = "&my.Z)
-	PrintLn("")
-
-	if my.X > nx then
-		if my.Y > ny then	
-			if my.Z > nz then
-				if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz+1) then
-					ret = false
-				else
-					ret = true
-				end if
-			else
-				if nz == 0 then
-					//ret = true
-					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) then
-						ret = false
-					else
-						ret = true
-					end if
-				else
-					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
-						ret = false
-					else
-						ret = true
-					end if
-				end if
-			end if
-		else
-			if my.Z > nz then
-				if ny == 0 then
-					//ret = true
-					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny,nz+1) then
-						ret = false
-					else
-						ret = true
-					end if
-				else
-					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1)then
-						ret = false
-					else
-						ret = true
-					end if
-				end if
-			else
-				if nz == 0 or ny == 0 then
-					//ret = true
-					if universe.map.is_void(nx+1,ny,nz) or (universe.map.is_void(nx-1,ny+1,nz) and (not universe.map.is_void(nx,ny+1,nz) )) then
-						ret = false
-					else
-						ret = true
-					end if
-				else
-					if universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
-						ret = false
-					else
-						ret = true
-					end if
-				end if
-			end if		
-		end if
-	else
-		if my.Y > ny then	
-			if my.Z > nz then
-				if  nx == 0 then
-					//ret = true
-					if universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz+1) then
-						ret = false
-					else
-						ret = true
-					end if
-				else
-					if universe.map.is_void(nx-1,ny,nz) then
-						ret = false
-					else
-						if universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz+1) then
-							ret = false
-						else
-							ret = true
-						end if
-					end if
-				end if
-			else
-				if  nx == 0 or nz == 0 then
-					//ret = true
-					if universe.map.is_void(nx,ny+1,nz) then
-						ret = false
-					else
-						ret = true
-					end if
-				else
-					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny,nz-1) then
-						ret = false
-					else
-						ret = true
-					end if
-				end if
-			end if
-		else
-			if my.Z > nz then
-				if nx == 0 or ny == 0 then
-					//ret = true
-					if universe.map.is_void(nx,ny,nz+1) then
-						ret = false
-					else
-						ret = true
-					end if
-				else
-					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz+1) then
-						ret = false
-					else
-						ret = true
-					end if
-				end if
-			else
-				if nx == 0 or ny == 0 or nz == 0 then
-						ret = true
-				else
-					if universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny,nz-1) then
-						ret = false
-					else
-						ret = true
-					end if
-				end if
-			end if		
-		end if	
-	end if	
-
-	return ret
-}
-
 sub back_step(){
 	dim n(3) as Integer
 	dim diff_x as Double
@@ -1076,6 +903,7 @@ sub back_step(){
 	dim k(3) as Double
 	dim pre_n(3) as Double
 	dim i as Integer
+	dim ak(3) as Double 
 
 	println("ç°Ç¢ÇÈèÍèä")
 	println("x ;" & my.X)
@@ -1117,9 +945,10 @@ sub back_step(){
 				k(i) = (pre_n(i) - pre(i)) / u(i)
 			end if
 		end if
+		ak(i) = Abs(k(i))
 	next i
 
-	if k(0) <= k(1) and k(1) <= k(2) then
+	if ak(0) <= ak(1) and ak(1) <= ak(2) then
 		my.X = pre(0) + k(2) * u(0)
 		my.y = pre(1) + k(2) * u(1)
 		my.z = pre(2) + k(2) * u(2)
@@ -1135,7 +964,7 @@ sub back_step(){
 				my.z = pre(2) + k(0) * u(2)
 			end if
 		end if
-	elseif k(0) <= k(2) and k(2) <= k(1) then
+	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
 		my.X = pre(0) + k(1) * u(0)
 		my.y = pre(1) + k(1) * u(1)
 		my.z = pre(2) + k(1) * u(2)
@@ -1151,7 +980,7 @@ sub back_step(){
 				my.z = pre(2) + k(0) * u(2)
 			end if
 		end if
-	elseif k(1) <= k(0) and k(0) <= k(2) then
+	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
 		my.X = pre(0) + k(2) * u(0)
 		my.y = pre(1) + k(2) * u(1)
 		my.z = pre(2) + k(2) * u(2)
@@ -1167,7 +996,7 @@ sub back_step(){
 				my.z = pre(2) + k(1) * u(2)
 			end if
 		end if
-	elseif k(1) <= k(2) and k(2) <= k(0) then
+	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
 		my.X = pre(0) + k(0) * u(0)
 		my.y = pre(1) + k(0) * u(1)
 		my.z = pre(2) + k(0) * u(2)
@@ -1183,7 +1012,7 @@ sub back_step(){
 				my.z = pre(2) + k(1) * u(2)
 			end if
 		end if
-	elseif k(2) <= k(0) and k(0) <= k(1) then
+	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
 		my.X = pre(0) + k(1) * u(0)
 		my.y = pre(1) + k(1) * u(1)
 		my.z = pre(2) + k(1) * u(2)
@@ -1221,9 +1050,50 @@ sub back_step(){
 
 sub determining_bend(){
 	dim degree as double
+	dim sum as Integer
+	dim prob(3) as Double
+	dim r as Double
+	dim rad as Double
+	dim i as Integer
+	dim x as integer
+	dim y as Integer
+	dim z as Integer
 
-	degree = NormInv(Rnd(),0,30) + my.Direction
-	
+	println("before")
+	PrintLn("x is"&my.forward_vector(0))
+	PrintLn("y is"&my.forward_vector(1))
+
+	//degree = NormInv(Rnd(),0,30)
+	degree = 30
+	rad = DegreeToRad(degree)
+	x = my.forward_vector(0)
+	y = my.forward_vector(1)
+	z = my.forward_vector(2)
+	PrintLn("x is"&x)
+	PrintLn("y is"&y)
+	println(cos(rad))
+		println(sin(rad))
+
+	sum = Abs(my.normal_vector(0)) + Abs(my.normal_vector(1)) + Abs(my.normal_vector(2))
+	r = Rnd()
+	for i = 0 to 2	
+		prob(i) = Abs(my.normal_vector(i)) / sum
+	next i
+
+	if r < prob(0) then
+		my.forward_vector(1) = Cos(rad) * y - Sin(rad) * z
+		my.forward_vector(2) = Sin(rad) * y + cos(rad) * z 		 
+	elseif r < prob(0) + prob(1) then
+		my.forward_vector(0) = Cos(rad) * x + Sin(rad) * z 
+		my.forward_vector(2) = (-1) * Sin(rad) * x + cos(rad) * z		 
+	else
+		my.forward_vector(0) = Cos(rad) * x - Sin(rad) * y 
+		my.forward_vector(1) = Sin(rad) * x + cos(rad) * y 		 
+	end if
+
+	println("after")
+	PrintLn("x is"&my.forward_vector(0))
+	PrintLn("y is"&my.forward_vector(1))
 }
 
 
@@ -1376,7 +1246,6 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(2,1) = my.forward_vector(2) * my.normal_vector(1) * my.ap_or_dis
 			my.next_vector(2,2) = my.forward_vector(1) * my.normal_vector(2) * my.ap_or_dis
 
-			println("angle is "& angle)
 /*
 			calculate_matrix()
 
@@ -1446,10 +1315,6 @@ sub store_vector(type as Integer,angle as Double){
 			PrintLn("type miss")
 		end if
 	end if
-
-	println("vector is")
-	println("x : "&my.next_vector(2,0)&"  y : "&my.next_vector(2,1)&"   z : "&my.next_vector(2,2))
-	println("")
 }
 
 sub calculate_matrix(){
@@ -1496,9 +1361,6 @@ sub select_vector(){
 		prob(i) = calculate_probabilistic(my.next_vector(i,0),my.next_vector(i,1),my.next_vector(i,2),sum_diff)
 	next i
 	r = Rnd()
-
-	println("prob(0) : " &prob(0)&"      prob(1) :"&prob(1)&"      prob(2) : "&prob(2))
-	println("r : "&r)
 
 	if r < prob(0) then
 		my.forward_vector(0) = my.next_vector(0,0)
@@ -1599,14 +1461,6 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
-
-	println("")
-	println("n = "&n)
-	println("diff = "& diff)
-	println("sum_diff = "& sum_diff)
-	println("my.base_vector(0) : " &my.base_vector(0)&"my.base_vector(1) : " &my.base_vector(1)&"my.base_vector(2) : " &my.base_vector(2))
-	println("prob = "& ret)
-	println("")
 	
 	return ret
 }
@@ -1614,7 +1468,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 function is_bend() as Boolean{
 	dim ret as Boolean
 
-	if Rnd() < 0.01 then
+	if Rnd() < 0.2 then
 		ret = true
 	else
 		ret = false
@@ -2179,7 +2033,6 @@ function is_disappear_surface() as Boolean{
 	}
 
 
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -2473,14 +2326,14 @@ Others_Data {
     Rule_Colored = Yes;
     Rule_LineNo = Yes;
     Window_Hide_Run = 1;
-    Debug_Position_x = 71;
+    Debug_Position_x = 72;
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
     Console_Position_x = 1084;
     Console_Position_y = -16;
     Console_Size_x = 920;
-    Console_Size_y = 909;
+    Console_Size_y = 905;
     Componen_Tree_Position_x = 755;
     Componen_Tree_Position_y = 152;
     Componen_Tree_Size_x = 839;
