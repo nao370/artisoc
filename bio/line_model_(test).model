@@ -30,7 +30,7 @@ UNIVERSE {
             Dim normal_vector(0, 0)[3] As Double = (3*0.0);
             Dim tmp_position(0, 0)[3] As Double = (3*0.0);
             Dim do_type(0, 0) <1>  As Integer = (0);
-            Dim ap_or_dis(0, 0) As Integer = ();
+            Dim ap_or_dis(0, 0) As Integer = (0);
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -1261,27 +1261,99 @@ sub store_vector(type as Integer,angle as Double){
 	//}‚ÌáŠQ•¨Œ©‚ÄƒxƒNƒgƒ‹‚Ì•ûŒü‚ðŒˆ‚ß‚é
 		if type == 3 then
 			my.next_vector(0,0) = 0
-			my.next_vector(0,1) = my.ap_or_dis * my.normal_vector(1)
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,1) = my.normal_vector(1)
+			else
+				if Int(my.Y) == 0 and my.normal_vector(1) > 0 then
+					my.next_vector(0,1) = my.normal_vector(1)
+				else
+					if universe.map.is_void(Int(my.X),Int(my.Y) - my.normal_vector(1),Int(my.Z)) then
+						my.next_vector(0,1) = my.normal_vector(1) 
+					else
+						my.next_vector(0,1) = - my.normal_vector(1)
+					end if
+				end if
+			end if
 			my.next_vector(0,2) = 0
 
-			my.next_vector(1,0) = my.ap_or_dis * my.normal_vector(0)
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,0) = my.normal_vector(0)
+			else
+				if Int(my.x) == 0 and my.normal_vector(0) > 0 then
+					my.next_vector(1,0) = my.normal_vector(0)
+				else
+					if universe.map.is_void(Int(my.X) - my.normal_vector(0),Int(my.Y),Int(my.Z)) then
+						my.next_vector(1,0) = my.normal_vector(0) 
+					else
+						my.next_vector(1,0) = - my.normal_vector(0)
+					end if
+				end if
+			end if
 			my.next_vector(1,1) = 0
 			my.next_vector(1,2) = 0
 		elseif type == 4 then
 			my.next_vector(0,0) = 0
 			my.next_vector(0,1) = 0
-			my.next_vector(0,2) = my.ap_or_dis * my.normal_vector(2)
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,2) = my.normal_vector(2)
+			else
+				if Int(my.z) == 0 and my.normal_vector(2) > 0 then
+					my.next_vector(0,2) = my.normal_vector(2)
+				else
+					if universe.map.is_void(Int(my.X),Int(my.Y),Int(my.Z) - my.normal_vector(2)) then
+						my.next_vector(0,2) = my.normal_vector(2) 
+					else
+						my.next_vector(0,2) = - my.normal_vector(2)
+					end if
+				end if
+			end if
 
-			my.next_vector(1,0) = my.ap_or_dis * my.normal_vector(0)
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,0) = my.normal_vector(0)
+			else
+				if Int(my.x) == 0 and my.normal_vector(0) > 0 then
+					my.next_vector(1,0) = my.normal_vector(0)
+				else
+					if universe.map.is_void(Int(my.X) - my.normal_vector(0),Int(my.Y),Int(my.Z)) then
+						my.next_vector(1,0) = my.normal_vector(0) 
+					else
+						my.next_vector(1,0) = - my.normal_vector(0)
+					end if
+				end if
+			end if
 			my.next_vector(1,1) = 0
 			my.next_vector(1,2) = 0
 		elseif type == 5 then
 			my.next_vector(0,0) = 0
 			my.next_vector(0,1) = 0
-			my.next_vector(0,2) = my.ap_or_dis * my.normal_vector(2)
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,2) = my.normal_vector(2)
+			else
+				if Int(my.z) == 0 and my.normal_vector(2) > 0 then
+					my.next_vector(0,2) = my.normal_vector(2)
+				else
+					if universe.map.is_void(Int(my.X),Int(my.Y),Int(my.Z) - my.normal_vector(2)) then
+						my.next_vector(0,2) = my.normal_vector(2) 
+					else
+						my.next_vector(0,2) = - my.normal_vector(2)
+					end if
+				end if
+			end if
 
 			my.next_vector(1,0) = 0
-			my.next_vector(1,1) = my.ap_or_dis * my.normal_vector(1)
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,1) = my.normal_vector(1)
+			else
+				if Int(my.Y) == 0 and my.normal_vector(1) > 0 then
+					my.next_vector(1,1) = my.normal_vector(1)
+				else
+					if universe.map.is_void(Int(my.X),Int(my.Y) - my.normal_vector(1),Int(my.Z)) then
+						my.next_vector(1,1) = my.normal_vector(1) 
+					else
+						my.next_vector(1,1) = - my.normal_vector(1)
+					end if
+				end if
+			end if
 			my.next_vector(1,2) = 0
 		else
 			println("type miss")
@@ -1628,13 +1700,17 @@ function is_appear_surface() as Boolean{
 					ret = false
 				end if
 			else
-				if universe.map.is_void(my.X-1,my.Y,my.Z) then
+				if nx == 0 then
 					ret = true
-					my.angle_surface = -1
-					my.b_type = 5
-					my.normal_vector(0) = 1
 				else
-					ret = false
+					if universe.map.is_void(my.X-1,my.Y,my.Z) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type = 5
+						my.normal_vector(0) = 1
+					else
+						ret = false
+					end if
 				end if			
 			end if
 		else
@@ -1740,13 +1816,17 @@ function is_appear_surface() as Boolean{
 					ret = false
 				end if
 			else
-				if universe.map.is_void(my.X,my.Y-1,my.Z) then
+				if ny == 0 then
 					ret = true
-					my.angle_surface = -1
-					my.b_type =4
-					my.normal_vector(1) = 1
 				else
-					ret = false
+					if universe.map.is_void(my.X,my.Y-1,my.Z) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type =4
+						my.normal_vector(1) = 1
+					else
+						ret = false
+					end if
 				end if			
 			end if
 		else
@@ -1808,13 +1888,17 @@ function is_appear_surface() as Boolean{
 					ret = false
 				end if
 			else
-				if universe.map.is_void(my.X,my.Y,my.Z-1) then
+				if nz == 0 then
 					ret = true
-					my.angle_surface = -1
-					my.b_type =3
-					my.normal_vector(2) = -1
 				else
-					ret = false
+					if universe.map.is_void(my.X,my.Y,my.Z-1) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type =3
+						my.normal_vector(2) = -1
+					else
+						ret = false
+					end if
 				end if			
 			end if
 		else
@@ -2092,6 +2176,10 @@ function is_disappear_surface() as Boolean{
 	end if		
 	
 	return ret
+	}
+
+
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
