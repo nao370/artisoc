@@ -1937,11 +1937,11 @@ function is_disappear_surface() as Boolean{
 			ret = false
 		end if	
 	elseif axis == 3 then
-		if nx == my.X then
-			if not (ny == 0 and my.normal_vector(1) > 0) then
-				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
+		if ny == my.Y then
+			if not (nx == 0 and my.normal_vector(0) > 0) then
+				if not universe.map.is_void(nx-my.normal_vector(0),ny,nz) then
 					if not (nz == 0 and my.normal_vector(2) > 0) then
-						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny - my.normal_vector(1),nz - my.normal_vector(2)) then
+						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx- my.normal_vector(0),ny,nz - my.normal_vector(2)) then
 							ret = false
 						else
 							ret = true
@@ -2021,11 +2021,11 @@ function is_disappear_surface() as Boolean{
 			ret = false
 		end if	
 	else
-		if nx == my.X then
+		if nz == my.Z then
 			if not (ny == 0 and my.normal_vector(1) > 0) then
 				if not universe.map.is_void(nx,ny-my.normal_vector(1),nz) then
-					if not (nz == 0 and my.normal_vector(2) > 0) then
-						if not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny - my.normal_vector(1),nz - my.normal_vector(2)) then
+					if not (nx == 0 and my.normal_vector(0) > 0) then
+						if not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny - my.normal_vector(1),nz) then
 							ret = false
 						else
 							ret = true
@@ -2038,8 +2038,8 @@ function is_disappear_surface() as Boolean{
 						my.normal_vector(2) = my.forward_vector(2)
 					end if
 				else
-					if not (nz == 0 and my.normal_vector(2) > 0) then
-						if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) then
+					if not (nx == 0 and my.normal_vector(0) > 0) then
+						if universe.map.is_void(nx - my.normal_vector(0),ny,nz) then
 							ret = false
 						else
 							ret = true
@@ -2051,8 +2051,8 @@ function is_disappear_surface() as Boolean{
 					end if
 				end if
 			else
-				if not (nz == 0 and my.normal_vector(2) > 0) then
-					if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) then
+				if not (nx == 0 and my.normal_vector(0) > 0) then
+					if universe.map.is_void(nx - my.normal_vector(2),ny,nz) then
 						ret = false
 					else
 						ret = true
@@ -2069,7 +2069,7 @@ function is_disappear_surface() as Boolean{
 	end if		
 	
 	return ret
-	}
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
