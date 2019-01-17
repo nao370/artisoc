@@ -32,6 +32,7 @@ UNIVERSE {
             Dim do_type(0, 0) <1>  As Integer = (0);
             Dim ap_or_dis(0, 0) As Integer = (0);
             Dim a_flag(0, 0) As Boolean = (0);
+            Dim position_type(0, 0) As Integer = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -448,6 +449,8 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 
 	return ret
 	}
+	}
+	}
 #end_rule UNIVERSE
 
 
@@ -468,6 +471,7 @@ my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 my.do_type = 1
 my.ap_or_dis = 1
+my.position_type = 0
 }
 
 Agt_Step{
@@ -556,10 +560,10 @@ sub step_direction(){
 function is_step() as Boolean{
 	dim ret as Boolean
 
-	if not is_filled() then
+	if is_filled() then
 		ret = false
 	else
-		if not is_float() then
+		if is_float() then
 			ret = false
 		else
 			if is_jump() then
@@ -872,6 +876,8 @@ function type_gap(x as Double,a as Integer) as Integer{
 
 function is_filled() as Boolean{
 	dim i as Integer
+	dim j as Integer
+	dim k as Integer
 	dim a(3) as Integer
 	dim x(3) as Double
 	dim g(3) as Integer
@@ -883,43 +889,41 @@ function is_filled() as Boolean{
 
 	for i = 0 to 2
 		a(i) = close_num(x(i))
-		g(i) = type_gap(x(i),a(i))
-		println("a"&i&" : "&a(i))
-		println("x"&i&" : "&x(i))
-		println("g"&i&" : "&g(i))
 	next i
 
-	if g(0) == 0 then
-		if universe.map.is_void(a(0),a(1)+g(1),a(2)) or universe.map.is_void(a(0),a(1),a(2)+g(2)) or universe.map.is_void(a(0),a(1)+g(1),a(2)+g(2)) then
-			ret = false
+	ret = false
+	for i = 0 to 2
+		if a(i) == 0 then
+			g(i) = 0
 		else
-			ret = true
+			g(i) = 1
 		end if
-	elseif g(1) == 0 then
-		if universe.map.is_void(a(0)+g(0),a(1),a(2)) or universe.map.is_void(a(0),a(1),a(2)+g(2)) or universe.map.is_void(a(0)+g(0),a(1),a(2)+g(2)) then
-			ret = false
-		else
-			ret = true
-		end if
-	elseif g(2) == 0 then
-		if universe.map.is_void(a(0)+g(0),a(1),a(2)) or universe.map.is_void(a(0),a(1)+g(1),a(2)) or universe.map.is_void(a(0)+g(0),a(1)+g(1),a(2)) then
-			ret = false
-		else
-			ret = true
-		end if
-	else
-		ret = false
-	end if
+	next i
+	
+	for k = 0 to (1 + g(2))
+	 for j = 0 to (1 + g(1))
+	 	for i = 0 to (1 + g(0))
+	 		if universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+	 			if abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
+	 				ret = true
+	 				return ret
+	 			end if
+	 		end if
+	 	next i
+	 next j
+	next k
 
 	return ret
 }
 
 function is_float() as Boolean{
 	dim i as Integer
+	dim j as Integer
+	dim k as Integer
 	dim a(3) as Integer
 	dim x(3) as Double
+	dim g(3) as Integer
 	dim ret as Boolean
-	dim n(3) as Integer
 
 	x(0) = my.X
 	x(1) = my.Y
@@ -927,111 +931,34 @@ function is_float() as Boolean{
 
 	for i = 0 to 2
 		a(i) = close_num(x(i))
-		n(i) = Int(x(i))
+	next i
+
+	ret = false
+	for i = 0 to 2
+		if a(i) == 0 then
+			g(i) = 0
+		else
+			g(i) = 1
+		end if
 	next i
 
 	if x(0) == 0 or x(1) == 0 or x(2) == 0 then
-		ret = true
+		ret = false
 		return ret
 	end if
-
-	if n(0) == x(0) and n(1) == x(1) and n(2) == x(2) then 
-		if universe.map.is_void(a(0)+1,a(1),a(2)) or universe.map.is_void(a(0)-1,a(1),a(2)) then
-			ret = true
-		else
-			if universe.map.is_void(a(0),a(1)+1,a(2)) or universe.map.is_void(a(0),a(1)-1,a(2)) then
-				ret = true
-			else
-				if universe.map.is_void(a(0),a(1),a(2)+1) or universe.map.is_void(a(0),a(1),a(2)-1) then
-					ret = true
-				else
-					if universe.map.is_void(a(0)+1,a(1)+1,a(2)) or universe.map.is_void(a(0)+1,a(1)-1,a(2)) or universe.map.is_void(a(0)-1,a(1)+1,a(2)) or universe.map.is_void(a(0)-1,a(1)-1,a(2)) then
-						ret = true
-					else
-						if universe.map.is_void(a(0)+1,a(1),a(2)+1) or universe.map.is_void(a(0)+1,a(1),a(2)-1) or universe.map.is_void(a(0)-1,a(1),a(2)+1) or universe.map.is_void(a(0)-1,a(1),a(2)-1) then
-							ret = true
-						else
-							if universe.map.is_void(a(0),a(1)+1,a(2)+1) or universe.map.is_void(a(0),a(1)+1,a(2)-1) or universe.map.is_void(a(0),a(1)-1,a(2)+1) or universe.map.is_void(a(0),a(1)-1,a(2)-1) then
-								ret = true
-							else
-								if universe.map.is_void(a(0)+1,a(1)+1,a(2)+1) or universe.map.is_void(a(0)+1,a(1)+1,a(2)-1) or universe.map.is_void(a(0)+1,a(1)-1,a(2)+1) or universe.map.is_void(a(0)+1,a(1)-1,a(2)-1) then
-									ret = true
-								else
-									if universe.map.is_void(a(0)-1,a(1)+1,a(2)+1) or universe.map.is_void(a(0)-1,a(1)+1,a(2)-1) or universe.map.is_void(a(0)-1,a(1)-1,a(2)+1) or universe.map.is_void(a(0)-1,a(1)-1,a(2)-1) then
-										ret = true
-									else
-										ret = false
-									end if
-								end if
-							end if
-						end if
-					end if
-				end if
-			end if
-		end if
-	elseif n(0) == x(0) and n(1) == x(1) and n(2) != x(2) then
-		if universe.map.is_void(a(0)+1,a(1),a(2)) or universe.map.is_void(a(0)-1,a(1),a(2)) then
-			ret = true
-		else
-			if universe.map.is_void(a(0),a(1)+1,a(2)) or universe.map.is_void(a(0),a(1)-1,a(2)) then
-				ret = true
-			else
-				if universe.map.is_void(a(0)+1,a(1)+1,a(2)) or universe.map.is_void(a(0)+1,a(1)-1,a(2)) or universe.map.is_void(a(0)-1,a(1)+1,a(2)) or universe.map.is_void(a(0)-1,a(1)-1,a(2)) then
-					ret = true
-				else
-					ret = false
-				end if
-			end if
-		end if
-	elseif n(0) == x(0) and n(1) != x(1) and n(2) == x(2) then
-		if universe.map.is_void(a(0)+1,a(1),a(2)) or universe.map.is_void(a(0)-1,a(1),a(2)) then
-			ret = true
-		else
-			if universe.map.is_void(a(0),a(1),a(2)+1) or universe.map.is_void(a(0),a(1),a(2)-1) then
-				ret = true
-			else
-				if universe.map.is_void(a(0)+1,a(1),a(2)+1) or universe.map.is_void(a(0)+1,a(1),a(2)-1) or universe.map.is_void(a(0)-1,a(1),a(2)+1) or universe.map.is_void(a(0)-1,a(1),a(2)-1) then
-					ret = true
-				else
-					ret = false
-				end if
-			end if
-		end if
-	elseif n(0) == x(0) and n(1) != x(1) and n(2) != x(2) then
-		if universe.map.is_void(a(0)+1,a(1),a(2)) or universe.map.is_void(a(0)-1,a(1),a(2)) then
-			ret = true
-		else
-			ret = false
-		end if
-	elseif n(0) != x(0) and n(1) == x(1) and n(2) == x(2) then
-		if universe.map.is_void(a(0),a(1)+1,a(2)) or universe.map.is_void(a(0),a(1)-1,a(2)) then
-			ret = true
-		else
-			if universe.map.is_void(a(0),a(1),a(2)+1) or universe.map.is_void(a(0),a(1),a(2)-1) then
-				ret = true
-			else
-				if universe.map.is_void(a(0),a(1)+1,a(2)+1) or universe.map.is_void(a(0),a(1)+1,a(2)-1) or universe.map.is_void(a(0),a(1)-1,a(2)+1) or universe.map.is_void(a(0),a(1)-1,a(2)-1) then
-					ret = true
-				else
-					ret = false
-				end if
-			end if
-		end if
-	elseif n(0) != x(0) and n(1) == x(1) and n(2) != x(2) then
-		if universe.map.is_void(a(0),a(1)+1,a(2)) or universe.map.is_void(a(0),a(1)-1,a(2)) then
-			ret = true
-		else
-			ret = false
-		end if
-	elseif n(0) != x(0) and n(1) != x(1) and n(2) == x(2) then
-		if universe.map.is_void(a(0),a(1),a(2)+1) or universe.map.is_void(a(0),a(1),a(2)-1) then
-			ret = true
-		else
-			ret = false
-		end if
-	else
-		ret = false
-	end if
+	
+	for k = 0 to (1 + g(2))
+	 for j = 0 to (1 + g(1))
+	 	for i = 0 to (1 + g(0))
+	 		if universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+	 			if abs(a(0) - g(0) + i  - my.X) > 1 and abs(a(1) - g(1) + j  - my.y) > 1 and abs(a(2) - g(2) + k  - my.z) > 1 then
+	 				ret = true
+	 				return ret
+	 			end if
+	 		end if
+	 	next i
+	 next j
+	next k
 
 	return ret
 }
@@ -1675,11 +1602,13 @@ function direction_type() as Integer{
 function is_appear_surface() as Boolean{
 	dim ret as Boolean
 	dim axis as Integer
+	dim pos as Integer
 	dim nx as Integer
 	dim ny as Integer
 	dim nz as Integer
 
 	axis = direction_type()
+	pos = my.position_type
 	ny = Int(my.Y)
 	nz = Int(my.Z)
 	nx = Int(my.X)
@@ -1920,7 +1849,7 @@ function is_appear_surface() as Boolean{
 		else
 			ret = false
 		end if		
-	end if		
+	end if	
 
 	return ret
 }
@@ -2202,6 +2131,8 @@ function is_disappear_surface() as Boolean{
 	end if		
 	
 	return ret
+	}
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -2409,7 +2340,7 @@ Map3D_Output {
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
     Position_x = 5;
-    Position_y = -11;
+    Position_y = -10;
     Size_x = 1075;
     Size_y = 909;
     Map_Cell_Size = -1;
@@ -2503,8 +2434,8 @@ Others_Data {
     Console_Position_y = -6;
     Console_Size_x = 920;
     Console_Size_y = 905;
-    Componen_Tree_Position_x = 541;
-    Componen_Tree_Position_y = 50;
+    Componen_Tree_Position_x = 870;
+    Componen_Tree_Position_y = 891;
     Componen_Tree_Size_x = 839;
     Componen_Tree_Size_y = 383;
     Console_Background_Color = 16777215;
