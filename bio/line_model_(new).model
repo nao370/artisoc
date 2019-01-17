@@ -448,7 +448,6 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 
 	return ret
 	}
-	}
 #end_rule UNIVERSE
 
 
@@ -2203,8 +2202,6 @@ function is_disappear_surface() as Boolean{
 	end if		
 	
 	return ret
-	}
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -2233,7 +2230,7 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 5;
+    Exec_Wait = 12;
     Exec_Wait_Max = 1000;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
@@ -2263,7 +2260,7 @@ Map_Output {
     Map_Space_Name = "Universe.map";
     Map_Name = "map";
     Title = "map";
-    Disable = No;
+    Disable = Yes;
     Background_Color = 255, 255, 255;
     Position_x = 1497;
     Position_y = 133;
@@ -2397,7 +2394,7 @@ Map3D_Output {
     Background_Image_Folder_Name = "";
     Background_Image_Folder_Variable_Name = Dummy;
     Background_Color = -1;
-    FastDraw = Yes;
+    FastDraw = No;
     Line_Display = No;
     Camera_Position_Type = Mouse;
     Camera_Position_Agent_Name = Universe.CameraPointer;
