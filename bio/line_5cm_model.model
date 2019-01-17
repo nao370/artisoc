@@ -1,0 +1,1686 @@
+//====================================================================/
+//　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　/
+// artisoc                                                            /
+//                                                                    /
+//====================================================================/
+
+Version = 4.0;
+
+
+
+//-------------------------------------------------------
+// Component Tree
+//-------------------------------------------------------
+UNIVERSE {
+    Space map(0,0),Square_2D(20, 40, !Loop, North, 1, Map_3D){
+        AgtType insect(0, 0)[1] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) <2>  As Double = (0.0);
+            Dim Y(0, 0) <2>  As Double = (0.0);
+            Dim Z(0, 0) <2>  As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+            Dim next_vector(0, 0)[3][3] As Double = (9*0.0);
+            Dim forward_vector(0, 0)[3] As Double = (3*0.0);
+            Dim base_vector(0, 0)[3] As Double = (3*0.0);
+            Dim angle_surface(0, 0) As Double = (0.0);
+            Dim b_type(0, 0) As Integer = (0);
+            Dim matrix(0, 0)[3][3] As Double = (9*0.0);
+            Dim normal_vector(0, 0)[3] As Double = (3*0.0);
+            Dim tmp_position(0, 0)[3] As Double = (3*0.0);
+            Dim do_type(0, 0) <1>  As Integer = (0);
+            Dim ap_or_dis(0, 0) As Integer = (0);
+            Dim a_flag(0, 0) As Boolean = (0);
+            Dim position_type(0, 0) As Integer = ();
+        }
+        AgtType barrier(0, 0)[0] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Z(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+        }
+        Dim fin(0, 0)[20][40][1] As Integer = (800*0);
+        Dim is_void(0, 0)[20][40][16] As Boolean = (12800*0);
+    }
+    Dim CameraPointer(0, 0) As Agt = (0);
+    Dim num_fin(0, 0) As Integer = (0);
+}
+
+
+//-------------------------------------------------------
+// Agent Variable Initial Data
+//-------------------------------------------------------
+Initial_Value {
+    UNIVERSE.MAP.INSECT.X = 1(1.0);
+    UNIVERSE.MAP.INSECT.Y = 1(1.0);
+    UNIVERSE.MAP.INSECT.Z = 1(0.0);
+    UNIVERSE.MAP.INSECT.LAYER = 1(0);
+    UNIVERSE.MAP.INSECT.DIRECTION = 1(0.0);
+    UNIVERSE.MAP.INSECT.ANGLE = 1(0.0);
+    UNIVERSE.MAP.INSECT.FORWARD_VECTOR = 1(3*0.0);
+    UNIVERSE.MAP.INSECT.BASE_VECTOR = 1(3*0.0);
+    UNIVERSE.MAP.INSECT.ANGLE_SURFACE = 1(0.0);
+    UNIVERSE.MAP.INSECT.B_TYPE = 1(0);
+    UNIVERSE.MAP.INSECT.NORMAL_VECTOR = 1(2*0.0, 1.0);
+    UNIVERSE.MAP.INSECT.TMP_POSITION = 1(3*0.0);
+}
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE
+Univ_Init{
+	ClearConsoleScreen()
+	make_rubble_mix(0.1)
+	write_void()
+	println("")
+	println("start")
+}
+
+sub write_void(){
+dim i as Integer
+dim j as Integer
+
+for j = 0 to GetHeightSpace(universe.map) -1
+for i = 0 to GetWidthSpace(universe.map) -1
+if universe.map.is_void(i,j,0) then
+print("■")
+else
+print("□")
+end if
+next i
+println("")
+next j
+}
+
+Univ_Step_Begin{
+
+}
+
+Univ_Step_End{
+
+}
+
+Univ_Finish{
+
+}
+
+sub make_rubble_mix(rate as Double){
+	dim tmp_rate as Double
+	dim tmp_number as Integer
+	dim max as Integer
+	dim height as Integer
+	dim width as Integer
+	dim x as integer
+	dim y as integer
+	dim z as integer
+	dim r as Double
+	dim pattern as Integer
+
+	tmp_rate = 0
+	tmp_number = 0
+	height = GetHeightSpace(universe.map)
+	width = GetWidthSpace(universe.map)
+	max = height * width * 16
+
+	Do While tmp_rate < rate
+		x = Int(Rnd() * (width-2)) + 2
+		y = Int(Rnd() * (height-2)) + 2
+		z = Int(Rnd() * (16))
+		pattern = Int(Rnd() * 3)
+		r = Rnd() * 100
+		if r < 33 then
+			tmp_number = tmp_number + make_rubble_board(pattern,x,y,z)
+		elseif r < 66 then
+//			tmp_number = tmp_number + make_rubble_box(x,y,z)
+		else
+//			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
+		end if		
+		tmp_rate = tmp_number / max
+	Loop
+}
+
+function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as integer)as Integer{
+	dim t as Integer
+	dim a as Integer
+	dim b as Integer
+	dim c as Integer
+	dim one as Agt
+	dim set as AgtSet
+	dim temp as AgtSet
+	dim ret as Integer
+	dim flag as Boolean
+
+	flag = false
+	ret = 64
+	set = CreateAgtMulti(universe.map.barrier,64)
+	if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //水平に置く
+		for each one in set
+			t = GetAgtEntry(set,one)
+			c = t / 8
+			b = t Mod 8
+			MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+			if is_void(temp,z) then
+				one.X = x + b
+				one.Y = y + c
+				one.Z = z
+				universe.map.is_void(x+b,y+c,z) = true
+				if z == 0 then
+					flag = true
+				else
+					if universe.map.is_void(x+b,y+c,z) then
+						flag = true
+					end if
+				end if
+			else
+				DelAgt(one)
+				ret = ret - 1
+			end if
+		next one
+		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
+	elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 16 - 8 then // 縦長に置く
+		for each one in set
+			t = GetAgtEntry(set,one)
+			a = t / 8
+			b = t Mod 8
+			MakeOneAgtSetAroundPosition(temp,universe.map,x,y+b,0,0,universe.map.barrier)
+			if is_void(temp,z+a) then
+				one.X = x
+				one.Y = y + b
+				one.Z = z + a
+				universe.map.is_void(x,y+b,z+a) = true
+				if z+a == 0 then
+					flag = true
+				else
+					if universe.map.is_void(x,y+b,z) then
+						flag = true
+					end if
+				end if
+			else
+				delagt(one)
+				ret = ret - 1
+			end if
+		next one
+		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
+	elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 16 - 8 then // 横長に置く
+		for each one in set
+			t = GetAgtEntry(set,one)
+			a = t / 8
+			c = t Mod 8
+			MakeOneAgtSetAroundPosition(temp,universe.map,x+c,y,0,0,universe.map.barrier)
+			if is_void(temp,z+a) then
+				one.X = x + c
+				one.Y = y
+				one.Z = z + a
+				universe.map.is_void(x+c,y,z+a) = true
+				if z+a == 0 then
+					flag = true
+				else
+					if universe.map.is_void(x+c,y,z) then
+						flag = true
+					end if
+				end if
+			else
+				delagt(one)
+				ret = ret - 1
+			end if
+		next one
+		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
+	else
+		ret = 0
+	end if
+
+	return ret
+}
+
+function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
+	dim t as Integer
+	dim a as Integer
+	dim b as Integer
+	dim c as Integer
+	dim one as Agt
+	dim set as AgtSet
+	dim temp as AgtSet
+	dim ret as integer
+	dim flag as Boolean
+
+	ret = 64
+		flag = false
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
+	set = CreateAgtMulti(universe.map.barrier,64)
+	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 16 - 4 then
+		if CountAgtSet(temp) == 0 then
+			for each one in set
+				t = GetAgtEntry(set,one)
+				a = t  / 16 
+				b = t Mod (16)
+				c = b / 4
+				b = b Mod 4
+ 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+ 				if is_void(temp,z+a) then
+		  		one.X = x + b
+		  		one.Y = y + c
+		  		one.Z = z + a
+		  		universe.map.is_void(x+b,y+c,z+a) = true
+		  		if z+a == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z) then
+							flag = true
+						end if
+					end if
+		  	else
+					delagt(one)
+					ret = ret - 1		  		
+		  	end if		  	
+			next one
+			if  not flag then
+				for each one in set
+					DelAgt(one)
+				next one
+				ret = 0
+			end if
+		 end if
+		else
+			ret = 0
+		end if
+
+		return ret
+}
+
+function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as integer)as Integer{
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+	dim t as Integer
+	dim c as Integer
+	dim ret as Integer
+	dim flag as Boolean
+
+	ret = 64
+		flag = false
+	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
+	set = CreateAgtMulti(universe.map.barrier,64)
+	if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 16 -2  then
+	//横長の柱を作る
+		if CountAgtSet(temp) == 0 then
+			for each one in set
+				t = GetAgtEntry(set,one)
+	  		a = t  / 32 
+	  		b = t Mod (32)
+	  		c = b / 16
+	  		b = b Mod 16
+ 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+ 				if is_void(temp,z+a) then
+		  		one.X = x + b
+		  		one.Y = y + c
+		  		one.Z = z + a
+		  		universe.map.is_void(x+b,y+c,z+a) = true
+		  		if z+a == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z) then
+							flag = true
+						end if
+					end if
+		  	else
+					delagt(one)
+					ret = ret - 1		  		
+		  	end if
+	  	next one
+	  	if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
+	  end if	 
+	elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 16 -2 then
+	//縦長の柱を作る
+		if CountAgtSet(temp) == 0 then
+  		for each one in set
+  			t = GetAgtEntry(set,one)
+  			a = t  / 32 
+  			b = t Mod (32)
+  			c = b / 2
+  			b = b Mod 2
+ 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+ 				if is_void(temp,z+a) then
+	  			one.X = x + b
+ 		 			one.Y = y + c
+ 		 			one.Z = z + a
+ 		 			universe.map.is_void(x+b,y+c,z+a) = true
+ 		 			if z+a == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z) then
+							flag = true
+						end if
+					end if
+ 		 		else
+					delagt(one)
+					ret = ret - 1		  	 		 		
+ 		 		end if
+  		next one
+  		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
+  	end if
+  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 16 - 16 then //立ってる柱を作る
+		if CountAgtSet(temp) == 0 then
+  		for each one in set
+  			t = GetAgtEntry(set,one)
+  			a = t  / 4 
+  			b = t Mod (4)
+  			c = b / 2
+  			b = b Mod 2
+ 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
+ 				if is_void(temp,z+a) then
+	  			one.X = x + b
+ 		 			one.Y = y + c
+ 		 			one.Z = z + a
+ 		 			universe.map.is_void(x+b,y+c,z+a) = true
+ 		 			if z+a == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z) then
+							flag = true
+						end if
+					end if
+ 		 		else
+					delagt(one)
+					ret = ret - 1		  	 		 		
+ 		 		end if
+  		next one
+  		if  not flag then
+			for each one in set
+				DelAgt(one)
+			next one
+			ret = 0
+		end if
+  	end if  
+  else
+  	ret = 0
+	end if
+
+	return ret
+}
+
+function is_void(tmp as AgtSet,z as Integer)as Boolean{
+	dim one as Agt
+	dim ret as Boolean
+
+	ret = true
+	if CountAgtSet(tmp) == 0 then
+		ret = true
+	else
+		for each one in tmp
+			if one.Z == z then
+				ret = false
+				break
+			end if
+		next one
+	end if
+
+	return ret
+	}
+	}
+	}
+#end_rule UNIVERSE
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.INSECT
+//Include "bend.inc"
+//Include "vector.inc"
+//Include "surface.inc"
+//Include "calculate.inc"
+
+Agt_Init{
+my.Direction = 60
+my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
+my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
+my.do_type = 1
+my.ap_or_dis = 1
+my.position_type = 0
+}
+
+Agt_Step{
+
+	if different_surface() then
+		println("b_type"& my.b_type)
+		determining_vector()
+		delete_normal_vector()
+	else
+		if is_bend() then
+			determining_bend()
+		end if
+	end if
+	forward_step()
+
+	PrintLn("myX is "&my.X)
+	PrintLn("myY is "&my.Y)
+	PrintLn("myZ is "&my.Z)
+
+	PrintLn("normalX is "&my.normal_vector(0))
+	PrintLn("normalY is "&my.normal_vector(1))
+	PrintLn("normalZ is "&my.normal_vector(2))
+
+	println("do_type"& my.do_type)
+
+	println("")
+			
+}
+
+sub delete_normal_vector(){
+	dim type as Integer
+
+	type = my.do_type
+
+	if type == 0 then
+		my.normal_vector(0) = 0
+	elseif type == 1 then
+		my.normal_vector(0) = 0
+		my.normal_vector(1) = 0
+	elseif type == 2 then
+		my.normal_vector(0) = 0
+		my.normal_vector(2) = 0
+	elseif type == 3 then
+		my.normal_vector(1) = 0
+	elseif type == 4 then
+		my.normal_vector(1) = 0
+		my.normal_vector(2) = 0
+	else
+		my.normal_vector(2) = 0
+	end if
+}
+
+
+sub forward_step() {
+
+	step_direction()
+	
+	if not is_step() then
+		my.tmp_position(0) = my.X
+		my.tmp_position(1) = my.Y
+		my.tmp_position(2) = my.Z
+		back_step()
+	end if
+}
+
+sub step_direction(){
+	my.X = my.X + my.forward_vector(0)
+	my.Y = my.Y + my.forward_vector(1)
+	my.Z = my.Z + my.forward_vector(2)
+
+	if my.X < 0 then
+		my.X = 0
+		my.do_type = 4
+	end if
+	if my.y < 0 then
+		my.y = 0
+		my.do_type = 2
+	end if
+	if my.z < 0 then
+		my.z = 0
+		my.do_type = 1
+	end if
+
+}
+
+function is_step() as Boolean{
+	dim ret as Boolean
+
+	if is_filled() then
+		ret = false
+	else
+		if is_float() then
+			ret = false
+		else
+			//if is_jump() then
+				ret = true
+			//else
+			//	ret = false
+			end if
+		end if
+	end if
+
+	return ret
+}
+
+function is_jump() as Boolean{
+//さっきまでの面を飛び出したかどうか
+//スピード的に要らんかも？？
+}
+
+function type_gap(x as Double,a as Integer) as Integer{
+	dim ret as Integer
+
+	if x - a > 0 then
+		ret = 1
+	elseif x - a < 0 then
+		ret = -1
+	else
+		ret = 0
+	end if
+
+	return ret
+}
+
+function is_filled() as Boolean{
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim a(3) as Integer
+	dim x(3) as Double
+	dim g(3) as Integer
+	dim ret as Boolean
+
+	x(0) = my.X
+	x(1) = my.Y
+	x(2) = my.Z
+
+	for i = 0 to 2
+		a(i) = close_num(x(i))
+	next i
+
+	ret = false
+	for i = 0 to 2
+		if a(i) == 0 then
+			g(i) = 0
+		else
+			g(i) = 1
+		end if
+	next i
+	
+	for k = 0 to (1 + g(2))
+	 for j = 0 to (1 + g(1))
+	 	for i = 0 to (1 + g(0))
+	 		if universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+	 			if abs(a(0) - g(0) + i  - my.X) < 0.5 and abs(a(1) - g(1) + j  - my.y) < 0.5 and abs(a(2) - g(2) + k  - my.z) < 0.5 then
+	 				ret = true
+	 				return ret
+	 			end if
+	 		end if
+	 	next i
+	 next j
+	next k
+
+	return ret
+}
+
+function is_float() as Boolean{
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim a(3) as Integer
+	dim x(3) as Double
+	dim g(3) as Integer
+	dim ret as Boolean
+
+	x(0) = my.X
+	x(1) = my.Y
+	x(2) = my.Z
+
+	for i = 0 to 2
+		a(i) = close_num(x(i))
+	next i
+
+	ret = false
+	for i = 0 to 2
+		if a(i) == 0 then
+			g(i) = 0
+		else
+			g(i) = 1
+		end if
+	next i
+
+	if x(0) == 0 or x(1) == 0 or x(2) == 0 then
+		ret = false
+		return ret
+	end if
+	
+	for k = 0 to (1 + g(2))
+	 for j = 0 to (1 + g(1))
+	 	for i = 0 to (1 + g(0))
+	 		if universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+	 			if abs(a(0) - g(0) + i  - my.X) > 0.5 and abs(a(1) - g(1) + j  - my.y) > 0.5 and abs(a(2) - g(2) + k  - my.z) > 0.5 then
+	 				ret = true
+	 				return ret
+	 			end if
+	 		end if
+	 	next i
+	 next j
+	next k
+
+	return ret
+}
+
+sub back_step(){
+	dim n(3) as Integer
+	dim diff_x as Double
+	dim diff_y as Double
+	dim diff_z as Double
+	dim pre(3) as Double
+	dim u(3) as Double
+	dim k(3) as Double
+	dim pre_n(3) as Double
+	dim i as Integer
+	dim ak(3) as Double 
+
+	println("今いる場所")
+	println("x ;" & my.X)
+	println("y ;" & my.y)
+	println("z ;" & my.z)
+			
+	pre(0) = GetHistory(my.X,1)
+	pre(1) = GetHistory(my.y,1)
+	pre(2) = GetHistory(my.z,1)
+
+	println("さっきいた場所")
+	println("x ;" & pre(0))
+	println("y ;" & pre(1))
+	println("z ;" & pre(2))
+
+	k(0) = 0
+	k(1) = 0
+	k(2) = 0
+
+	u(0) = my.forward_vector(0)//my.X - pre_x
+	u(1) = my.forward_vector(1)//my.y - pre_y
+	u(2) = my.forward_vector(2)//my.z - pre_z
+
+	n(0) = Int(my.X)
+	n(1) = Int(my.Y)
+	n(2) = Int(my.Z)
+
+	pre_n(0) = Int(pre(0))
+	pre_n(1) = Int(pre(1))
+	pre_n(2) = Int(pre(2))
+
+	for i = 0 to 2
+		if n(i) == pre_n(i) then
+			k(i) = 0
+		else
+			if n(i) > pre_n(i) then
+				k(i) = (n(i) - pre(i)) / u(i)
+			else
+				k(i) = (pre_n(i) - pre(i)) / u(i)
+			end if
+		end if
+		ak(i) = Abs(k(i))
+	next i
+
+	if ak(0) <= ak(1) and ak(1) <= ak(2) then
+		my.X = pre(0) + k(2) * u(0)
+		my.y = pre(1) + k(2) * u(1)
+		my.z = pre(2) + k(2) * u(2)
+
+		if not is_step() then
+			my.X = pre(0) + k(1) * u(0)
+			my.y = pre(1) + k(1) * u(1)
+			my.z = pre(2) + k(1) * u(2)
+
+			if not is_step() then
+				my.X = pre(0) + k(0) * u(0)
+				my.y = pre(1) + k(0) * u(1)
+				my.z = pre(2) + k(0) * u(2)
+			end if
+		end if
+	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
+		my.X = pre(0) + k(1) * u(0)
+		my.y = pre(1) + k(1) * u(1)
+		my.z = pre(2) + k(1) * u(2)
+
+		if not is_step() then
+			my.X = pre(0) + k(2) * u(0)
+			my.y = pre(1) + k(2) * u(1)
+			my.z = pre(2) + k(2) * u(2)
+
+			if not is_step() then
+				my.X = pre(0) + k(0) * u(0)
+				my.y = pre(1) + k(0) * u(1)
+				my.z = pre(2) + k(0) * u(2)
+			end if
+		end if
+	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
+		my.X = pre(0) + k(2) * u(0)
+		my.y = pre(1) + k(2) * u(1)
+		my.z = pre(2) + k(2) * u(2)
+
+		if not is_step() then
+			my.X = pre(0) + k(0) * u(0)
+			my.y = pre(1) + k(0) * u(1)
+			my.z = pre(2) + k(0) * u(2)
+
+			if not is_step() then
+				my.X = pre(0) + k(1) * u(0)
+				my.y = pre(1) + k(1) * u(1)
+				my.z = pre(2) + k(1) * u(2)
+			end if
+		end if
+	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
+		my.X = pre(0) + k(0) * u(0)
+		my.y = pre(1) + k(0) * u(1)
+		my.z = pre(2) + k(0) * u(2)
+
+		if not is_step() then
+			my.X = pre(0) + k(2) * u(0)
+			my.y = pre(1) + k(2) * u(1)
+			my.z = pre(2) + k(2) * u(2)
+
+			if not is_step() then
+				my.X = pre(0) + k(1) * u(0)
+				my.y = pre(1) + k(1) * u(1)
+				my.z = pre(2) + k(1) * u(2)
+			end if
+		end if
+	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
+		my.X = pre(0) + k(1) * u(0)
+		my.y = pre(1) + k(1) * u(1)
+		my.z = pre(2) + k(1) * u(2)
+
+		if not is_step() then
+			my.X = pre(0) + k(0) * u(0)
+			my.y = pre(1) + k(0) * u(1)
+			my.z = pre(2) + k(0) * u(2)
+
+			if not is_step() then
+				my.X = pre(0) + k(2) * u(0)
+				my.y = pre(1) + k(2) * u(1)
+				my.z = pre(2) + k(2) * u(2)
+			end if
+		end if
+	else			
+		my.X = pre(0) + k(0) * u(0)
+		my.y = pre(1) + k(0) * u(1)
+		my.z = pre(2) + k(0) * u(2)
+
+		if not is_step() then
+			my.X = pre(0) + k(1) * u(0)
+			my.y = pre(1) + k(1) * u(1)
+			my.z = pre(2) + k(1) * u(2)
+
+			if not is_step() then
+				my.X = pre(0) + k(2) * u(0)
+				my.y = pre(1) + k(2) * u(1)
+				my.z = pre(2) + k(2) * u(2)
+			end if
+		end if
+	end if
+}
+
+
+sub determining_bend(){
+	dim degree as double
+	dim sum as Integer
+	dim prob(3) as Double
+	dim r as Double
+	dim rad as Double
+	dim i as Integer
+	dim x as Double
+	dim y as Double
+	dim z as Double
+
+	
+	degree = NormInv(Rnd(),0,30)
+	rad = DegreeToRad(degree)
+	x = my.forward_vector(0)
+	y = my.forward_vector(1)
+	z = my.forward_vector(2)
+
+
+
+	sum = Abs(my.normal_vector(0)) + Abs(my.normal_vector(1)) + Abs(my.normal_vector(2))
+	r = Rnd()
+	for i = 0 to 2	
+		prob(i) = Abs(my.normal_vector(i)) / sum
+	next i
+
+	if r < prob(0) then
+		my.forward_vector(1) = Cos(rad) * y - Sin(rad) * z
+		my.forward_vector(2) = Sin(rad) * y + cos(rad) * z 		 
+	elseif r < prob(0) + prob(1) then
+		my.forward_vector(0) = Cos(rad) * x + Sin(rad) * z 
+		my.forward_vector(2) = (-1) * Sin(rad) * x + cos(rad) * z		 
+	else
+		my.forward_vector(0) = Cos(rad) * x - Sin(rad) * y 
+		my.forward_vector(1) = Sin(rad) * x + cos(rad) * y 		 
+	end if
+
+	PrintLn("X is "&my.forward_vector(0))
+	PrintLn("Y is "&my.forward_vector(1))
+	PrintLn("Z is "&my.forward_vector(2))
+
+}
+
+
+sub determining_vector(){
+	
+	calculate_vector()
+	select_vector()
+	
+}
+
+sub calculate_vector(){
+//my.next_vectorに3種類計算する．2種類しかないときは空いてるところに(0,0,0)を入れる
+	dim b_type as Integer
+	dim angle as Double
+
+	store_vector(my.b_type,my.angle_surface)
+	
+}
+
+sub store_vector(type as Integer,angle as Double){
+//ベクトルをそれぞれ計算して格納する．この時に行けないベクトルも削除する
+	dim R(3,3) as Double
+	dim x(3) as Double
+	dim u(3) as Integer
+	dim length as Double
+	dim k as Integer
+
+	type = my.b_type
+	angle = my.angle_surface
+
+	my.next_vector(2,0) = 0
+	my.next_vector(2,1) = 0
+	my.next_vector(2,2) = 0
+	if type > 2 then
+	//±の障害物見てベクトルの方向を決める
+		if type == 3 then
+			my.next_vector(0,0) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,1) = my.normal_vector(1)
+			else
+				if Int(my.Y) == 0 and my.normal_vector(1) > 0 then
+					my.next_vector(0,1) = my.normal_vector(1)
+				else
+					if universe.map.is_void(Int(my.X),Int(my.Y) - my.normal_vector(1),Int(my.Z)) then
+						my.next_vector(0,1) = my.normal_vector(1)
+					else
+						my.next_vector(0,1) = - my.normal_vector(1)
+					end if
+				end if
+			end if
+			my.next_vector(0,2) = 0
+
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,0) = my.normal_vector(0)
+			else
+				if Int(my.x) == 0 and my.normal_vector(0) > 0 then
+					my.next_vector(1,0) = my.normal_vector(0)
+				else
+					if universe.map.is_void(Int(my.X) - my.normal_vector(0),Int(my.Y),Int(my.Z)) then
+						my.next_vector(1,0) = my.normal_vector(0) 
+					else
+						my.next_vector(1,0) = - my.normal_vector(0)
+					end if
+				end if
+			end if
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
+		elseif type == 4 then
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,2) = my.normal_vector(2)
+			else
+				if Int(my.z) == 0 and my.normal_vector(2) > 0 then
+					my.next_vector(0,2) = my.normal_vector(2)
+				else
+					if universe.map.is_void(Int(my.X),Int(my.Y),Int(my.Z) - my.normal_vector(2)) then
+						my.next_vector(0,2) = my.normal_vector(2) 
+					else
+						my.next_vector(0,2) = - my.normal_vector(2)
+					end if
+				end if
+			end if
+
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,0) = my.normal_vector(0)
+			else
+				if Int(my.x) == 0 and my.normal_vector(0) > 0 then
+					my.next_vector(1,0) = my.normal_vector(0)
+				else
+					if universe.map.is_void(Int(my.X) - my.normal_vector(0),Int(my.Y),Int(my.Z)) then
+						my.next_vector(1,0) = my.normal_vector(0) 
+					else
+						my.next_vector(1,0) = - my.normal_vector(0)
+					end if
+				end if
+			end if
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
+		elseif type == 5 then
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,2) = my.normal_vector(2)
+			else
+				if Int(my.z) == 0 and my.normal_vector(2) > 0 then
+					my.next_vector(0,2) = my.normal_vector(2)
+				else
+					if universe.map.is_void(Int(my.X),Int(my.Y),Int(my.Z) - my.normal_vector(2)) then
+						my.next_vector(0,2) = my.normal_vector(2) 
+					else
+						my.next_vector(0,2) = - my.normal_vector(2)
+					end if
+				end if
+			end if
+
+			my.next_vector(1,0) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,1) = my.normal_vector(1)
+			else
+				if Int(my.Y) == 0 and my.normal_vector(1) > 0 then
+					my.next_vector(1,1) = my.normal_vector(1)
+				else
+					if universe.map.is_void(Int(my.X),Int(my.Y) - my.normal_vector(1),Int(my.Z)) then
+						my.next_vector(1,1) = my.normal_vector(1) 
+					else
+						my.next_vector(1,1) = - my.normal_vector(1)
+					end if
+				end if
+			end if
+			my.next_vector(1,2) = 0
+		else
+			println("type miss")
+		end if
+	else
+		if type == 0 then
+			my.next_vector(0,0) = 1
+			my.next_vector(0,1) = 0
+			my.next_vector(0,2) = 0
+
+			my.next_vector(1,0) = -1
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
+			
+			u(0) = 1
+			u(1) = 0
+			u(2) = 0
+
+			my.next_vector(2,0) = my.forward_vector(0)
+			my.next_vector(2,1) = my.forward_vector(2) * my.normal_vector(1) * my.ap_or_dis
+			my.next_vector(2,2) = my.forward_vector(1) * my.normal_vector(2) * my.ap_or_dis
+
+/*
+			calculate_matrix()
+
+			x(0) = my.matrix(0,0) * my.forward_vector(0) + my.matrix(0,1) * my.forward_vector(1) + my.matrix(0,2) * my.forward_vector(2)
+			x(1) = my.matrix(1,0) * my.forward_vector(0) + my.matrix(1,1) * my.forward_vector(1) + my.matrix(1,2) * my.forward_vector(2)
+			x(2) = my.matrix(2,0) * my.forward_vector(0) + my.matrix(2,1) * my.forward_vector(1) + my.matrix(2,2) * my.forward_vector(2)
+
+			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
+			my.next_vector(2,0) = x(0) / length
+			my.next_vector(2,1) = x(1) / length
+			my.next_vector(2,2) = x(2) / length*/
+		elseif type == 1 then
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 1
+			my.next_vector(0,2) = 0
+
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = -1
+			my.next_vector(1,2) = 0
+			
+			u(0) = 0
+			u(1) = 1
+			u(2) = 0
+
+			my.next_vector(2,0) = my.forward_vector(2) * my.normal_vector(0) * my.ap_or_dis
+			my.next_vector(2,1) = my.forward_vector(1)
+			my.next_vector(2,2) = my.forward_vector(0) * my.normal_vector(2) * my.ap_or_dis
+/*
+			calculate_matrix()
+
+			x(0) = my.matrix(0,0) * my.forward_vector(0) + my.matrix(0,1) * my.forward_vector(1) + my.matrix(0,2) * my.forward_vector(2)
+			x(1) = my.matrix(1,0) * my.forward_vector(0) + my.matrix(1,1) * my.forward_vector(1) + my.matrix(1,2) * my.forward_vector(2)
+			x(2) = my.matrix(2,0) * my.forward_vector(0) + my.matrix(2,1) * my.forward_vector(1) + my.matrix(2,2) * my.forward_vector(2)
+
+			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
+			my.next_vector(2,0) = x(0) / length
+			my.next_vector(2,1) = x(1) / length
+			my.next_vector(2,2) = x(2) / length*/
+		elseif type == 2 then
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			my.next_vector(0,2) = 1
+
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = -1
+			
+			u(0) = 0
+			u(1) = 0
+			u(2) = 1
+
+			my.next_vector(2,0) = my.forward_vector(1) * my.normal_vector(0) * my.ap_or_dis
+			my.next_vector(2,1) = my.forward_vector(0) * my.normal_vector(1) * my.ap_or_dis
+			my.next_vector(2,2) = my.forward_vector(2)
+
+			/*calculate_matrix()
+
+			x(0) = my.matrix(0,0) * my.forward_vector(0) + my.matrix(0,1) * my.forward_vector(1) + my.matrix(0,2) * my.forward_vector(2)
+			x(1) = my.matrix(1,0) * my.forward_vector(0) + my.matrix(1,1) * my.forward_vector(1) + my.matrix(1,2) * my.forward_vector(2)
+			x(2) = my.matrix(2,0) * my.forward_vector(0) + my.matrix(2,1) * my.forward_vector(1) + my.matrix(2,2) * my.forward_vector(2)
+
+			length = Sqr( x(0)^2 + x(1)^2 + x(2)^2 )
+			my.next_vector(2,0) = x(0) / length
+			my.next_vector(2,1) = x(1) / length
+			my.next_vector(2,2) = x(2) / length		*/
+		else
+			PrintLn("type miss")
+		end if
+	end if
+}
+
+sub calculate_matrix(){
+	dim theta as Double
+	dim n(3) as Double
+
+	theta = DegreeToRad(my.angle_surface)
+	if my.b_type == 0 then
+		n(0) = 1
+		n(1) = 0
+		n(2) = 0
+	elseif my.b_type == 1 then
+		n(0) = 0
+		n(1) = 1
+		n(2) = 0	
+	else
+		n(0) = 0
+		n(1) = 0
+		n(2) = 1	
+	end if
+
+	my.matrix(0,0) = Cos(theta) + (n(0)^2) * (1 - Cos(theta))
+	my.matrix(0,1) = n(0) * n(1) * (1 - Cos(theta)) - (n(2)) * (sin(theta))
+	my.matrix(0,2) = n(2) * n(0) * (1 - Cos(theta)) + (n(1)) * (sin(theta))
+	my.matrix(1,0) = n(0) * n(1) * (1 - Cos(theta)) + (n(2)) * (sin(theta))
+	my.matrix(1,1) = Cos(theta) + (n(1)^2) * (1 - Cos(theta))
+	my.matrix(1,2) = n(1) * n(2) * (1 - Cos(theta)) - (n(0)) * (sin(theta))
+	my.matrix(2,0) = n(2) * n(0) * (1 - Cos(theta)) - (n(1)) * (sin(theta))
+	my.matrix(2,1) = n(1) * n(2) * (1 - Cos(theta)) + (n(0)) * (sin(theta))
+	my.matrix(2,2) = Cos(theta) + (n(2)^2) * (1 - Cos(theta))
+}
+
+
+sub select_vector(){
+//my.next_vectorから1つ確率で選んでmy.forward_vectorに入れる
+	dim i as Integer
+	dim prob(3) as Double
+	dim r as Double
+	dim sum_diff as Double
+	
+	make_base_vector()
+	sum_diff = calclator_sum_diff()
+	for i = 0 to 2
+		prob(i) = calculate_probabilistic(my.next_vector(i,0),my.next_vector(i,1),my.next_vector(i,2),sum_diff)
+	next i
+	r = Rnd()
+
+	if r < prob(0) then
+		my.forward_vector(0) = my.next_vector(0,0)
+		my.forward_vector(1) = my.next_vector(0,1)
+		my.forward_vector(2) = my.next_vector(0,2)
+	elseif r < prob(0) + prob(1) then
+		my.forward_vector(0) = my.next_vector(1,0)
+		my.forward_vector(1) = my.next_vector(1,1)
+		my.forward_vector(2) = my.next_vector(1,2)	
+	else
+		my.forward_vector(0) = my.next_vector(2,0)
+		my.forward_vector(1) = my.next_vector(2,1)
+		my.forward_vector(2) = my.next_vector(2,2)	
+	end if
+
+	println("my.forward_vector is")
+	println("x : "&my.forward_vector(0)&"     y : "&my.forward_vector(1)&"       z : "&my.forward_vector(2))
+
+	my.do_type = select_do_type()
+}
+
+function select_do_type() as Integer{
+	dim ret as Integer
+
+	if my.forward_vector(0) == 0 then
+		if my.forward_vector(1) == 0 then
+			ret = 5
+		else
+			if my.forward_vector(2) == 0 then
+				ret = 3
+			else
+				ret = 4
+			end if
+		end if
+	else
+		if my.forward_vector(1) == 0 then
+			if my.forward_vector(2) == 0 then
+				ret = 0
+			else
+				ret = 2
+			end if
+		else
+			ret = 1
+		end if
+	end if
+
+	return ret
+}
+
+function calclator_sum_diff()as Double{
+	dim diff as Double
+	dim i as Integer
+	dim tmp as Double
+
+	diff = 0
+	for i = 0 to 2
+		tmp = Sqr( ( my.base_vector(0) - my.next_vector(i,0) )^2 + ( my.base_vector(1) - my.next_vector(i,1) )^2 + ( my.base_vector(2) - my.next_vector(i,2) )^2 )
+		if tmp != 1 then
+			diff = diff + tmp
+		end if
+	next i
+
+	return diff
+}
+
+sub make_base_vector(){
+	dim g(3) as Double
+	dim a(3) as Double
+	dim length as Double
+	dim i as Integer
+
+	g(0) = 0
+	g(1) = 0
+	g(2) = -1
+
+	for i = 0 to 2
+		a(i) = my.forward_vector(i) + g(i) * (49 / 60)
+	next i
+
+	length = Sqr( a(0)^2 + a(1) ^2 + a(2) ^ 2 )
+
+	for i = 0 to 2
+		my.base_vector(i) = a(i) / length
+	next i
+	
+}
+
+function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff as Double) as Double{
+	dim diff as Double
+	dim ret as Double
+	dim n as Integer
+
+	if my.next_vector(2,0) == 0 and my.next_vector(2,1) == 0 and my.next_vector(2,2) == 0 then
+		n = 2
+	else
+		n = 3
+	end if
+
+	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
+	ret = ( 1 - diff / sum_diff ) / ( n -1 )
+	
+	return ret
+}
+
+function is_bend() as Boolean{
+	dim ret as Boolean
+
+	if Rnd() < 0.01 then
+		ret = true
+	else
+		ret = false
+	end if
+	
+	return ret
+}
+
+function different_surface() as Boolean{
+	dim ret  as Boolean
+	dim a as Integer
+	dim b as Integer
+
+	ret = false
+	if is_disappear_surface()  then
+		my.ap_or_dis = -1
+		ret = true
+	else
+		if is_appear_surface() then
+			if my.a_flag then
+				my.ap_or_dis = -1
+			else
+				my.ap_or_dis = 1
+			end if
+			ret = true
+		end if
+	end if
+	
+	return ret
+}
+
+function direction_type() as Integer{
+//x平行0,xyで動く1,xzで動く2，y平行3，yzで動く4，z平行5の0~5をタイプで返す
+	dim ret as Integer
+	dim x as Double
+	dim y as Double
+	dim z as Double
+
+	x = my.forward_vector(0)
+	y = my.forward_vector(1)
+	z = my.forward_vector(2)
+	
+	if x==0 then
+		if y == 0 then
+			ret = 5
+		elseif z == 0 then
+			ret = 3
+		else
+			ret = 4
+		end if
+	elseif y == 0 then
+		if z == 0 then
+			ret = 0
+		else
+			ret = 2
+		end if	
+	elseif z == 0 then
+		ret = 1
+	else
+		PrintLn("miss")
+	end if
+
+	return ret
+}
+
+function is_appear_surface() as Boolean{
+
+}
+
+function single(num as Double) as Integer{
+	if num > 0 then
+		return 1
+	elseif num < 0 then
+		return -1
+	else
+		return 0
+	end if
+}
+
+function is_disappear_surface() as Boolean{
+
+	}
+	
+#end_rule UNIVERSE.MAP.INSECT
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.BARRIER
+Agt_Init{
+
+}
+
+Agt_Step{
+
+}
+#end_rule UNIVERSE.MAP.BARRIER
+
+
+
+
+//-------------------------------------------------------
+// Simulation Definition Division
+//-------------------------------------------------------
+Single_Simulation {
+    Step_Max = 0;
+    Time_Max = 0;
+    End_Condition = "";
+    Exec_Wait = 12;
+    Exec_Wait_Max = 1000;
+    Random_Generator = Java_Standard;
+    Exec_Order = Random;
+    Exec_Order_Random_First_Step_Only = No;
+    Random_Seed = 0;
+    Redraw_Timing = Step;
+    Redraw_Interval = 1;
+    Garbage_Interval = 0;
+}
+
+
+//-------------------------------------------------------
+// Simulation Loop Definition Division
+//-------------------------------------------------------
+Repeat_Simulation {
+    Value_Change = None;
+    Initial_Value_Change_None {
+        Repeat_Max = 1;
+    }
+}
+
+
+//-------------------------------------------------------
+// 2 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map_Output {
+    Map_Space_Name = "Universe.map";
+    Map_Name = "map";
+    Title = "map";
+    Disable = Yes;
+    Background_Color = 255, 255, 255;
+    Position_x = 1497;
+    Position_y = 133;
+    Size_x = 551;
+    Size_y = 872;
+    Map_Cell_Size = 19;
+    Remarks = Yes;
+    Legend_Pos = Top;
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    FastDraw = Yes;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Axis_Label = "", "";
+    Draw_Range = 0, 0, 20, 40;
+    Ruled_Line = No;
+    Text_Display = No;
+    Text_Display_Variable_Name = "";
+    Chess_Type_Display_Position = Yes;
+    Background_Transparent = No;
+    Target_Layer = 0;
+    Coordinate_Display = No;
+    Space_Kind = Square_2D;
+    BG_Pict = No;
+    BG_Type = 0;
+    BG_Var_Name = "";
+    BG_File_Name = "";
+    Origin_Position = 2;
+    Output_Group_Name = "";
+    Output {
+        Map_Element_Name = "insect";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.insect";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 255,0,0;
+        Marker_Id = 1;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.insect.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.insect.ID";
+    }
+    Output {
+        Map_Element_Name = "barrier";
+        Map_Element = Agent_Variable;
+        Output_Expression = "Universe.map.barrier";
+        Draw_Line = No;
+        Collection_Name = "";
+        Line_Type = 0;
+        Line_Arrow = 0;
+        Line_Width = 0;
+        Line_Color = 0, 0, 0;
+        Line_Type_Variable = "";
+        Line_Arrow_Variable = "";
+        Line_Width_Variable = "";
+        Line_Color_Variable = "";
+        Agent_Color = 0,0,255;
+        Marker_Id = 2;
+        Effective_Figures = 0;
+        Format_Id = 0;
+        Agent_Image_Direction = No;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Agent_Image_Magnify_by_value = Yes;
+        Agent_Image_Magnify_Value = 1.0;
+        Agent_Image_Magnify_Variable_Name = "Universe.map.barrier.ID";
+        Agent_Image_Transparency_by_value = Yes;
+        Agent_Image_Transparency_Value = 0.0;
+        Agent_Image_Transparency_Variable_Name = "Universe.map.barrier.ID";
+    }
+    Output {
+        Map_Element_Name = "fin";
+        Map_Element = Space_Variable;
+        Output_Expression = "Universe.map.fin";
+        Space_Color_Direct_RGB = No;
+        Space_Draw_Range = 0.0, 1.0;
+        Space_Color_Min = 255, 255, 255;
+        Space_Color_Max = 204, 204, 0;
+        Marker_Id = 6;
+        Icon_Type = 0;
+        Icon_Var_Name = "";
+        Icon_Transparent = No;
+        Icon_Enlarg_Reduce = No;
+        Icon_File_Name = "";
+        Num_Display = No;
+        Num_Var_Name = "";
+        Space_Variable_Transparency_by_value = Yes;
+        Space_Variable_Transparency_Value = 0.0;
+        Space_Variable_Transparency_Variable_Name = "Universe.map.fin";
+    }
+}
+
+
+//-------------------------------------------------------
+//  3 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map3D_Output {
+    Map3D_Name = "map";
+    Disable = Yes;
+    Background_Image_Display = No;
+    Background_Image_Type = Fixed_Value;
+    Background_Image_Folder_Name = "";
+    Background_Image_Folder_Variable_Name = Dummy;
+    Background_Color = -1;
+    FastDraw = No;
+    Line_Display = No;
+    Camera_Position_Type = Mouse;
+    Camera_Position_Agent_Name = Universe.CameraPointer;
+    Light_Position_Type = Coordinate;
+    Light_Position = 0.0,0.0,0.0;
+    Light_Position_Agent_Name = Dummy;
+    Output_Group_Name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Position_x = 5;
+    Position_y = -10;
+    Size_x = 1075;
+    Size_y = 909;
+    Map_Cell_Size = -1;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Space3D_Output {
+        Space_3D_Name = "map";
+        Space_Path_Name = Universe.map;
+        Layer = 0;
+        Space_3D_PositionD = 0.0,0.0,0.0;
+        Ruled_Line_Display = Yes;
+        Origin_Position = Left_Top;
+        Display_Object_Type = None;
+        Image_File_Path_Name = "";
+        Model_3D_File_Path_Name = "";
+        Agent3D_Output {
+                Agent_3D_Name = "insect";
+                Agent_Path_Name = Universe.map.insect;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Sphere_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -65536;
+                Color_Variable_Path_Name = Universe.map.insect.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+        Agent3D_Output {
+                Agent_3D_Name = "barrier";
+                Agent_Path_Name = Universe.map.barrier;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Quadrartic_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -16777012;
+                Color_Variable_Path_Name = Universe.map.barrier.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+    }
+}
+
+
+//-------------------------------------------------------
+// Control Panel Definition Division
+//-------------------------------------------------------
+Control_Panel {
+    Display_Area = 0, 0, 136, 49;
+    Display_Type = 0;
+}
+
+
+//-------------------------------------------------------
+// Space Initial Value Definition Divsion
+//-------------------------------------------------------
+Space_Initial {
+}
+
+
+//-------------------------------------------------------
+// Other Miscellaneous Data Definition Division
+//-------------------------------------------------------
+Others_Data {
+    Indent = 4;
+    Rule_Colored = Yes;
+    Rule_LineNo = Yes;
+    Window_Hide_Run = 1;
+    Debug_Position_x = 72;
+    Debug_Position_y = 72;
+    Debug_Size_x = 400;
+    Debug_Size_y = 200;
+    Console_Position_x = 1253;
+    Console_Position_y = -6;
+    Console_Size_x = 920;
+    Console_Size_y = 905;
+    Componen_Tree_Position_x = 870;
+    Componen_Tree_Position_y = 891;
+    Componen_Tree_Size_x = 839;
+    Componen_Tree_Size_y = 383;
+    Console_Background_Color = 16777215;
+    Console_Foreground_Color = 255;
+    Console_DisplayLines_Max = 500;
+    plug_in_module_name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 0;
+    Font_Size = 14.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 0, 0, 0;
+}
+
+
+//-------------------------------------------------------
+// Network Information Definition Division
+//-------------------------------------------------------
+Network_Info {
+    Global_Space_Area = 0, 0, 100, 100;
+    Local_Space_Info {
+    }
+}
+
+
+//-------------------------------------------------------
+// Window Location Definition Division
+//-------------------------------------------------------
+Window_Rectangle {
+    Window_Name = Main_Window, -7, 0, 854, 1017;
+    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
+}
+
+
+//-------------------------------------------------------
+// Help Favorite Division
+//-------------------------------------------------------
+Help_Favorite {
+}
