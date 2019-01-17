@@ -31,7 +31,7 @@ UNIVERSE {
             Dim tmp_position(0, 0)[3] As Double = (3*0.0);
             Dim do_type(0, 0) <1>  As Integer = (0);
             Dim ap_or_dis(0, 0) As Integer = (0);
-            Dim a_flag(0, 0) As Boolean = ();
+            Dim a_flag(0, 0) As Boolean = (0);
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -2204,6 +2204,7 @@ function is_disappear_surface() as Boolean{
 	
 	return ret
 	}
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -2410,8 +2411,8 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 0;
-    Position_y = 0;
+    Position_x = 5;
+    Position_y = -11;
     Size_x = 1075;
     Size_y = 909;
     Map_Cell_Size = -1;
@@ -2505,10 +2506,10 @@ Others_Data {
     Console_Position_y = -6;
     Console_Size_x = 920;
     Console_Size_y = 905;
-    Componen_Tree_Position_x = 1042;
-    Componen_Tree_Position_y = 901;
+    Componen_Tree_Position_x = 541;
+    Componen_Tree_Position_y = 50;
     Componen_Tree_Size_x = 839;
-    Componen_Tree_Size_y = 303;
+    Componen_Tree_Size_y = 383;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
