@@ -27,7 +27,7 @@ UNIVERSE {
             Dim angle_surface(0, 0) As Double = (0.0);
             Dim b_type(0, 0) As Integer = (0);
             Dim matrix(0, 0)[3][3] As Double = (9*0.0);
-            Dim normal_vector(0, 0)[3] As Double = (3*0.0);
+            Dim normal_vector(0, 0) <1> [3] As Double = (3*0.0);
             Dim tmp_position(0, 0)[3] As Double = (3*0.0);
             Dim do_type(0, 0) <1>  As Integer = (0);
             Dim ap_or_dis(0, 0) As Integer = (0);
@@ -450,6 +450,7 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 	end if
 
 	return ret
+	}
 #end_rule UNIVERSE
 
 
@@ -531,7 +532,11 @@ sub delete_normal_vector(){
 
 sub forward_step() {
 
-	step_direction()
+	if is_differernt() then
+		step_surface()
+	else
+		step_direction()
+	end if
 	
 	if not is_step() then
 		my.tmp_position(0) = my.X
@@ -539,6 +544,37 @@ sub forward_step() {
 		my.tmp_position(2) = my.Z
 		back_step()
 	end if
+}
+
+function is_differernt()as Boolean{
+	dim i as Integer
+	dim n as Integer
+	dim ret as Boolean
+
+	ret = false
+	for i = 0 to 2
+		n = GetHistory(my.normal_vector(i),1)
+		if n != my.normal_vector(i) then
+			ret = true
+		end if
+	next i
+
+	return ret
+}
+
+sub step_surface(){
+	dim pre(3) as	Integer
+	dim n(3) as Integer
+	dim i as Integer
+
+	for i =0 to 2
+		pre(i) = GetHistory(my.normal_vector(i),1)
+		n(i) = my.normal_vector(i)
+	next i
+
+	my.X = my.X - pre(0) + n(0)
+	my.Y = my.Y - pre(1) + n(1)
+	my.Z = my.Z - pre(2) + n(2)
 }
 
 sub step_direction(){
@@ -618,15 +654,15 @@ function is_pause() as Boolean{
 				else
 					if universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx+1,ny - my.touch(1),nz) then
 						if my.X == nx then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					elseif not universe.map.is_void(nx,ny - my.touch(1),nz) and universe.map.is_void(nx+1,ny - my.touch(1),nz) then
 						if my.X == nx then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					else
 						ret = false
@@ -642,15 +678,15 @@ function is_pause() as Boolean{
 				else
 					if universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx+1,ny,nz - my.touch(2)) then
 						if my.X == nx then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					elseif not universe.map.is_void(nx,ny,nz - my.touch(2)) and universe.map.is_void(nx+1,ny,nz - my.touch(2)) then
 						if my.X == nx then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					else
 						ret = false
@@ -672,15 +708,15 @@ function is_pause() as Boolean{
 				else
 					if universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny+1,nz) then
 						if my.Y == ny then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					elseif not universe.map.is_void(nx - my.touch(0),ny,nz) and universe.map.is_void(nx - my.touch(0),ny+1,nz) then
 						if my.Y == ny then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					else
 						ret = false
@@ -696,15 +732,15 @@ function is_pause() as Boolean{
 				else
 					if universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx,ny+1,nz - my.touch(2)) then
 						if my.Y == ny then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					elseif not universe.map.is_void(nx,ny,nz - my.touch(2)) and universe.map.is_void(nx,ny+1,nz - my.touch(2)) then
 						if my.y == ny then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					else
 						ret = false
@@ -724,15 +760,15 @@ function is_pause() as Boolean{
 				else
 					if universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny,nz+1) then
 						if my.Z == nz then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					elseif not universe.map.is_void(nx - my.touch(0),ny,nz) and universe.map.is_void(nx - my.touch(0),ny,nz+1) then
 						if my.Z == nz then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					else
 						ret = false
@@ -748,15 +784,15 @@ function is_pause() as Boolean{
 				else
 					if universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx,ny - my.touch(1),nz+1) then
 						if my.Z == nz then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					elseif not universe.map.is_void(nx,ny - my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz+1) then
 						if my.Z == nz then
-							ret = true
-						else
 							ret = false
+						else
+							ret = true
 						end if
 					else
 						ret = false
@@ -1286,11 +1322,7 @@ sub store_vector(type as Integer,angle as Double){
 				if Int(my.Y) == 0 and my.touch(1) > 0 then
 					my.next_vector(0,1) = my.touch(1)
 				else
-					if universe.map.is_void(Int(my.X),Int(my.Y) - my.touch(1),Int(my.Z)) then
-						my.next_vector(0,1) = my.touch(1)
-					else
-						my.next_vector(0,1) = - my.touch(1)
-					end if
+					my.next_vector(0,1) = - my.touch(1)
 				end if
 			end if
 			my.next_vector(0,2) = 0	
@@ -1301,11 +1333,7 @@ sub store_vector(type as Integer,angle as Double){
 				if Int(my.x) == 0 and my.touch(0) > 0 then
 					my.next_vector(1,0) = my.touch(0)
 				else
-					if universe.map.is_void(Int(my.X) - my.touch(0),Int(my.Y),Int(my.Z)) then
-						my.next_vector(1,0) = my.touch(0) 
-					else
-						my.next_vector(1,0) = - my.touch(0)
-					end if
+					my.next_vector(1,0) = - my.touch(0)
 				end if
 			end if
 			my.next_vector(1,1) = 0
@@ -1327,11 +1355,7 @@ sub store_vector(type as Integer,angle as Double){
 				if Int(my.z) == 0 and my.touch(2) > 0 then
 					my.next_vector(0,2) = my.touch(2)
 				else
-					if universe.map.is_void(Int(my.X),Int(my.Y),Int(my.Z) - my.touch(2)) then
-						my.next_vector(0,2) = my.touch(2) 
-					else
-						my.next_vector(0,2) = - my.touch(2)
-					end if
+					my.next_vector(0,2) = - my.touch(2)
 				end if
 			end if
 
@@ -1341,11 +1365,7 @@ sub store_vector(type as Integer,angle as Double){
 				if Int(my.x) == 0 and my.touch(0) > 0 then
 					my.next_vector(1,0) = my.touch(0)
 				else
-					if universe.map.is_void(Int(my.X) - my.touch(0),Int(my.Y),Int(my.Z)) then
-						my.next_vector(1,0) = my.touch(0) 
-					else
-						my.next_vector(1,0) = - my.touch(0)
-					end if
+					my.next_vector(1,0) = - my.touch(0)
 				end if
 			end if
 			my.next_vector(1,1) = 0
@@ -1367,11 +1387,7 @@ sub store_vector(type as Integer,angle as Double){
 				if Int(my.z) == 0 and my.touch(2) > 0 then
 					my.next_vector(0,2) = my.touch(2)
 				else
-					if universe.map.is_void(Int(my.X),Int(my.Y),Int(my.Z) - my.touch(2)) then
-						my.next_vector(0,2) = my.touch(2) 
-					else
-						my.next_vector(0,2) = - my.touch(2)
-					end if
+					my.next_vector(0,2) = - my.touch(2)
 				end if
 			end if
 
@@ -1382,11 +1398,7 @@ sub store_vector(type as Integer,angle as Double){
 				if Int(my.Y) == 0 and my.touch(1) > 0 then
 					my.next_vector(1,1) = my.touch(1)
 				else
-					if universe.map.is_void(Int(my.X),Int(my.Y) - my.touch(1),Int(my.Z)) then
-						my.next_vector(1,1) = my.touch(1) 
-					else
-						my.next_vector(1,1) = - my.touch(1)
-					end if
+					my.next_vector(1,1) = - my.touch(1)
 				end if
 			end if
 			my.next_vector(1,2) = 0
@@ -1565,20 +1577,20 @@ sub select_vector(){
 	r = Rnd()
 
 	if r < prob(0) then
+		set_normal_vector(my.n_normal(0))
 		my.forward_vector(0) = my.next_vector(0,0)
 		my.forward_vector(1) = my.next_vector(0,1)
-		my.forward_vector(2) = my.next_vector(0,2)
-		set_normal_vector(my.n_normal(0))
+		my.forward_vector(2) = my.next_vector(0,2)		
 	elseif r < prob(0) + prob(1) then
+	  set_normal_vector(my.n_normal(1))
 		my.forward_vector(0) = my.next_vector(1,0)
 		my.forward_vector(1) = my.next_vector(1,1)
 		my.forward_vector(2) = my.next_vector(1,2)	
-		set_normal_vector(my.n_normal(1))
 	else
+		set_normal_vector(my.n_normal(2))		
 		my.forward_vector(0) = my.next_vector(2,0)
 		my.forward_vector(1) = my.next_vector(2,1)
 		my.forward_vector(2) = my.next_vector(2,2)
-		set_normal_vector(my.n_normal(2))	
 	end if
 
 	println("my.forward_vector is")
@@ -1591,14 +1603,14 @@ sub set_normal_vector(n as Integer){
 	dim i as Integer
 	dim a as Integer
 	dim f as Double
-	
+
+	f = set_foward(n)
+	println("forward is"&f)
 	for i = 0 to 2
 	//•ûŒü‚ðŠÓ‚Ý‚Ä1or-1‚ð‚¢‚ê‚é
-	f = GetHistory(my.forward_vector(i),1)
 	println("i is"&i)
-	println("forward is"&f)
 	println("ap_or_dis is"&my.ap_or_dis)
-	a = my.forward_vector(i) * my.ap_or_dis
+	a = f * my.ap_or_dis
 	if a != 0 then
 		a = a / Abs(a)
 	end if
@@ -1611,6 +1623,44 @@ sub set_normal_vector(n as Integer){
 		my.normal_vector(i) = 0
 	end if
 	next i
+}
+
+function set_foward (n as Integer)as Double{
+//“–‚½‚Á‚½Ž²‚Æ‚Íˆá‚¤oƒxƒNƒgƒ‹‚Å‚à‚È‚¢forwardvector‚ð•Ô‚·
+	dim i as Integer
+	dim ret as Double
+	dim f as Double
+	dim type as Integer
+
+	type = my.b_type
+
+	if type == 0 then
+		for i = 0 to 1
+			if my.forward_vector(i+1) != 0 then
+				ret = my.forward_vector(i+1)
+			end if
+		next i
+	elseif type == 1 then
+		for i = 0 to 2
+			if i!= 1 and my.forward_vector(i) != 0 then
+				ret = my.forward_vector(i)
+			end if
+		next i
+	elseif type == 2 then
+		for i = 0 to 1
+			if my.forward_vector(i) != 0 then
+				ret = my.forward_vector(i)
+			end if
+		next i
+	elseif type == 3 then
+		ret = my.forward_vector(2)
+	elseif type == 4 then
+		ret = my.forward_vector(1)
+	else
+		ret = my.forward_vector(0)
+	end if
+	
+	return ret
 }
 
 function select_do_type() as Integer{
@@ -2058,7 +2108,7 @@ function is_disappear_surface() as Boolean{
 				if nz == 0 and my.normal_vector(2) > 0 then
 					if ny == 0 and my.touch(1) > 0 then
 						ret = false
-					elseif universe.map.is_void(nx+f(0),ny - my.touch(1),nz) and not universe.map.is_void(nx,ny - my.touch(1),nz ) then
+					elseif not universe.map.is_void(nx+f(0),ny - my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz ) then
 						ret = true
 						my.b_type = 5
 					else
@@ -2353,7 +2403,6 @@ function is_disappear_surface() as Boolean{
 	
 	return ret
 	}
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
