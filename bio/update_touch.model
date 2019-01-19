@@ -455,6 +455,7 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 	return ret
 	}
 	}
+	
 #end_rule UNIVERSE
 
 
@@ -586,6 +587,9 @@ function is_differernt()as Boolean{
 	dim ret as Boolean
 
 	n = my.dis_surface
+	PrintLn("")
+	PrintLn("is_differrent")
+	PrintLn("dis_surface :"&n)
 	if n == -1 then
 		ret = false
 	elseif my.forward_vector(n) != 0 and my.ap_or_dis == -1 then
@@ -2325,7 +2329,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 5
 						my.dis_surface = 1
-						my.touch(0) = f(0)
+						my.touch(0) = -f(0)
 					else
 						ret = false
 					end if
@@ -2337,7 +2341,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 5
 							my.dis_surface = 1
-							my.touch(0) = f(0)
+							my.touch(0) = -f(0)
 						else
 							ret = false
 						end if
@@ -2345,7 +2349,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 5
 						my.dis_surface = 2
-						my.touch(0) = f(0)
+						my.touch(0) = -f(0)
 					end if
 				end if
 			else
@@ -2355,11 +2359,11 @@ function is_disappear_surface() as Boolean{
 					if universe.map.is_void(nx,ny - my.normal_vector(1),nz) then
 						if nz == 0 and my.touch(2) > 0 then
 							ret = false
-						elseif not universe.map.is_void(nx+f(0),ny,nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
+						elseif not universe.map.is_void(nx+f(0),ny- my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz ) then
 							ret = true
 							my.b_type = 5
 							my.dis_surface = 2
-							my.touch(0) = f(0)
+							my.touch(0) = -f(0)
 						else
 							ret = false
 						end if
@@ -2367,7 +2371,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 5
 						my.dis_surface = 1
-						my.touch(0) = f(0)
+						my.touch(0) = -f(0)
 					end if
 				end if
 			end if
@@ -2516,7 +2520,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 4
 						my.dis_surface = 1
-						my.touch(1) = f(1)
+						my.touch(1) = -f(1)
 					else
 						ret = false
 					end if
@@ -2528,7 +2532,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 4
 							my.dis_surface = 1
-							my.touch(1) = f(1)
+							my.touch(1) = -f(1)
 						else
 							ret = false
 						end if
@@ -2536,7 +2540,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 4
 						my.dis_surface = 2
-						my.touch(1) = f(1)
+						my.touch(1) = -f(1)
 					end if
 				end if
 			else
@@ -2550,7 +2554,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 4
 							my.dis_surface = 2
-							my.touch(1) = f(1)
+							my.touch(1) = -f(1)
 						else
 							ret = false
 						end if
@@ -2641,7 +2645,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 3
 						my.dis_surface = 1
-						my.touch(2) = f(2)
+						my.touch(2) = -f(2)
 					else
 						ret = false
 					end if
@@ -2653,7 +2657,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 3
 							my.dis_surface = 1
-							my.touch(2) = f(2)
+							my.touch(2) = -f(2)
 						else
 							ret = false
 						end if
@@ -2661,7 +2665,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 3
 						my.dis_surface = 2
-						my.touch(2) = f(2)
+						my.touch(2) = -f(2)
 					end if
 				end if
 			else
@@ -2675,7 +2679,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 3
 							my.dis_surface = 2
-							my.touch(2) = f(2)
+							my.touch(2) = -f(2)
 						else
 							ret = false
 						end if
@@ -2683,7 +2687,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 3
 						my.dis_surface = 1
-						my.touch(2) = f(2)
+						my.touch(2) = -f(2)
 					end if
 				end if
 			end if
@@ -2696,11 +2700,11 @@ function is_disappear_surface() as Boolean{
 	}
 
 	sub update_touch() {
-	dim pre(3) as Integer
-	dim x(3) as Integer
-	dim y(3) as Integer
-	dim n_v(3) as Integer
-	dim normal(3) as Integer
+	dim pre(3) as Double
+	dim x(3) as Double
+	dim y(3) as Double
+	dim n_v(3) as Double
+	dim normal(3) as Double
 	dim theta as Double
 	dim i as Integer
 
@@ -2727,26 +2731,44 @@ function is_disappear_surface() as Boolean{
 		else
 			theta = calculate_theta(0,1)
 		end if
+		/*print("cos & sin")
+		println(cos(theta))
+		println(sin(theta))
 		y(0) = x(0)
 		y(1) = Cos(theta) * x(1) - Sin(theta) * x(2)
-		y(2) = sin(theta) * x(1) + cos(theta) * x(2)		
+		y(2) = sin(theta) * x(1) + cos(theta) * x(2)		*/
+		y(0) = x(0)
+		y(1) = -x(1)
+		y(2) = -x(2)
 	elseif normal(1) != 0 then
 		if normal(1) == -1 then
 			theta = calculate_theta(1,-1)
 		else
 			theta = calculate_theta(1,1)
 		end if
+/*		print("cos & sin")
+		println(cos(theta))
+		println(sin(theta))
 		y(0) = Cos(theta) * x(0) + Sin(theta) * x(2)
 		y(1) = x(1)
-		y(2) = - sin(theta) * x(0) + cos(theta) * x(2)	
+		y(2) = - sin(theta) * x(0) + cos(theta) * x(2)	*/
+		y(0) = -x(0)
+		y(1) = x(1)
+		y(2) = -x(2)
 	else
 		if normal(2) == -1 then
 			theta = calculate_theta(2,-1)
 		else
 			theta = calculate_theta(2,1)
 		end if
+/*		print("cos & sin")
+		println(cos(theta))
+		println(sin(theta))
 		y(0) = Cos(theta) * x(0) - Sin(theta) * x(1)
 		y(1) = sin(theta) * x(0) + cos(theta) * x(1)
+		y(2) = x(2)*/
+		y(0) = -x(0)
+		y(1) = -x(1)
 		y(2) = x(2)
 	end if
 
@@ -2774,7 +2796,7 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 			pnor(i) = 0
 		end if
 		if nor(i) != 0 then
-			n = nor(i)
+			no = nor(i)
 		end if
 		if pnor(i) != 0 then
 			p = pnor(i)
@@ -2783,22 +2805,20 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 
 	if no * p > 0 then
 		if sign > 0 then
-			theta = DegreeToRad(90)
-		else
 			theta = DegreeToRad(270)
+		else
+			theta = DegreeToRad(90)
 		end if
 	else
 		if sign < 0 then
-			theta = DegreeToRad(90)
-		else
 			theta = DegreeToRad(270)
+		else
+			theta = DegreeToRad(90)
 		end if
 	end if
 
 	return theta
 }
-
-
 
 
 
@@ -3081,7 +3101,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -3140,7 +3160,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, 950, 0, 980, 1030;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
