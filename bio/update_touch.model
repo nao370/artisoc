@@ -470,7 +470,7 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 //Include "calculate.inc"
 
 Agt_Init{
-my.Direction = 60
+my.Direction = 60.1
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 my.do_type = 1
@@ -488,7 +488,6 @@ dim i as Integer
 		println("b_type"& my.b_type)
 		determining_vector()
 		update_normal_vector()
-		delete_touch_vector()
 	PrintLn("normalX is "&my.normal_vector(0))
 	PrintLn("normalY is "&my.normal_vector(1))
 	PrintLn("normalZ is "&my.normal_vector(2))
@@ -567,9 +566,11 @@ sub forward_step() {
 
 	if is_differernt() then
 		step_surface()
+		update_touch()
 	else
 		step_direction()
 	end if
+	delete_touch_vector()
 	
 	if not is_step() then
 		my.tmp_position(0) = my.X
@@ -635,33 +636,7 @@ sub step_surface(){
 	PrintLn("myY is "&my.Y)
 	PrintLn("myZ is "&my.Z)
 	
-	update_touch()
 	my.dis_surface = -1	
-}
-
-sub update_touch(){
-	dim n as Integer
-	dim i as Integer
-	dim f(3) as Integer
-
-	n = my.do_type
-	println("n is "&n)
-	if n==0 or n == 3 or n== 5 then
-		for i = 0 to 2
-			f(i) = GetHistory(my.forward_vector(i),1)
-			if GetHistory(my.touch(i),1) == 0 then
-				my.touch(i) = f(i)
-			end if
-		next i
-	else
-		for i = 0 to 2
-			my.touch(i) = my.normal_vector(i)
-		next i
-	end if
-	PrintLn("touch(0) is "&my.touch(0))
-	PrintLn("touch(1) is "&my.touch(1))
-	PrintLn("touch(2) is "&my.touch(2))
-	
 }
 
 sub step_direction(){
@@ -1930,16 +1905,16 @@ function different_surface() as Boolean{
 	dim b as Integer
 
 	ret = false
-	if is_disappear_surface()  then
-		my.ap_or_dis = -1
-		ret = true
-	else
-		if is_appear_surface() then
-			if my.a_flag then
+	if is_appear_surface() then
+		if my.a_flag then
 				my.ap_or_dis = -1
 			else
 				my.ap_or_dis = 1
 			end if
+			ret = true
+	else
+		if is_disappear_surface() then
+			my.ap_or_dis = -1
 			ret = true
 		end if
 	end if
@@ -2350,7 +2325,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 5
 						my.dis_surface = 1
-						my.touch(1) = 0
+						my.touch(0) = f(0)
 					else
 						ret = false
 					end if
@@ -2362,7 +2337,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 5
 							my.dis_surface = 1
-							my.touch(1) = 0
+							my.touch(0) = f(0)
 						else
 							ret = false
 						end if
@@ -2370,7 +2345,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 5
 						my.dis_surface = 2
-						my.touch(2) = 0
+						my.touch(0) = f(0)
 					end if
 				end if
 			else
@@ -2384,7 +2359,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 5
 							my.dis_surface = 2
-							my.touch(2) = 0
+							my.touch(0) = f(0)
 						else
 							ret = false
 						end if
@@ -2392,7 +2367,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 5
 						my.dis_surface = 1
-						my.touch(1) = 0
+						my.touch(0) = f(0)
 					end if
 				end if
 			end if
@@ -2409,22 +2384,22 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 2
-						my.touch(2) = 0
+						my.touch(0) = -1
 					elseif not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 2
-						my.touch(2) = 0
+						my.touch(0) = 1
 					elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 2
-						my.touch(2) = 0
+						my.touch(1) = -1
 					elseif not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 2
-						my.touch(2) = 0
+						my.touch(0) = 1
 					else
 						ret = false
 					end if
@@ -2433,12 +2408,12 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 2
-						my.touch(2) = 0
+						my.touch(0) = -1
 					elseif not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 2
-						my.touch(2) = 0
+						my.touch(0) = 1
 					else
 						ret = false
 					end if
@@ -2452,12 +2427,12 @@ function is_disappear_surface() as Boolean{
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 2
-					my.touch(2) = 0
+					my.touch(1) = -1
 				elseif not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 2
-					my.touch(2) = 0
+					my.touch(1) = 1
 				else
 					ret = false
 				end if
@@ -2475,22 +2450,22 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 1
-						my.touch(1) = 0
+						my.touch(0) = -1
 					elseif not universe.map.is_void(nx,ny - my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny - my.normal_vector(1),nz) then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 1
-						my.touch(1) = 0
+						my.touch(0) = 1
 					elseif universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx,ny - my.normal_vector(1),nz+1) then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 1
-						my.touch(1) = 0
+						my.touch(2) = -1
 					elseif not universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 1
-						my.touch(1) = 0
+						my.touch(2) = 1
 					else
 						ret = false
 					end if
@@ -2499,12 +2474,12 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 1
-						my.touch(1) = 0
+						my.touch(0) = -1
 					elseif not universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny- my.normal_vector(1),nz) then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 1
-						my.touch(1) = 0
+						my.touch(0) = 1
 					else
 						ret = false
 					end if
@@ -2518,12 +2493,12 @@ function is_disappear_surface() as Boolean{
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 1
-					my.touch(1) = 0
+					my.touch(2) = -1
 				elseif not universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) then
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 1
-					my.touch(1) = 0
+					my.touch(2) = 1
 				else
 					ret = false
 				end if
@@ -2541,7 +2516,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 4
 						my.dis_surface = 1
-						my.touch(0) = 0
+						my.touch(1) = f(1)
 					else
 						ret = false
 					end if
@@ -2553,7 +2528,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 4
 							my.dis_surface = 1
-							my.touch(0) = 0
+							my.touch(1) = f(1)
 						else
 							ret = false
 						end if
@@ -2561,7 +2536,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 4
 						my.dis_surface = 2
-						my.touch(2) = 0
+						my.touch(1) = f(1)
 					end if
 				end if
 			else
@@ -2575,7 +2550,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 4
 							my.dis_surface = 2
-							my.touch(2) = 0
+							my.touch(1) = f(1)
 						else
 							ret = false
 						end if
@@ -2583,7 +2558,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 4
 						my.dis_surface = 1
-						my.touch(0) = 0
+						my.touch(1) = f(1)
 					end if
 				end if
 			end if
@@ -2600,18 +2575,22 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 0
+						my.touch(1) = -1
 					elseif not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny+1,nz) then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 0
+						my.touch(1) = 1
 					elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 0
+						my.touch(2) = -1
 					elseif not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 0
+						my.touch(2) = 1
 					else
 						ret = false
 					end if
@@ -2620,10 +2599,12 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 0
+						my.touch(1) = -1
 					elseif not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny+1,nz) then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 0
+						my.touch(1) = 1
 					else
 						ret = false
 					end if
@@ -2637,10 +2618,12 @@ function is_disappear_surface() as Boolean{
 					ret = true
 					my.b_type = 1
 					my.dis_surface = 0
+					my.touch(2) = -1
 				elseif not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
 					ret = true
 					my.b_type = 1
 					my.dis_surface = 0
+					my.touch(2) = 1
 				else
 					ret = false
 				end if
@@ -2658,7 +2641,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 3
 						my.dis_surface = 1
-						my.touch(0) = 0
+						my.touch(2) = f(2)
 					else
 						ret = false
 					end if
@@ -2670,7 +2653,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 3
 							my.dis_surface = 1
-							my.touch(0) = 0
+							my.touch(2) = f(2)
 						else
 							ret = false
 						end if
@@ -2678,7 +2661,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 3
 						my.dis_surface = 2
-						my.touch(1) = 0
+						my.touch(2) = f(2)
 					end if
 				end if
 			else
@@ -2692,7 +2675,7 @@ function is_disappear_surface() as Boolean{
 							ret = true
 							my.b_type = 3
 							my.dis_surface = 2
-							my.touch(1) = 0
+							my.touch(2) = f(2)
 						else
 							ret = false
 						end if
@@ -2700,7 +2683,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 3
 						my.dis_surface = 1
-						my.touch(0) = 0
+						my.touch(2) = f(2)
 					end if
 				end if
 			end if
@@ -2711,7 +2694,120 @@ function is_disappear_surface() as Boolean{
 	
 	return ret
 	}
+
+	sub update_touch() {
+	dim pre(3) as Integer
+	dim x(3) as Integer
+	dim y(3) as Integer
+	dim n_v(3) as Integer
+	dim normal(3) as Integer
+	dim theta as Double
+	dim i as Integer
+
+
+	for i = 0 to 2
+		pre(i) = GetHistory(my.forward_vector(i),1)
+		n_v(i) = my.forward_vector(i)
+		x(i) = my.touch(i)
+	next i
+
+	normal(0) = pre(1) * n_v(2) - pre(2) * n_v(1)
+	normal(1) = pre(2) * n_v(0) - pre(0) * n_v(2)
+	normal(2) = pre(0) * n_v(1) - pre(1) * n_v(0)
+
+	for i = 0 to 2
+				println("normal"&i&" is" &normal(i))
+	next i
+		for i = 0 to 2
+		println("x"&i&"is "&x(i))
+	next i
+	if normal(0) != 0 then
+		if normal(0) == -1 then
+			theta = calculate_theta(0,-1)
+		else
+			theta = calculate_theta(0,1)
+		end if
+		y(0) = x(0)
+		y(1) = Cos(theta) * x(1) - Sin(theta) * x(2)
+		y(2) = sin(theta) * x(1) + cos(theta) * x(2)		
+	elseif normal(1) != 0 then
+		if normal(1) == -1 then
+			theta = calculate_theta(1,-1)
+		else
+			theta = calculate_theta(1,1)
+		end if
+		y(0) = Cos(theta) * x(0) + Sin(theta) * x(2)
+		y(1) = x(1)
+		y(2) = - sin(theta) * x(0) + cos(theta) * x(2)	
+	else
+		if normal(2) == -1 then
+			theta = calculate_theta(2,-1)
+		else
+			theta = calculate_theta(2,1)
+		end if
+		y(0) = Cos(theta) * x(0) - Sin(theta) * x(1)
+		y(1) = sin(theta) * x(0) + cos(theta) * x(1)
+		y(2) = x(2)
+	end if
+
+	println("")
+	for i = 0 to 2		
+		println("y"&i&"is "&y(i))
+		my.touch(i) = y(i)
+	next i
+} 
+
+function calculate_theta(n as Integer,sign as Integer) as Double{
+	dim i as Integer
+	dim nor(3) as Double
+	dim pnor(3) as Double
+	dim no as Double
+	dim p as Double
+	dim theta as Double
 	
+	for i = 0 to 2
+		if i != n then
+			nor(i) = my.forward_vector(i)
+			pnor(i) = GetHistory(my.forward_vector(i),1)
+		else
+			nor(i) = 0
+			pnor(i) = 0
+		end if
+		if nor(i) != 0 then
+			n = nor(i)
+		end if
+		if pnor(i) != 0 then
+			p = pnor(i)
+		end if
+	next i
+
+	if no * p > 0 then
+		if sign > 0 then
+			theta = DegreeToRad(90)
+		else
+			theta = DegreeToRad(270)
+		end if
+	else
+		if sign < 0 then
+			theta = DegreeToRad(90)
+		else
+			theta = DegreeToRad(270)
+		end if
+	end if
+
+	return theta
+}
+
+
+
+
+
+
+
+
+
+
+
 #end_rule UNIVERSE.MAP.INSECT
 
 
