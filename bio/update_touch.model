@@ -716,11 +716,27 @@ function is_pause() as Boolean{
 	dim nx as Integer
 	dim ny as Integer
 	dim nz as Integer
+	dim f(3) as Double
+	dim i as Integer
+	dim minus(3) as Integer
 
-	nx = Int(my.X)
-	ny = Int(my.Y)
-	nz = Int(my.Z)
-
+	for i = 0 to 2
+		if my.forward_vector(i) != 0 then
+			f(i) = My.forward_vector(i)
+			f(i) = f(i) / Abs(f(i))
+		else
+			f(i) = 0
+		end if
+		if f(i) < 0 then
+			minus(i) = 1
+		else
+			minus(i) = 0
+		end if
+	next i
+	
+	nx = Int(my.X) + minus(0)
+	ny = Int(my.Y) + minus(1)
+	nz = Int(my.Z) + minus(2)
 	
 	PrintLn("myX is "&my.X)
 	PrintLn("myY is "&my.Y)
@@ -730,7 +746,6 @@ function is_pause() as Boolean{
 	PrintLn("touchX is "&my.touch(0))
 	PrintLn("touchY is "&my.touch(1))
 	PrintLn("touchZ is "&my.touch(2))
-
 	
 	type = my.do_type
 
@@ -746,13 +761,9 @@ function is_pause() as Boolean{
 				if ny == 0 and my.touch(1) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx+1,ny - my.touch(1),nz) then
-						if my.X == nx then
-							ret = false
-						else
-							ret = true
-						end if
-					elseif not universe.map.is_void(nx,ny - my.touch(1),nz) and universe.map.is_void(nx+1,ny - my.touch(1),nz) then
+					if nx == 0 then
+						ret = false
+					elseif universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx+f(0),ny - my.touch(1),nz) then
 						if my.X == nx then
 							ret = false
 						else
@@ -770,13 +781,9 @@ function is_pause() as Boolean{
 				if nz == 0 and my.touch(2) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx+1,ny,nz - my.touch(2)) then
-						if my.X == nx then
-							ret = false
-						else
-							ret = true
-						end if
-					elseif not universe.map.is_void(nx,ny,nz - my.touch(2)) and universe.map.is_void(nx+1,ny,nz - my.touch(2)) then
+					if nx == 0 then
+						ret = false
+					elseif universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx+f(0),ny,nz - my.touch(2)) then
 						if my.X == nx then
 							ret = false
 						else
@@ -800,13 +807,9 @@ function is_pause() as Boolean{
 				if nx == 0 and my.touch(0) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny+1,nz) then
-						if my.Y == ny then
-							ret = false
-						else
-							ret = true
-						end if
-					elseif not universe.map.is_void(nx - my.touch(0),ny,nz) and universe.map.is_void(nx - my.touch(0),ny+1,nz) then
+					if ny == 0 then
+						ret = false
+					elseif universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny+f(1),nz) then
 						if my.Y == ny then
 							ret = false
 						else
@@ -824,14 +827,10 @@ function is_pause() as Boolean{
 				if nz == 0 and my.touch(2) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx,ny+1,nz - my.touch(2)) then
-						if my.Y == ny then
-							ret = false
-						else
-							ret = true
-						end if
-					elseif not universe.map.is_void(nx,ny,nz - my.touch(2)) and universe.map.is_void(nx,ny+1,nz - my.touch(2)) then
-						if my.y == ny then
+					if ny == 0 then
+						ret = false
+					elseif universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.touch(2)) then
+						if my.Y == ny  then
 							ret = false
 						else
 							ret = true
@@ -852,13 +851,9 @@ function is_pause() as Boolean{
 				if nx == 0 and my.touch(0) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny,nz+1) then
-						if my.Z == nz then
-							ret = false
-						else
-							ret = true
-						end if
-					elseif not universe.map.is_void(nx - my.touch(0),ny,nz) and universe.map.is_void(nx - my.touch(0),ny,nz+1) then
+					if nz == 0 then
+						ret = false
+					elseif universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny,nz+f(2)) then
 						if my.Z == nz then
 							ret = false
 						else
@@ -876,13 +871,9 @@ function is_pause() as Boolean{
 				if ny == 0 and my.touch(1) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx,ny - my.touch(1),nz+1) then
-						if my.Z == nz then
-							ret = false
-						else
-							ret = true
-						end if
-					elseif not universe.map.is_void(nx,ny - my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz+1) then
+					if nz == 0 then
+						ret = false
+					elseif universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx,ny - my.touch(1),nz+f(2)) then
 						if my.Z == nz then
 							ret = false
 						else
@@ -1267,7 +1258,7 @@ sub back_step(){
 	pre_n(2) = Int(pre(2))
 
 	for i = 0 to 2
-		if n(i) == pre_n(i)then
+		if n(i) == pre_n(i) or u(i) == 0 then
 			k(i) = 0
 		else
 			if n(i) > pre_n(i) then
@@ -2015,11 +2006,12 @@ function different_surface() as Boolean{
 
 	ret = false
 	if is_appear_surface() then
-		if my.a_flag then
+		/*if my.a_flag then
 				my.ap_or_dis = -1
 			else
 				my.ap_or_dis = 1
-			end if
+			end if*/
+			my.ap_or_dis = 1
 			ret = true
 	else
 		if is_disappear_surface() then
@@ -2924,7 +2916,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 
 	return theta
 }
-
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3131,10 +3122,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 0;
-    Position_y = 1;
-    Size_x = 1075;
-    Size_y = 908;
+    Position_x = -4;
+    Position_y = -12;
+    Size_x = 1074;
+    Size_y = 909;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3222,9 +3213,9 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1149;
+    Console_Position_x = 1388;
     Console_Position_y = -5;
-    Console_Size_x = 920;
+    Console_Size_x = 681;
     Console_Size_y = 905;
     Componen_Tree_Position_x = 803;
     Componen_Tree_Position_y = 38;
