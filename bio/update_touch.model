@@ -454,8 +454,6 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 
 	return ret
 	}
-	}
-	
 #end_rule UNIVERSE
 
 
@@ -551,7 +549,7 @@ sub delete_touch_vector(){
 	dim type as Integer
 
 	type = my.do_type
-
+	
 	if type == 0 then
 		my.touch(0) = 0
 	elseif type == 1 then
@@ -590,7 +588,9 @@ sub forward_step() {
 	end if
 	delete_touch_vector()
 	update_normal()
-	
+
+	println("do_type : "&my.do_type)
+	println("")
 	if not is_step() then
 		my.tmp_position(0) = my.X
 		my.tmp_position(1) = my.Y
@@ -672,15 +672,12 @@ sub step_direction(){
 
 	if my.X < 0 then
 		my.X = 0
-		my.do_type = 4
 	end if
 	if my.y < 0 then
 		my.y = 0
-		my.do_type = 2
 	end if
 	if my.z < 0 then
 		my.z = 0
-		my.do_type = 1
 	end if
 
 }
@@ -753,11 +750,11 @@ function is_pause() as Boolean{
 	
 	type = my.do_type
 
-	if my.is_hemi then
+	/*if my.is_hemi then
 		ret = false
 		my.is_hemi = false
 		return ret 
-	end if
+	end if*/
 
 	if type == 0 then
 		if my.normal_vector(1) == 0 then
@@ -1497,7 +1494,7 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,2) = 0
 
 			if my.ap_or_dis == 1 or n == my.dis_surface then
-				if my.normal_vector(0) == 0 then
+				if my.normal_vector(0) != 0 then
 					my.n_normal(0) = 0
 					my.n_normal(1) = 2
 				else
@@ -1654,7 +1651,7 @@ sub store_vector(type as Integer,angle as Double){
 			else
 				my.n_normal(0) = 1
 				my.n_normal(1) = 1
-				my.n_normal(1) = 2
+				my.n_normal(2) = 2
 			end if
 
 /*
@@ -1699,7 +1696,7 @@ sub store_vector(type as Integer,angle as Double){
 			else
 				my.n_normal(0) = 0
 				my.n_normal(1) = 0
-				my.n_normal(1) = 2
+				my.n_normal(2) = 2
 			end if
 /*
 			calculate_matrix()
@@ -1743,7 +1740,7 @@ sub store_vector(type as Integer,angle as Double){
 			else
 				my.n_normal(0) = 1
 				my.n_normal(1) = 1
-				my.n_normal(1) = 0
+				my.n_normal(2) = 0
 			end if
 			/*calculate_matrix()
 
@@ -2016,11 +2013,13 @@ function different_surface() as Boolean{
 				my.ap_or_dis = 1
 			end if*/
 			my.ap_or_dis = 1
+			println("appear")
 			ret = true
 	else
 		if is_disappear_surface() then
 			my.ap_or_dis = -1
 			ret = true
+			println("disappear")
 		end if
 	end if
 	
@@ -2463,7 +2462,7 @@ function is_disappear_surface() as Boolean{
 						elseif not universe.map.is_void(nx+f(0),ny,nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
 							ret = true
 							my.b_type = 5
-							my.dis_surface = 1
+							my.dis_surface = 2
 							my.touch(0) = -f(0)
 						else
 							ret = false
@@ -2471,7 +2470,7 @@ function is_disappear_surface() as Boolean{
 					else
 						ret = true
 						my.b_type = 5
-						my.dis_surface = 2
+						my.dis_surface = 1
 						my.touch(0) = -f(0)
 					end if
 				end if
@@ -2648,7 +2647,7 @@ function is_disappear_surface() as Boolean{
 				if nx == 0 and my.normal_vector(0) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx - my.normal_vector(2),ny+f(1),nz) then
+					if universe.map.is_void(nx - my.normal_vector(0),ny+f(1),nz) then
 						if nz == 0 and my.touch(2) > 0 then
 							ret = false
 						elseif not universe.map.is_void(nx,ny+f(1),nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
@@ -2663,7 +2662,7 @@ function is_disappear_surface() as Boolean{
 						ret = true
 						my.b_type = 4
 						my.dis_surface = 0
-						my.touch(1) = f(1)
+						my.touch(1) = -f(1)
 					end if
 				end if
 			end if
@@ -2773,7 +2772,7 @@ function is_disappear_surface() as Boolean{
 				if nx == 0 and my.normal_vector(0) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx - my.normal_vector(2),ny,nz+f(2)) then
+					if universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
 						if ny == 0 and my.touch(1) > 0 then
 							ret = false
 						elseif not universe.map.is_void(nx,ny- my.touch(1),nz+f(2)) and universe.map.is_void(nx,ny - my.touch(1) ,nz) then
@@ -2819,13 +2818,13 @@ function is_disappear_surface() as Boolean{
 	normal(0) = pre(1) * n_v(2) - pre(2) * n_v(1)
 	normal(1) = pre(2) * n_v(0) - pre(0) * n_v(2)
 	normal(2) = pre(0) * n_v(1) - pre(1) * n_v(0)
-
+/*
 	for i = 0 to 2
 				println("normal"&i&" is" &normal(i))
 	next i
 		for i = 0 to 2
 		println("x"&i&"is "&x(i))
-	next i
+	next i*/
 	if normal(0) != 0 then
 		if normal(0) == -1 then
 			theta = calculate_theta(0,-1)
@@ -2875,7 +2874,7 @@ function is_disappear_surface() as Boolean{
 
 	println("")
 	for i = 0 to 2		
-		println("y"&i&"is "&y(i))
+//		println("y"&i&"is "&y(i))
 		my.touch(i) = y(i)
 	next i
 } 
@@ -2948,7 +2947,7 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 12;
+    Exec_Wait = 13;
     Exec_Wait_Max = 1000;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
@@ -3254,7 +3253,7 @@ Network_Info {
 Window_Rectangle {
     Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 1700, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
