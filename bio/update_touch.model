@@ -52,8 +52,8 @@ UNIVERSE {
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
-    Dim num_void_fin(0, 0) As Integer = ();
-    Dim num_fill_fin(0, 0) As Integer = ();
+    Dim num_void_fin(0, 0) As Integer = (0);
+    Dim num_fill_fin(0, 0) As Integer = (0);
 }
 
 
@@ -83,7 +83,7 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.1)
+	make_rubble_mix(0.6)
 	make_void()
 	println("")
 	println("start")
@@ -195,9 +195,9 @@ sub make_rubble_mix(rate as Double){
 		if r < 33 then
 			tmp_number = tmp_number + make_rubble_board(pattern,x,y,z)
 		elseif r < 66 then
-//			tmp_number = tmp_number + make_rubble_box(x,y,z)
+			tmp_number = tmp_number + make_rubble_box(x,y,z)
 		else
-//			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
+			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
 		end if		
 		tmp_rate = tmp_number / max
 	Loop
@@ -2046,7 +2046,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 function is_bend() as Boolean{
 	dim ret as Boolean
 
-	if Rnd() < 0.01 then
+	if Rnd() < 0.00 then
 		ret = true
 	else
 		ret = false
@@ -3309,7 +3309,7 @@ Time_Graph {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -3368,7 +3368,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
