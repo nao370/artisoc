@@ -47,11 +47,11 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[20][40][1] As Integer = (800*0);
+        Dim fin(0, 0)[20][40][16] As Boolean = ();
         Dim is_void(0, 0)[20][40][16] As Boolean = (12800*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
-    Dim num_fin(0, 0) As Integer = (0);
+    Dim num_fin(0, 0) <6000>  As Integer = ();
 }
 
 
@@ -82,25 +82,25 @@ Initial_Value {
 Univ_Init{
 	ClearConsoleScreen()
 	make_rubble_mix(0.1)
-	write_void()
+	make_void()
 	println("")
 	println("start")
 }
 
-sub write_void(){
+sub make_void(){
 dim i as Integer
 dim j as Integer
+dim k as Integer
 
+for k= 0 to 15
 for j = 0 to GetHeightSpace(universe.map) -1
 for i = 0 to GetWidthSpace(universe.map) -1
-if universe.map.is_void(i,j,0) then
-print("¡")
-else
-print(" ")
-end if
+	if i == 0 or i == GetHeightSpace(universe.map)-1 or j == 0 or j == GetWidthSpace(universe.map) - 1 or k == 15 then
+		universe.map.is_void = true
+	end if
 next i
-println("")
 next j
+next k
 }
 
 Univ_Step_Begin{
@@ -108,7 +108,53 @@ Univ_Step_Begin{
 }
 
 Univ_Step_End{
+	draw_fin()
+	if universe.num_fin == 12800 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+		ExitSimulation()
+	end if
+}
 
+sub draw_fin(){
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+
+	for k= 0 to 15
+		for j = 0 to GetHeightSpace(universe.map) -1
+			for i = 0 to GetWidthSpace(universe.map) -1
+				if is_in_area(i,j,k) then
+					universe.map.fin(i,j,k)= true
+					universe.num_fin = universe.num_fin + 1
+				end if
+			next i
+		next j
+	next k
+}
+
+function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
+	dim ret as Boolean
+	dim tmp as AgtSet
+	dim one as Agt
+	dim r as Double
+
+	r = 20
+	if universe.map.fin(x,y,z) then
+		ret = false
+	else
+		MakeOneAgtSetAroundPosition(tmp,universe.map,x,y,0,r,universe.map.insect)
+		if CountAgtSet(tmp) > 0 then
+			ret = false
+			for each one in tmp
+				if ((one.X - x)^2 + (one.y - y)^2 + (one.z - z)^2) < r^2 then
+					ret = true
+				end if
+			next i
+		else
+			ret = false
+		end if
+	end if
+
+	return ret
 }
 
 Univ_Finish{
@@ -178,12 +224,12 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				if z == 0 then
 					flag = true
 				else
-					if universe.map.is_void(x+b,y+c,z) then
+					if universe.map.is_void(x+b,y+c,z-1) then
 						flag = true
 					end if
 				end if
 			else
-				DelAgt(one)
+				//DelAgt(one)
 				ret = ret - 1
 			end if
 		next one
@@ -204,15 +250,15 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				one.Y = y + b
 				one.Z = z + a
 				universe.map.is_void(x,y+b,z+a) = true
-				if z+a == 0 then
+				if z == 0 then
 					flag = true
 				else
-					if universe.map.is_void(x,y+b,z) then
+					if universe.map.is_void(x,y+b,z-1) then
 						flag = true
 					end if
 				end if
 			else
-				delagt(one)
+				//delagt(one)
 				ret = ret - 1
 			end if
 		next one
@@ -233,15 +279,15 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				one.Y = y
 				one.Z = z + a
 				universe.map.is_void(x+c,y,z+a) = true
-				if z+a == 0 then
+				if z == 0 then
 					flag = true
 				else
-					if universe.map.is_void(x+c,y,z) then
+					if universe.map.is_void(x+c,y,z-1) then
 						flag = true
 					end if
 				end if
 			else
-				delagt(one)
+				//delagt(one)
 				ret = ret - 1
 			end if
 		next one
@@ -287,10 +333,10 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 		  		one.Y = y + c
 		  		one.Z = z + a
 		  		universe.map.is_void(x+b,y+c,z+a) = true
-		  		if z+a == 0 then
+		  		if z == 0 then
 						flag = true
 					else
-						if universe.map.is_void(x+b,y+c,z) then
+						if universe.map.is_void(x+b,y+c,z-1) then
 							flag = true
 						end if
 					end if
@@ -343,10 +389,10 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		  		one.Y = y + c
 		  		one.Z = z + a
 		  		universe.map.is_void(x+b,y+c,z+a) = true
-		  		if z+a == 0 then
+		  		if z == 0 then
 						flag = true
 					else
-						if universe.map.is_void(x+b,y+c,z) then
+						if universe.map.is_void(x+b,y+c,z-1) then
 							flag = true
 						end if
 					end if
@@ -377,10 +423,10 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
  		 			one.Y = y + c
  		 			one.Z = z + a
  		 			universe.map.is_void(x+b,y+c,z+a) = true
- 		 			if z+a == 0 then
+ 		 			if z == 0 then
 						flag = true
 					else
-						if universe.map.is_void(x+b,y+c,z) then
+						if universe.map.is_void(x+b,y+c,z-1) then
 							flag = true
 						end if
 					end if
@@ -410,10 +456,10 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
  		 			one.Y = y + c
  		 			one.Z = z + a
  		 			universe.map.is_void(x+b,y+c,z+a) = true
- 		 			if z+a == 0 then
+ 		 			if z == 0 then
 						flag = true
 					else
-						if universe.map.is_void(x+b,y+c,z) then
+						if universe.map.is_void(x+b,y+c,z-1) then
 							flag = true
 						end if
 					end if
@@ -1157,7 +1203,10 @@ function is_filled() as Boolean{
 	 for j = 0 to (1 + g(1))
 	 	for i = 0 to (1 + g(0))
 	 		if universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
-	 			if abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
+	 			if a(0)-g(0)+i > GetWidthSpace(universe.map)-3 or a(1)-g(1)+j > GetHeightSpace(universe.map)-3 then
+	 				ret = true
+	 				return ret
+	 			elseif abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
 	 				ret = true
 	 				return ret
 	 			end if
@@ -1991,7 +2040,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 function is_bend() as Boolean{
 	dim ret as Boolean
 
-	if Rnd() < 0.00 then
+	if Rnd() < 0.01 then
 		ret = true
 	else
 		ret = false
@@ -2947,7 +2996,7 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 13;
+    Exec_Wait = 0;
     Exec_Wait_Max = 1000;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
@@ -3125,9 +3174,9 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = -4;
-    Position_y = -12;
-    Size_x = 1074;
+    Position_x = 0;
+    Position_y = -4;
+    Size_x = 1129;
     Size_y = 909;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
@@ -3184,6 +3233,48 @@ Map3D_Output {
                 Magnify_Value = 1.0;
                 Magnify_Variable_Path_Name = "";
         }
+    }
+}
+
+
+//-------------------------------------------------------
+// Time Graph Output Definition Division
+//-------------------------------------------------------
+Time_Graph {
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Graph_Name = "fin";
+    Title = "fin";
+    Disable = No;
+    Background_Color = 255, 255, 255;
+    Remarks = Yes;
+    Legend_Pos = Top;
+    FastDraw = Yes;
+    Position_x = 1141;
+    Position_y = 6;
+    Size_x = 500;
+    Size_y = 300;
+    Map_Cell_Size = -1;
+    Axis_Label = "", "";
+    Draw_By_JFree_Chart = Yes;
+    Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
+    ScaleAuto = Yes, Yes;
+    Output_Group_Name = "";
+    Output {
+        Graph_Element_Name = "fin";
+        Line_Color = 0, 0, 255;
+        Line_Width = 2;
+        Marker_Id = 0;
+        Output_Expression = "universe.num_fin";
+        Expression_Value_Display = No;
+        Effective_Fraction_Figures = 0;
+        Graph_Element_Color = (255, 0, 0);
     }
 }
 
@@ -3252,8 +3343,8 @@ Network_Info {
 //-------------------------------------------------------
 Window_Rectangle {
     Window_Name = Main_Window, -11, -11, 1942, 1042;
-    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Output_Setting_Window, 746, 346, 480, 350;
+    Window_Name = Artisoc_Help_Window, 10, 10, 1059, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
