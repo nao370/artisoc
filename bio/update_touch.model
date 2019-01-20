@@ -487,14 +487,14 @@ dim i as Integer
 
 	if different_surface() then
 		println("b_type"& my.b_type)
+			for i =0 to 2
+		println(i&" th  : touch"&my.touch(i))
+	next i
 		determining_vector()
 		update_normal_vector()
 	PrintLn("normalX is "&my.normal_vector(0))
 	PrintLn("normalY is "&my.normal_vector(1))
 	PrintLn("normalZ is "&my.normal_vector(2))
-	for i =0 to 2
-		println(i&" th  : touch"&my.touch(i))
-	next i
 	else
 		if is_bend() then
 			determining_bend()
@@ -1452,9 +1452,13 @@ sub store_vector(type as Integer,angle as Double){
 
 	for i = 0 to 2	
 		pre_t(i) = GetHistory(my.touch(i),1)
+		if my.normal_vector(i) != 0 then
+			n = i
+		end if
 	next i
 	type = my.b_type
 	angle = my.angle_surface
+
 
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
@@ -1497,12 +1501,22 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,1) = 0
 			my.next_vector(1,2) = 0
 
-			if my.normal_vector(0) == 0 then
-				my.n_normal(0) = 2
-				my.n_normal(1) = 1
+			if my.ap_or_dis == 1 or n == my.dis_surface then
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 1
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 0
+					my.n_normal(1) = 2
+				end if
 			else
-				my.n_normal(0) = 0
-				my.n_normal(1) = 2
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 0
+					my.n_normal(1) = 1
+				else
+					my.n_normal(0) = 0
+					my.n_normal(1) = 2
+				end if
 			end if
 		elseif type == 4 then
 			my.next_vector(0,0) = 0
@@ -1540,12 +1554,22 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,1) = 0
 			my.next_vector(1,2) = 0
 
-			if my.normal_vector(1) == 0 then
-				my.n_normal(0) = 0
-				my.n_normal(1) = 2
+			if my.ap_or_dis == 1 or n == my.dis_surface then
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 1
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 0
+					my.n_normal(1) = 1
+				end if
 			else
-				my.n_normal(0) = 1
-				my.n_normal(1) = 0
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 0
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 0
+					my.n_normal(1) = 1
+				end if
 			end if
 		elseif type == 5 then
 			my.next_vector(0,0) = 0
@@ -1583,12 +1607,22 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 			my.next_vector(1,2) = 0
 
-			if my.normal_vector(0) == 0 then
-				my.n_normal(0) = 1
-				my.n_normal(1) = 2
+			if my.ap_or_dis == 1 or n == my.dis_surface then
+				if my.normal_vector(1) == 0 then
+					my.n_normal(0) = 0
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 1
+					my.n_normal(1) = 0
+				end if
 			else
-				my.n_normal(0) = 0
-				my.n_normal(1) = 1
+				if my.normal_vector(1) == 0 then
+					my.n_normal(0) = 1
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 1
+					my.n_normal(1) = 0
+				end if
 			end if
 		else
 			println("type miss")
@@ -1811,6 +1845,7 @@ sub print_vector(){
 		PrintLn("next_vector(0)"&my.next_vector(i,0))
 		PrintLn("next_vector(1)"&my.next_vector(i,1))
 		PrintLn("next_vector(2)"&my.next_vector(i,2))
+		PrintLn("next_normal is"&my.n_normal(i))
 	next i
 }
 
@@ -2426,10 +2461,10 @@ function is_disappear_surface() as Boolean{
 				if ny == 0 and my.normal_vector(1) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx,ny - my.normal_vector(1),nz) then
+					if universe.map.is_void(nx+f(0),ny - my.normal_vector(1),nz) then
 						if nz == 0 and my.touch(2) > 0 then
 							ret = false
-						elseif not universe.map.is_void(nx+f(0),ny- my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz ) then
+						elseif not universe.map.is_void(nx+f(0),ny,nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
 							ret = true
 							my.b_type = 5
 							my.dis_surface = 1
@@ -2617,7 +2652,7 @@ function is_disappear_surface() as Boolean{
 				if nx == 0 and my.normal_vector(0) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx - my.normal_vector(2),ny,nz) then
+					if universe.map.is_void(nx - my.normal_vector(2),ny+f(1),nz) then
 						if nz == 0 and my.touch(2) > 0 then
 							ret = false
 						elseif not universe.map.is_void(nx,ny+f(1),nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
@@ -2742,7 +2777,7 @@ function is_disappear_surface() as Boolean{
 				if nx == 0 and my.normal_vector(0) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx - my.normal_vector(2),ny,nz) then
+					if universe.map.is_void(nx - my.normal_vector(2),ny,nz+f(2)) then
 						if ny == 0 and my.touch(1) > 0 then
 							ret = false
 						elseif not universe.map.is_void(nx,ny- my.touch(1),nz+f(2)) and universe.map.is_void(nx,ny - my.touch(1) ,nz) then
@@ -2889,8 +2924,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 
 	return theta
 }
-
-
 
 #end_rule UNIVERSE.MAP.INSECT
 
@@ -3101,7 +3134,7 @@ Map3D_Output {
     Position_x = 0;
     Position_y = 1;
     Size_x = 1075;
-    Size_y = 870;
+    Size_y = 908;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3189,8 +3222,8 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1298;
-    Console_Position_y = -10;
+    Console_Position_x = 1149;
+    Console_Position_y = -5;
     Console_Size_x = 920;
     Console_Size_y = 905;
     Componen_Tree_Position_x = 803;
