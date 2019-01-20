@@ -47,11 +47,13 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[20][40][16] As Boolean = ();
+        Dim fin(0, 0)[20][40][16] As Boolean = (12800*0);
         Dim is_void(0, 0)[20][40][16] As Boolean = (12800*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
-    Dim num_fin(0, 0) <6000>  As Integer = ();
+    Dim num_fin(0, 0) <6000>  As Integer = (0);
+    Dim num_void_fin(0, 0) As Integer = ();
+    Dim num_fill_fin(0, 0) As Integer = ();
 }
 
 
@@ -125,6 +127,11 @@ sub draw_fin(){
 				if is_in_area(i,j,k) then
 					universe.map.fin(i,j,k)= true
 					universe.num_fin = universe.num_fin + 1
+					if universe.map.is_void(i,j,k) then
+						universe.num_fill_fin = universe.num_fill_fin + 1
+					else
+						universe.num_void_fin = universe.num_void_fin +1
+					end if
 				end if
 			next i
 		next j
@@ -1202,11 +1209,10 @@ function is_filled() as Boolean{
 	for k = 0 to (1 + g(2))
 	 for j = 0 to (1 + g(1))
 	 	for i = 0 to (1 + g(0))
-	 		if universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
-	 			if a(0)-g(0)+i > GetWidthSpace(universe.map)-3 or a(1)-g(1)+j > GetHeightSpace(universe.map)-3 then
-	 				ret = true
-	 				return ret
-	 			elseif abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
+	 		if a(0)-g(0)+i > GetWidthSpace(universe.map)-1 or a(1)-g(1)+j > GetHeightSpace(universe.map)-1 then
+	 		
+	 		elseif universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+	 			if abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
 	 				ret = true
 	 				return ret
 	 			end if
@@ -3269,12 +3275,32 @@ Time_Graph {
     Output {
         Graph_Element_Name = "fin";
         Line_Color = 0, 0, 255;
-        Line_Width = 2;
+        Line_Width = 3;
         Marker_Id = 0;
         Output_Expression = "universe.num_fin";
         Expression_Value_Display = No;
         Effective_Fraction_Figures = 0;
         Graph_Element_Color = (255, 0, 0);
+    }
+    Output {
+        Graph_Element_Name = "void";
+        Line_Color = 255, 0, 0;
+        Line_Width = 2;
+        Marker_Id = 0;
+        Output_Expression = "universe.num_void_fin";
+        Expression_Value_Display = No;
+        Effective_Fraction_Figures = 0;
+        Graph_Element_Color = (0, 255, 0);
+    }
+    Output {
+        Graph_Element_Name = "fill";
+        Line_Color = 0, 0, 255;
+        Line_Width = 2;
+        Marker_Id = 0;
+        Output_Expression = "universe.num_fill_fin";
+        Expression_Value_Display = No;
+        Effective_Fraction_Figures = 0;
+        Graph_Element_Color = (0, 51, 255);
     }
 }
 
@@ -3344,7 +3370,7 @@ Network_Info {
 Window_Rectangle {
     Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 746, 346, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 1059, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
