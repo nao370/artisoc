@@ -690,18 +690,22 @@ function is_step() as Boolean{
 
 	if is_filled() then
 		ret = false
+		println("filled")
 	else
 		if is_float() then
 			ret = false
+			println("float")
 		else
 			if not is_jump() then
 				if is_pause() then
 					ret = false
+					println("pause")
 				else
 					ret = true
 				end if
 			else
 				ret = false
+				PrintLn("jump")
 			end if
 		end if
 	end if
@@ -1494,11 +1498,11 @@ sub store_vector(type as Integer,angle as Double){
 
 			if my.ap_or_dis == 1 or n == my.dis_surface then
 				if my.normal_vector(0) == 0 then
-					my.n_normal(0) = 1
-					my.n_normal(1) = 2
-				else
 					my.n_normal(0) = 0
 					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 2
+					my.n_normal(1) = 1
 				end if
 			else
 				if my.normal_vector(0) == 0 then
@@ -3250,7 +3254,7 @@ Network_Info {
 Window_Rectangle {
     Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 1700, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
