@@ -502,6 +502,7 @@ dim i as Integer
 		end if
 	end if
 	forward_step()
+	clear_val()
 
 	PrintLn("myX is "&my.X)
 	PrintLn("myY is "&my.Y)
@@ -516,6 +517,12 @@ dim i as Integer
 	println("")
 			
 }
+
+sub clear_val(){
+//毎ステップ初期化必要な変数を初期化する関数
+	my.dis_surface = -1
+}
+
 
 sub update_normal_vector(){
 	dim type as Integer
@@ -563,6 +570,16 @@ sub delete_touch_vector(){
 	end if
 }
 
+sub update_normal(){
+	dim i as Integer
+
+	for i = 0 to 2
+		if my.normal_vector(i) != 0 then
+			my.normal_vector(i) = my.touch(i)
+		end if
+	next i
+}
+
 sub forward_step() {
 
 	if is_differernt() then
@@ -572,6 +589,7 @@ sub forward_step() {
 		step_direction()
 	end if
 	delete_touch_vector()
+	update_normal()
 	
 	if not is_step() then
 		my.tmp_position(0) = my.X
@@ -584,18 +602,22 @@ sub forward_step() {
 function is_differernt()as Boolean{
 	dim i as Integer
 	dim n as Integer
+	dim f as Double
 	dim ret as Boolean
 
 	n = my.dis_surface
-	PrintLn("")
-	PrintLn("is_differrent")
-	PrintLn("dis_surface :"&n)
 	if n == -1 then
 		ret = false
-	elseif my.forward_vector(n) != 0 and my.ap_or_dis == -1 then
-		ret = true
 	else
-		ret = false
+		f = my.forward_vector(n)//GetHistory(my.forward_vector(n),1)
+		PrintLn("")
+		PrintLn("is_differrent")
+		PrintLn("dis_surface :"&n)
+		if f != 0 and my.ap_or_dis == -1 then
+			ret = true
+		else
+			ret = false
+		end if
 	end if
 	
 	return ret
@@ -1437,6 +1459,7 @@ sub store_vector(type as Integer,angle as Double){
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
 	my.next_vector(2,2) = 0
+	PrintLn("dis : "&my.dis_surface)
 	if type > 2 then
 	//±の障害物見てベクトルの方向を決める
 		if type == 3 then
@@ -1444,10 +1467,15 @@ sub store_vector(type as Integer,angle as Double){
 			if my.ap_or_dis == 1 then
 				my.next_vector(0,1) = pre_t(1)
 			else
-				if Int(my.Y) == 0 and pre_t(1) > 0 then
+				/*if Int(my.Y) == 0 and pre_t(1) > 0 then
 					my.next_vector(0,1) = pre_t(1)
 				else
 					my.next_vector(0,1) = - pre_t(1)
+				end if*/
+				if my.dis_surface == 1 then
+					my.next_vector(0,1) = - my.touch(1)
+				else
+					my.next_vector(0,1) = my.touch(1)
 				end if
 			end if
 			my.next_vector(0,2) = 0	
@@ -1455,10 +1483,15 @@ sub store_vector(type as Integer,angle as Double){
 			if my.ap_or_dis == 1 then
 				my.next_vector(1,0) = pre_t(0)
 			else
-				if Int(my.x) == 0 and pre_t(0) > 0 then
+				/*if Int(my.x) == 0 and pre_t(0) > 0 then
 					my.next_vector(1,0) = pre_t(0)
 				else
 					my.next_vector(1,0) = - pre_t(0)
+				end if*/
+				if my.dis_surface == 0 then
+					my.next_vector(1,0) = - my.touch(0)
+				else
+					my.next_vector(1,0) =  my.touch(0)
 				end if
 			end if
 			my.next_vector(1,1) = 0
@@ -1477,20 +1510,31 @@ sub store_vector(type as Integer,angle as Double){
 			if my.ap_or_dis == 1 then
 				my.next_vector(0,2) = pre_t(2)
 			else
-				if Int(my.z) == 0 and pre_t(2) > 0 then
+				/*if Int(my.z) == 0 and pre_t(2) > 0 then
 					my.next_vector(0,2) = pre_t(2)
 				else
 					my.next_vector(0,2) = - pre_t(2)
+				end if*/
+				if my.dis_surface == 2 then
+					my.next_vector(0,2) = - my.touch(2)
+				else
+					my.next_vector(0,2) =  my.touch(2)
 				end if
 			end if
+			
 
 			if my.ap_or_dis == 1 then
 				my.next_vector(1,0) = pre_t(0)
 			else
-				if Int(my.x) == 0 and pre_t(0) > 0 then
+				/*if Int(my.x) == 0 and pre_t(0) > 0 then
 					my.next_vector(1,0) = pre_t(0)
 				else
 					my.next_vector(1,0) = - pre_t(0)
+				end if*/
+				if my.dis_surface == 0 then
+					my.next_vector(1,0) = - my.touch(0)
+				else
+					my.next_vector(1,0) =  my.touch(0)
 				end if
 			end if
 			my.next_vector(1,1) = 0
@@ -1509,21 +1553,32 @@ sub store_vector(type as Integer,angle as Double){
 			if my.ap_or_dis == 1 then
 				my.next_vector(0,2) = pre_t(2)
 			else
-				if Int(my.z) == 0 and pre_t(2) > 0 then
+				/*if Int(my.z) == 0 and pre_t(2) > 0 then
 					my.next_vector(0,2) = pre_t(2)
 				else
 					my.next_vector(0,2) = - pre_t(2)
+				end if*/
+				if my.dis_surface == 2 then
+					my.next_vector(0,2) = - my.touch(2)
+				else
+					my.next_vector(0,2) = my.touch(2)
 				end if
 			end if
+			
 
 			my.next_vector(1,0) = 0
 			if my.ap_or_dis == 1 then
 				my.next_vector(1,1) = pre_t(1)
 			else
-				if Int(my.Y) == 0 and pre_t(1) > 0 then
+				/*if Int(my.Y) == 0 and pre_t(1) > 0 then
 					my.next_vector(1,1) = pre_t(1)
 				else
 					my.next_vector(1,1) = - pre_t(1)
+				end if*/
+				if my.dis_surface == 1 then
+					my.next_vector(1,1) = - my.touch(1)
+				else
+					my.next_vector(1,1) =  my.touch(1)
 				end if
 			end if
 			my.next_vector(1,2) = 0
@@ -1554,8 +1609,13 @@ sub store_vector(type as Integer,angle as Double){
 
 			if not my.is_hemi then
 				my.next_vector(2,0) = my.forward_vector(0)
+				my.next_vector(2,1) = Abs(my.forward_vector(2)) * pre_t(1) * my.ap_or_dis
+				my.next_vector(2,2) = Abs(my.forward_vector(1)) * pre_t(2) * my.ap_or_dis
+				/*
+				my.next_vector(2,0) = my.forward_vector(0)
 				my.next_vector(2,1) = my.forward_vector(2) * pre_t(1) * my.ap_or_dis
 				my.next_vector(2,2) = my.forward_vector(1) * pre_t(2) * my.ap_or_dis
+				*/
 			end if
 
 			if my.normal_vector(1) == 0 then
@@ -1593,9 +1653,14 @@ sub store_vector(type as Integer,angle as Double){
 			u(2) = 0
 
 			if not my.is_hemi then
+				my.next_vector(2,0) = Abs(my.forward_vector(2)) * pre_t(0) * my.ap_or_dis
+				my.next_vector(2,1) = my.forward_vector(1)
+				my.next_vector(2,2) = Abs(my.forward_vector(0)) * pre_t(2) * my.ap_or_dis
+				/*
 				my.next_vector(2,0) = my.forward_vector(2) * pre_t(0) * my.ap_or_dis
 				my.next_vector(2,1) = my.forward_vector(1)
 				my.next_vector(2,2) = my.forward_vector(0) * pre_t(2) * my.ap_or_dis
+				*/
 			end if
 
 			if my.normal_vector(0) == 0 then
@@ -1632,9 +1697,14 @@ sub store_vector(type as Integer,angle as Double){
 			u(2) = 1
 
 			if not my.is_hemi then
+				my.next_vector(2,0) = Abs(my.forward_vector(1)) * pre_t(0) * my.ap_or_dis
+				my.next_vector(2,1) = Abs(my.forward_vector(0)) * pre_t(1) * my.ap_or_dis
+				my.next_vector(2,2) = my.forward_vector(2)
+				/*
 				my.next_vector(2,0) = my.forward_vector(1) * pre_t(0) * my.ap_or_dis
 				my.next_vector(2,1) = my.forward_vector(0) * pre_t(1) * my.ap_or_dis
 				my.next_vector(2,2) = my.forward_vector(2)
+				*/
 			end if
 
 			if my.normal_vector(1) == 0 then
@@ -2362,7 +2432,7 @@ function is_disappear_surface() as Boolean{
 						elseif not universe.map.is_void(nx+f(0),ny- my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz ) then
 							ret = true
 							my.b_type = 5
-							my.dis_surface = 2
+							my.dis_surface = 1
 							my.touch(0) = -f(0)
 						else
 							ret = false
@@ -2370,7 +2440,7 @@ function is_disappear_surface() as Boolean{
 					else
 						ret = true
 						my.b_type = 5
-						my.dis_surface = 1
+						my.dis_surface = 2
 						my.touch(0) = -f(0)
 					end if
 				end if
@@ -2519,7 +2589,7 @@ function is_disappear_surface() as Boolean{
 					elseif not universe.map.is_void(nx - my.touch(0),ny+f(1),nz) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
 						ret = true
 						my.b_type = 4
-						my.dis_surface = 1
+						my.dis_surface = 0
 						my.touch(1) = -f(1)
 					else
 						ret = false
@@ -2531,7 +2601,7 @@ function is_disappear_surface() as Boolean{
 						elseif not universe.map.is_void(nx - my.touch(0) ,ny+ f(1),nz) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
 							ret = true
 							my.b_type = 4
-							my.dis_surface = 1
+							my.dis_surface = 0
 							my.touch(1) = -f(1)
 						else
 							ret = false
@@ -2561,7 +2631,7 @@ function is_disappear_surface() as Boolean{
 					else
 						ret = true
 						my.b_type = 4
-						my.dis_surface = 1
+						my.dis_surface = 0
 						my.touch(1) = f(1)
 					end if
 				end if
@@ -2644,7 +2714,7 @@ function is_disappear_surface() as Boolean{
 					elseif not universe.map.is_void(nx - my.touch(0),ny,nz+f(2)) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
 						ret = true
 						my.b_type = 3
-						my.dis_surface = 1
+						my.dis_surface = 0
 						my.touch(2) = -f(2)
 					else
 						ret = false
@@ -2656,7 +2726,7 @@ function is_disappear_surface() as Boolean{
 						elseif not universe.map.is_void(nx - my.touch(0) ,ny,nz+ f(2)) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
 							ret = true
 							my.b_type = 3
-							my.dis_surface = 1
+							my.dis_surface = 0
 							my.touch(2) = -f(2)
 						else
 							ret = false
@@ -2664,7 +2734,7 @@ function is_disappear_surface() as Boolean{
 					else
 						ret = true
 						my.b_type = 3
-						my.dis_surface = 2
+						my.dis_surface = 1
 						my.touch(2) = -f(2)
 					end if
 				end if
@@ -2678,7 +2748,7 @@ function is_disappear_surface() as Boolean{
 						elseif not universe.map.is_void(nx,ny- my.touch(1),nz+f(2)) and universe.map.is_void(nx,ny - my.touch(1) ,nz) then
 							ret = true
 							my.b_type = 3
-							my.dis_surface = 2
+							my.dis_surface = 1
 							my.touch(2) = -f(2)
 						else
 							ret = false
@@ -2686,7 +2756,7 @@ function is_disappear_surface() as Boolean{
 					else
 						ret = true
 						my.b_type = 3
-						my.dis_surface = 1
+						my.dis_surface = 0
 						my.touch(2) = -f(2)
 					end if
 				end if
@@ -2819,12 +2889,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 
 	return theta
 }
-
-
-
-
-
-
 
 
 
@@ -3125,8 +3189,8 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1253;
-    Console_Position_y = -6;
+    Console_Position_x = 1298;
+    Console_Position_y = -10;
     Console_Size_x = 920;
     Console_Size_y = 905;
     Componen_Tree_Position_x = 803;
@@ -3160,7 +3224,7 @@ Network_Info {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, 950, 0, 980, 1030;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
