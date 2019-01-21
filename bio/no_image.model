@@ -47,8 +47,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[800][1500][16] As Boolean = ();
-        Dim is_void(0, 0)[800][1500][16] As Boolean = ();
+        Dim fin(0, 0)[800][1500][16] As Boolean = (19200000*0);
+        Dim is_void(0, 0)[800][1500][16] As Boolean = (19200000*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -83,8 +83,9 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.1)
 	make_void()
+	println("construct wall")
+	make_rubble_mix(0.6)
 	println("")
 	println("start")
 }
@@ -200,6 +201,7 @@ sub make_rubble_mix(rate as Double){
 			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
 		end if		
 		tmp_rate = tmp_number / max
+		PrintLn("rate is "&tmp_rate)
 	Loop
 }
 
@@ -213,6 +215,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	dim temp as AgtSet
 	dim ret as Integer
 	dim flag as Boolean
+	dim kill as AgtSet
 
 	flag = false
 	ret = 64
@@ -222,8 +225,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 			t = GetAgtEntry(set,one)
 			c = t / 8
 			b = t Mod 8
-			MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
-			if is_void(temp,z) then
+			if not universe.map.is_void(x+b,y+c,z) then
 				one.X = x + b
 				one.Y = y + c
 				one.Z = z
@@ -236,14 +238,12 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 					end if
 				end if
 			else
-				//DelAgt(one)
+				AddAgt(kill,one)
 				ret = ret - 1
 			end if
 		next one
 		if  not flag then
-			for each one in set
-				DelAgt(one)
-			next one
+			DelAgtSet(set,set)
 			ret = 0
 		end if
 	elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 16 - 8 then // c’·‚É’u‚­
@@ -251,8 +251,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 			t = GetAgtEntry(set,one)
 			a = t / 8
 			b = t Mod 8
-			MakeOneAgtSetAroundPosition(temp,universe.map,x,y+b,0,0,universe.map.barrier)
-			if is_void(temp,z+a) then
+			if not universe.map.is_void(x,y+b,z+a) then
 				one.X = x
 				one.Y = y + b
 				one.Z = z + a
@@ -265,14 +264,12 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 					end if
 				end if
 			else
-				//delagt(one)
+				AddAgt(kill,one)
 				ret = ret - 1
 			end if
 		next one
 		if  not flag then
-			for each one in set
-				DelAgt(one)
-			next one
+			DelAgtSet(set,set)
 			ret = 0
 		end if
 	elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 16 - 8 then // ‰¡’·‚É’u‚­
@@ -280,8 +277,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 			t = GetAgtEntry(set,one)
 			a = t / 8
 			c = t Mod 8
-			MakeOneAgtSetAroundPosition(temp,universe.map,x+c,y,0,0,universe.map.barrier)
-			if is_void(temp,z+a) then
+			if not universe.map.is_void(x+c,y,z+a) then
 				one.X = x + c
 				one.Y = y
 				one.Z = z + a
@@ -294,20 +290,18 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 					end if
 				end if
 			else
-				//delagt(one)
+				AddAgt(kill,one)
 				ret = ret - 1
 			end if
 		next one
 		if  not flag then
-			for each one in set
-				DelAgt(one)
-			next one
+			DelAgtSet(set,set)
 			ret = 0
 		end if
 	else
 		ret = 0
 	end if
-
+	DelAgtSet(kill,kill)
 	return ret
 }
 
@@ -321,6 +315,7 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	dim temp as AgtSet
 	dim ret as integer
 	dim flag as Boolean
+	dim kill as AgtSet
 
 	ret = 64
 		flag = false
@@ -334,8 +329,7 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 				b = t Mod (16)
 				c = b / 4
 				b = b Mod 4
- 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
- 				if is_void(temp,z+a) then
+ 				if not universe.map.is_void(x+b,y+c,z+a) then
 		  		one.X = x + b
 		  		one.Y = y + c
 		  		one.Z = z + a
@@ -348,21 +342,19 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 						end if
 					end if
 		  	else
-					//delagt(one)
+					AddAgt(kill,one)
 					ret = ret - 1		  		
 		  	end if		  	
 			next one
 			if  not flag then
-				for each one in set
-					DelAgt(one)
-				next one
+				DelAgtSet(set,set)
 				ret = 0
 			end if
 		 end if
 		else
 			ret = 0
 		end if
-
+	DelAgtSet(kill,kill)
 		return ret
 }
 
@@ -376,6 +368,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	dim c as Integer
 	dim ret as Integer
 	dim flag as Boolean
+		dim kill as AgtSet
 
 	ret = 64
 		flag = false
@@ -390,8 +383,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	  		b = t Mod (32)
 	  		c = b / 16
 	  		b = b Mod 16
- 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
- 				if is_void(temp,z+a) then
+ 				if not universe.map.is_void(x+b,y+c,z+a) then
 		  		one.X = x + b
 		  		one.Y = y + c
 		  		one.Z = z + a
@@ -404,14 +396,12 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 						end if
 					end if
 		  	else
-					//delagt(one)
+					AddAgt(kill,one)
 					ret = ret - 1		  		
 		  	end if
 	  	next one
 	  	if  not flag then
-			for each one in set
-				DelAgt(one)
-			next one
+			DelAgtSet(set,set)
 			ret = 0
 		end if
 	  end if	 
@@ -424,8 +414,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
   			b = t Mod (32)
   			c = b / 2
   			b = b Mod 2
- 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
- 				if is_void(temp,z+a) then
+ 				if not universe.map.is_void(x+b,y+c,z+a) then
 	  			one.X = x + b
  		 			one.Y = y + c
  		 			one.Z = z + a
@@ -438,14 +427,12 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 						end if
 					end if
  		 		else
-					//delagt(one)
+					AddAgt(kill,one)
 					ret = ret - 1		  	 		 		
  		 		end if
   		next one
   		if  not flag then
-			for each one in set
-				DelAgt(one)
-			next one
+			DelAgtSet(set,set)
 			ret = 0
 		end if
   	end if
@@ -457,8 +444,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
   			b = t Mod (4)
   			c = b / 2
   			b = b Mod 2
- 				MakeOneAgtSetAroundPosition(temp,universe.map,x+b,y+c,0,0,universe.map.barrier)
- 				if is_void(temp,z+a) then
+ 				if not universe.map.is_void(x+b,y+c,z+a) then
 	  			one.X = x + b
  		 			one.Y = y + c
  		 			one.Z = z + a
@@ -471,21 +457,19 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 						end if
 					end if
  		 		else
-					//delagt(one)
+					AddAgt(kill,one)
 					ret = ret - 1		  	 		 		
  		 		end if
   		next one
   		if  not flag then
-			for each one in set
-				DelAgt(one)
-			next one
-			ret = 0
-		end if
+				DelAgtSet(set,set)
+				ret = 0
+			end if
   	end if  
   else
   	ret = 0
 	end if
-
+	DelAgtSet(kill,kill)
 	return ret
 }
 
