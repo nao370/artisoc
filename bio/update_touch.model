@@ -98,7 +98,7 @@ for k= 0 to 15
 for j = 0 to GetHeightSpace(universe.map) -1
 for i = 0 to GetWidthSpace(universe.map) -1
 	if i == 0 or i == GetHeightSpace(universe.map)-1 or j == 0 or j == GetWidthSpace(universe.map) - 1 or k == 15 then
-		universe.map.is_void = true
+		universe.map.is_void(i,j,k) = true
 	end if
 next i
 next j
@@ -488,7 +488,10 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 		next one
 	end if
 
-	return re
+	return ret
+	}
+
+	
 #end_rule UNIVERSE
 
 
