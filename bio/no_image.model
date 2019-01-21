@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(20, 40, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(800, 1500, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -47,8 +47,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[20][40][16] As Boolean = (12800*0);
-        Dim is_void(0, 0)[20][40][16] As Boolean = (12800*0);
+        Dim fin(0, 0)[800][1500][16] As Boolean = ();
+        Dim is_void(0, 0)[800][1500][16] As Boolean = ();
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -111,7 +111,7 @@ Univ_Step_Begin{
 
 Univ_Step_End{
 	draw_fin()
-	if universe.num_fin == 12800 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+	if universe.num_fin == 19200000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
 	end if
 }
@@ -3051,7 +3051,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 20, 40;
+    Draw_Range = 0, 0, 800, 1500;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
@@ -3160,7 +3160,7 @@ Map_Output {
 //-------------------------------------------------------
 Map3D_Output {
     Map3D_Name = "map";
-    Disable = Yes;
+    Disable = No;
     Background_Image_Display = No;
     Background_Image_Type = Fixed_Value;
     Background_Image_Folder_Name = "";
@@ -3369,7 +3369,7 @@ Network_Info {
 //-------------------------------------------------------
 Window_Rectangle {
     Window_Name = Main_Window, -8, -8, 1696, 1026;
-    Window_Name = Output_Setting_Window, 746, 346, 480, 350;
+    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
