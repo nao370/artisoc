@@ -37,6 +37,7 @@ UNIVERSE {
             Dim n_normal(0, 0)[3] As Integer = (3*0);
             Dim dis_surface(0, 0) As Integer = (0);
             Dim is_hemi(0, 0) As Boolean = (0);
+            Dim is_back(0, 0) As Boolean = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -83,7 +84,7 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.0)
+	make_rubble_mix(0.1)
 	make_void()
 	println("")
 	println("start")
@@ -560,6 +561,7 @@ dim i as Integer
 sub clear_val(){
 //毎ステップ初期化必要な変数を初期化する関数
 	my.dis_surface = -1
+	my.is_back = false
 }
 
 
@@ -689,14 +691,17 @@ sub step_surface(){
 		my.X = my.X - pre(0)
 		my.Y = my.Y + f(1)
 		my.Z = my.Z + f(2)
+		back_surface(0)
 	elseif n == 1 then
 		my.X = my.X + f(0)
 		my.Y = my.Y - pre(1)
 		my.Z = my.Z + f(2)
+		back_surface(1)
 	else
 		my.X = my.X + f(0)
 		my.Y = my.Y + f(1)
 		my.Z = my.Z - pre(2)
+		back_surface(2)
 	end if
 
 	PrintLn("myX is "&my.X)
@@ -704,6 +709,36 @@ sub step_surface(){
 	PrintLn("myZ is "&my.Z)
 	
 	my.dis_surface = -1	
+}
+
+sub back_surface(n as Integer){
+	dim pre as Integer
+	dim i as Integer
+	dim f(3) as Double
+
+	for i =0 to 2
+		f(i) = GetHistory(my.forward_vector(i),1)
+		if f(i) != 0 then
+			f(i) = f(i) / Abs(f(i))
+		end if
+	next i
+	if not universe.map.is_void(my.X - my.normal_vector(0),my.Y - my.normal_vector(1),my.Z - my.normal_vector(2)) then
+		pre = GetHistory(my.touch(n),1)
+		if n == 0 then
+			my.X = my.X + pre + f(0)
+			my.Y = my.Y 
+			my.Z = my.Z 
+		elseif n == 1 then
+			my.X = my.X 
+			my.Y = my.Y + pre + f(1)
+			my.Z = my.Z 
+		else
+			my.X = my.X 
+			my.Y = my.Y 
+			my.Z = my.Z + pre + f(2)
+		end if
+		my.is_back = true
+	end if
 }
 
 sub step_direction(){
@@ -791,11 +826,10 @@ function is_pause() as Boolean{
 	
 	type = my.do_type
 
-	/*if my.is_hemi then
+	if my.is_back then
 		ret = false
-		my.is_hemi = false
 		return ret 
-	end if*/
+	end if
 
 	if type == 0 then
 		if my.normal_vector(1) == 0 then
@@ -2382,7 +2416,7 @@ function is_disappear_surface() as Boolean{
 	dim nx as Integer
 	dim ny as Integer
 	dim nz as Integer
-	dim f(3) as Integer
+	dim f(3) as Double
 	dim i as Integer
 
 	axis = direction_type()
@@ -2396,6 +2430,7 @@ function is_disappear_surface() as Boolean{
 		else
 			f(i) = 0
 		end if
+		println("f("&i&") is"&f(i))
 	next i
 	
 	if axis == 0 then
@@ -2957,6 +2992,10 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
+	}
+
+
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
