@@ -12,8 +12,8 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(80, 150, !Loop, North, 1, Map_3D){
-        AgtType insect(0, 0)[1] {
+    Space map(0,0),Square_2D(20, 40, !Loop, North, 1, Map_3D){
+        AgtType insect(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
             Dim Y(0, 0) <2>  As Double = (0.0);
@@ -47,8 +47,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[80][150][40] As Boolean = (480000*0);
-        Dim is_void(0, 0)[80][150][40] As Boolean = (480000*0);
+        Dim fin(0, 0)[20][40][40] As Boolean = (32000*0);
+        Dim is_void(0, 0)[20][40][40] As Boolean = (32000*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -61,18 +61,6 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
-    UNIVERSE.MAP.INSECT.X = 1(1.0);
-    UNIVERSE.MAP.INSECT.Y = 1(1.0);
-    UNIVERSE.MAP.INSECT.Z = 1(0.0);
-    UNIVERSE.MAP.INSECT.LAYER = 1(0);
-    UNIVERSE.MAP.INSECT.DIRECTION = 1(0.0);
-    UNIVERSE.MAP.INSECT.ANGLE = 1(0.0);
-    UNIVERSE.MAP.INSECT.FORWARD_VECTOR = 1(3*0.0);
-    UNIVERSE.MAP.INSECT.BASE_VECTOR = 1(3*0.0);
-    UNIVERSE.MAP.INSECT.ANGLE_SURFACE = 1(0.0);
-    UNIVERSE.MAP.INSECT.B_TYPE = 1(0);
-    UNIVERSE.MAP.INSECT.NORMAL_VECTOR = 1(2*0.0, 1.0);
-    UNIVERSE.MAP.INSECT.TOUCH = 1(3*0);
 }
 
 
@@ -82,10 +70,32 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.6)
+	make_rubble_mix(0.2)
 	make_void()
 	println("")
 	println("start")
+	make_csv()
+}
+
+sub make_csv(){
+dim i as Integer
+dim j as Integer
+dim k as Integer
+
+OpenFileCSV("tst.csv",2,3)
+for k= 0 to 39
+for j = 0 to GetHeightSpace(universe.map) -1
+for i = 0 to GetWidthSpace(universe.map) -1
+	if universe.map.is_void(i,j,k) then
+		WriteFileCSV(2,1,true)
+	else
+		WriteFileCSV(2,0,true)
+	end if
+next i
+next j
+next k
+
+CloseFileCSV(2)
 }
 
 sub make_void(){
@@ -109,10 +119,12 @@ Univ_Step_Begin{
 }
 
 Univ_Step_End{
-	draw_fin()
-	if universe.num_fin == 480000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+	println("end")
+	ExitSimulation()
+/*	draw_fin()
+	if universe.num_fin == 128000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
-	end if
+	end if*/
 }
 
 sub draw_fin(){
@@ -1222,6 +1234,7 @@ function is_filled() as Boolean{
 	x(1) = my.Y
 	x(2) = my.Z
 
+		println("近いマス")
 	for i = 0 to 2
 		a(i) = close_num(x(i))
 		println("a("&i&")"&"is"&a(i))
@@ -1243,6 +1256,10 @@ function is_filled() as Boolean{
 	 			
 	 		elseif universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
 	 			if abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
+	 				println("どのマスに埋まったか")
+	 				println("x :"&a(0)-g(0)+i)
+	 				println("y :"&a(1)-g(1)+j)
+	 				println("z :"&a(2)-g(2)+k)
 	 				ret = true
 	 				return ret
 	 			end if
@@ -1484,9 +1501,10 @@ sub determining_bend(){
 	for i = 0 to 2	
 		prob(i) = Abs(my.touch(i)) / sum
 	next i
-		PrintLn("X is "&my.forward_vector(0))
+	PrintLn("X is "&my.forward_vector(0))
 	PrintLn("Y is "&my.forward_vector(1))
 	PrintLn("Z is "&my.forward_vector(2))
+
 
 	if r < prob(0) and my.normal_vector(0) != 0 then
 		my.forward_vector(1) = Cos(rad) * y - Sin(rad) * z
@@ -2511,31 +2529,11 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 1
 						my.dis_surface = 2
 						my.touch(0) = -f(0)
-					/*if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
-						ret = true
-						my.b_type = 1
-						my.dis_surface = 2
-						my.touch(0) = -1
-					elseif not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
-						ret = true
-						my.b_type = 1
-						my.dis_surface = 2
-						my.touch(0) = 1*/
 					elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 2
 						my.touch(1) = -f(1)
-					/*elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
-						ret = true
-						my.b_type = 0
-						my.dis_surface = 2
-						my.touch(1) = -1
-					elseif not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
-						ret = true
-						my.b_type = 0
-						my.dis_surface = 2
-						my.touch(0) = 1*/
 					else
 						ret = false
 					end if
@@ -2545,16 +2543,6 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 1
 						my.dis_surface = 2
 						my.touch(0) = -f(0)
-					/*if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
-						ret = true
-						my.b_type = 1
-						my.dis_surface = 2
-						my.touch(0) = -1
-					elseif not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
-						ret = true
-						my.b_type = 1
-						my.dis_surface = 2
-						my.touch(0) = 1*/
 					else
 						ret = false
 					end if
@@ -2569,16 +2557,6 @@ function is_disappear_surface() as Boolean{
 					my.b_type = 0
 					my.dis_surface = 2
 					my.touch(1) = -f(1)
-				/*if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
-					ret = true
-					my.b_type = 0
-					my.dis_surface = 2
-					my.touch(1) = -1
-				elseif not universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
-					ret = true
-					my.b_type = 0
-					my.dis_surface = 2
-					my.touch(1) = 1*/
 				else
 					ret = false
 				end if
@@ -2597,31 +2575,11 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 2
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
-					/*if universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx+1,ny - my.normal_vector(1),nz) then
-						ret = true
-						my.b_type = 2
-						my.dis_surface = 1
-						my.touch(0) = -1
-					elseif not universe.map.is_void(nx,ny - my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny - my.normal_vector(1),nz) then
-						ret = true
-						my.b_type = 2
-						my.dis_surface = 1
-						my.touch(0) = 1*/
 					elseif universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx,ny - my.normal_vector(1),nz+f(2)) then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 1
 						my.touch(2) = -f(2)
-					/*elseif universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx,ny - my.normal_vector(1),nz+1) then
-						ret = true
-						my.b_type = 0
-						my.dis_surface = 1
-						my.touch(2) = -1
-					elseif not universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) then
-						ret = true
-						my.b_type = 0
-						my.dis_surface = 1
-						my.touch(2) = 1*/
 					else
 						ret = false
 					end if
@@ -2631,16 +2589,6 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 2
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
-					/*if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx+1,ny- my.normal_vector(1),nz) then
-						ret = true
-						my.b_type = 2
-						my.dis_surface = 1
-						my.touch(0) = -1
-					elseif not universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny- my.normal_vector(1),nz) then
-						ret = true
-						my.b_type = 2
-						my.dis_surface = 1
-						my.touch(0) = 1*/
 					else
 						ret = false
 					end if
@@ -2655,16 +2603,6 @@ function is_disappear_surface() as Boolean{
 					my.b_type = 0
 					my.dis_surface = 1
 					my.touch(2) = -f(2)
-				/*if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) then
-					ret = true
-					my.b_type = 0
-					my.dis_surface = 1
-					my.touch(2) = -1
-				elseif not universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) then
-					ret = true
-					my.b_type = 0
-					my.dis_surface = 1
-					my.touch(2) = 1*/
 				else
 					ret = false
 				end if
@@ -2742,31 +2680,11 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 2
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
-					/*if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny +1,nz) then
-						ret = true
-						my.b_type = 2
-						my.dis_surface = 0
-						my.touch(1) = -1
-					elseif not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny+1,nz) then
-						ret = true
-						my.b_type = 2
-						my.dis_surface = 0
-						my.touch(1) = 1*/
 					elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 0
 						my.touch(2) = -f(2)
-					/*elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
-						ret = true
-						my.b_type = 1
-						my.dis_surface = 0
-						my.touch(2) = -1
-					elseif not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
-						ret = true
-						my.b_type = 1
-						my.dis_surface = 0
-						my.touch(2) = 1*/
 					else
 						ret = false
 					end if
@@ -2776,16 +2694,6 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 2
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
-					/*if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny+1,nz) then
-						ret = true
-						my.b_type = 2
-						my.dis_surface = 0
-						my.touch(1) = -1
-					elseif not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny+1,nz) then
-						ret = true
-						my.b_type = 2
-						my.dis_surface = 0
-						my.touch(1) = 1*/
 					else
 						ret = false
 					end if
@@ -2800,16 +2708,6 @@ function is_disappear_surface() as Boolean{
 					my.b_type = 1
 					my.dis_surface = 0
 					my.touch(2) = -f(2)
-				/*if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
-					ret = true
-					my.b_type = 1
-					my.dis_surface = 0
-					my.touch(2) = -1
-				elseif not universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
-					ret = true
-					my.b_type = 1
-					my.dis_surface = 0
-					my.touch(2) = 1*/
 				else
 					ret = false
 				end if
@@ -2900,25 +2798,13 @@ function is_disappear_surface() as Boolean{
 	normal(0) = pre(1) * n_v(2) - pre(2) * n_v(1)
 	normal(1) = pre(2) * n_v(0) - pre(0) * n_v(2)
 	normal(2) = pre(0) * n_v(1) - pre(1) * n_v(0)
-/*
-	for i = 0 to 2
-				println("normal"&i&" is" &normal(i))
-	next i
-		for i = 0 to 2
-		println("x"&i&"is "&x(i))
-	next i*/
+
 	if normal(0) != 0 then
 		if normal(0) == -1 then
 			theta = calculate_theta(0,-1)
 		else
 			theta = calculate_theta(0,1)
 		end if
-		/*print("cos & sin")
-		println(cos(theta))
-		println(sin(theta))
-		y(0) = x(0)
-		y(1) = Cos(theta) * x(1) - Sin(theta) * x(2)
-		y(2) = sin(theta) * x(1) + cos(theta) * x(2)		*/
 		y(0) = x(0)
 		y(1) = -x(1)
 		y(2) = -x(2)
@@ -2928,12 +2814,6 @@ function is_disappear_surface() as Boolean{
 		else
 			theta = calculate_theta(1,1)
 		end if
-/*		print("cos & sin")
-		println(cos(theta))
-		println(sin(theta))
-		y(0) = Cos(theta) * x(0) + Sin(theta) * x(2)
-		y(1) = x(1)
-		y(2) = - sin(theta) * x(0) + cos(theta) * x(2)	*/
 		y(0) = -x(0)
 		y(1) = x(1)
 		y(2) = -x(2)
@@ -2943,12 +2823,6 @@ function is_disappear_surface() as Boolean{
 		else
 			theta = calculate_theta(2,1)
 		end if
-/*		print("cos & sin")
-		println(cos(theta))
-		println(sin(theta))
-		y(0) = Cos(theta) * x(0) - Sin(theta) * x(1)
-		y(1) = sin(theta) * x(0) + cos(theta) * x(1)
-		y(2) = x(2)*/
 		y(0) = -x(0)
 		y(1) = -x(1)
 		y(2) = x(2)
@@ -3081,7 +2955,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 80, 150;
+    Draw_Range = 0, 0, 20, 40;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
@@ -3190,7 +3064,7 @@ Map_Output {
 //-------------------------------------------------------
 Map3D_Output {
     Map3D_Name = "map";
-    Disable = No;
+    Disable = Yes;
     Background_Image_Display = No;
     Background_Image_Type = Fixed_Value;
     Background_Image_Folder_Name = "";
@@ -3211,9 +3085,9 @@ Map3D_Output {
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
     Position_x = 0;
-    Position_y = -4;
-    Size_x = 1129;
-    Size_y = 909;
+    Position_y = 0;
+    Size_x = 838;
+    Size_y = 901;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3292,10 +3166,10 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 258;
-    Position_y = 7;
-    Size_x = 1085;
-    Size_y = 711;
+    Position_x = 419;
+    Position_y = 0;
+    Size_x = 419;
+    Size_y = 450;
     Map_Cell_Size = -1;
     Axis_Label = "", "";
     Draw_By_JFree_Chart = Yes;
@@ -3363,14 +3237,14 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1449;
-    Console_Position_y = -15;
-    Console_Size_x = 681;
-    Console_Size_y = 905;
-    Componen_Tree_Position_x = 803;
-    Componen_Tree_Position_y = 38;
-    Componen_Tree_Size_x = 839;
-    Componen_Tree_Size_y = 383;
+    Console_Position_x = 10;
+    Console_Position_y = 10;
+    Console_Size_x = 300;
+    Console_Size_y = 250;
+    Componen_Tree_Position_x = 129;
+    Componen_Tree_Position_y = 233;
+    Componen_Tree_Size_x = 300;
+    Componen_Tree_Size_y = 250;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -3395,10 +3269,36 @@ Network_Info {
 
 
 //-------------------------------------------------------
+// Space Map Initial Value Definition Division
+//-------------------------------------------------------
+Space_Map_Initial_Value {
+    Space_Path_Name = Universe.map;
+    Background_Image_File_Path_Name = "";
+    Origin_Position = Left_Bottom;
+    Space_Variable {
+        Variable = Universe.map.fin,(32000*0);
+        Marker_Id = 1;
+        Min_Value = "";
+        Max_Value = "";
+        Min_Value_Color = 255, 0, 0;
+        Max_Value_Color = 0, 255, 255;
+    }
+    Space_Variable {
+        Variable = Universe.map.is_void,(32000*0);
+        Marker_Id = 1;
+        Min_Value = "";
+        Max_Value = "";
+        Min_Value_Color = 255, 0, 0;
+        Max_Value_Color = 0, 255, 255;
+    }
+}
+
+
+//-------------------------------------------------------
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, 833, 0, 854, 1017;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
