@@ -665,51 +665,6 @@ function is_differernt()as Boolean{
 	return ret
 }
 
-sub step_surface(){
-	dim pre(3) as	Integer
-	dim f(3) as Double
-	dim n as Integer
-	dim i as Integer
-
-	n = my.dis_surface
-	for i =0 to 2
-		pre(i) = GetHistory(my.touch(i),1)
-		f(i) = GetHistory(my.forward_vector(i),1)
-		if f(i) != 0 then
-			f(i) = f(i) / Abs(f(i))
-		end if
-		println(i&" pre :"&pre(i) )
-		println("touch"&my.touch(i))
-	next i
-
-	PrintLn("myX is "&my.X)
-	PrintLn("myY is "&my.Y)
-	PrintLn("myZ is "&my.Z)
-
-	if n == 0 then
-		my.X = my.X - pre(0)
-		my.Y = my.Y + f(1)
-		my.Z = my.Z + f(2)
-		back_surface(0)
-	elseif n == 1 then
-		my.X = my.X + f(0)
-		my.Y = my.Y - pre(1)
-		my.Z = my.Z + f(2)
-		back_surface(1)
-	else
-		my.X = my.X + f(0)
-		my.Y = my.Y + f(1)
-		my.Z = my.Z - pre(2)
-		back_surface(2)
-	end if
-
-	PrintLn("myX is "&my.X)
-	PrintLn("myY is "&my.Y)
-	PrintLn("myZ is "&my.Z)
-	
-	my.dis_surface = -1	
-}
-
 sub back_surface(n as Integer){
 	dim pre as Integer
 	dim i as Integer
@@ -2818,10 +2773,56 @@ function is_disappear_surface() as Boolean{
 
 	println("")
 	for i = 0 to 2		
-//		println("y"&i&"is "&y(i))
+		println("y"&i&"is "&y(i))
 		my.touch(i) = y(i)
 	next i
 } 
+
+
+sub step_surface(){
+	dim pre(3) as	Integer
+	dim f(3) as Double
+	dim n as Integer
+	dim i as Integer
+
+	n = my.dis_surface
+	for i =0 to 2
+		pre(i) = GetHistory(my.touch(i),1)
+		f(i) = GetHistory(my.forward_vector(i),1)
+		if f(i) != 0 then
+			f(i) = f(i) / Abs(f(i))
+		end if
+		println(i&" pre :"&pre(i) )
+		println("touch"&my.touch(i))
+	next i
+
+	PrintLn("myX is "&my.X)
+	PrintLn("myY is "&my.Y)
+	PrintLn("myZ is "&my.Z)
+
+	if n == 0 then
+		my.X = my.X - pre(0)
+		my.Y = my.Y + f(1)
+		my.Z = my.Z + f(2)
+		back_surface(0)
+	elseif n == 1 then
+		my.X = my.X + f(0)
+		my.Y = my.Y - pre(1)
+		my.Z = my.Z + f(2)
+		back_surface(1)
+	else
+		my.X = my.X + f(0)
+		my.Y = my.Y + f(1)
+		my.Z = my.Z - pre(2)
+		back_surface(2)
+	end if
+
+	PrintLn("myX is "&my.X)
+	PrintLn("myY is "&my.Y)
+	PrintLn("myZ is "&my.Z)
+	
+	my.dis_surface = -1	
+}
 
 function calculate_theta(n as Integer,sign as Integer) as Double{
 	dim i as Integer
@@ -3286,7 +3287,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -7, 0, 854, 1017;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
