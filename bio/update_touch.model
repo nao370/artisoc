@@ -680,7 +680,7 @@ sub back_surface(n as Integer){
 			f(i) = f(i) / Abs(f(i))
 		end if
 		if a(i) < 0 then
-			a(i) = 0
+			return
 		end if
 	next i
 
@@ -2866,7 +2866,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	}
 
 
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3157,8 +3156,8 @@ Time_Graph {
     FastDraw = Yes;
     Position_x = 3;
     Position_y = -2;
-    Size_x = 426;
-    Size_y = 329;
+    Size_x = 763;
+    Size_y = 600;
     Map_Cell_Size = -1;
     Axis_Label = "", "";
     Draw_By_JFree_Chart = Yes;
@@ -3202,7 +3201,7 @@ Time_Graph {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -3287,9 +3286,9 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -7, 0, 854, 1017;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 1545, 411;
     Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
