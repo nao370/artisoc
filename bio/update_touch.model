@@ -691,7 +691,7 @@ sub back_surface(n as Integer){
 		if n == 0 and universe.map.is_void(a(0)+ pre + f(0),a(1),a(2)) then
 			my.X = my.X + pre + f(0)
 			my.Y = my.Y 
-			my.Z = my.Z 
+			my.Z = my.Z
 		elseif n == 1 and universe.map.is_void(a(0),a(1)+pre+f(1),a(2)) then
 			my.X = my.X 
 			my.Y = my.Y + pre + f(1)
@@ -710,11 +710,13 @@ sub back_surface(n as Integer){
 }
 
 sub prev_forward(){
+//ñ Çà⁄ÇÈëOÇÃèÛë‘Ç…ñﬂÇ∑
 	dim i as Integer 
 	
 	for i = 0 to 2
 		my.forward_vector(i) = GetHistory(my.forward_vector(i),1)
 		PrintLn("f("&i&") : "&my.forward_vector(i))
+		my.touch(i) = GetHistory(my.touch(i),1)
 	next i
 	my.do_type = GetHistory(my.do_type,1)
 }
@@ -2865,9 +2867,9 @@ sub step_surface(){
 		my.Z = my.Z - pre(2)
 		back_surface(2)
 	end if
-//	if my.is_back then
+	if not my.is_back then
 		update_touch()
-//	end if
+	end if
 	
 	PrintLn("myX is "&my.X)
 	PrintLn("myY is "&my.Y)
@@ -2916,8 +2918,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 
 	return theta
 	}
-
-
 
 
 #end_rule UNIVERSE.MAP.INSECT
