@@ -625,7 +625,6 @@ sub forward_step() {
 
 	if is_differernt() then
 		step_surface()
-		update_touch()
 	else
 		step_direction()
 	end if
@@ -2860,7 +2859,10 @@ sub step_surface(){
 		my.Z = my.Z - pre(2)
 		back_surface(2)
 	end if
-
+	if my.is_back then
+		update_touch()
+	end if
+	
 	PrintLn("myX is "&my.X)
 	PrintLn("myY is "&my.Y)
 	PrintLn("myZ is "&my.Z)
@@ -2912,7 +2914,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 
 
 
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
