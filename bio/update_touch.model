@@ -822,6 +822,7 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
+							println("1")
 						end if
 					else
 						ret = false
@@ -842,6 +843,7 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
+							println("2")
 						end if
 					else
 						ret = false
@@ -868,6 +870,7 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
+							println("3")
 						end if
 					else
 						ret = false
@@ -888,6 +891,7 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
+							println("4")
 						end if
 					else
 						ret = false
@@ -912,6 +916,7 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
+							println("5")
 						end if
 					else
 						ret = false
@@ -932,6 +937,7 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
+							println("6")
 						end if
 					else
 						ret = false
@@ -3120,8 +3126,8 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = -30;
-    Position_y = -4;
+    Position_x = 3;
+    Position_y = -5;
     Size_x = 931;
     Size_y = 909;
     Map_Cell_Size = -1;
