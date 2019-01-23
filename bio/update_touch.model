@@ -1570,7 +1570,7 @@ sub store_vector(type as Integer,angle as Double){
 			else
 				if my.normal_vector(0) == 0 then
 					my.n_normal(0) = 0
-					my.n_normal(1) = 1
+					my.n_normal(1) = 2
 				else
 					my.n_normal(0) = 0
 					my.n_normal(1) = 1
@@ -1612,7 +1612,7 @@ sub store_vector(type as Integer,angle as Double){
 				end if
 			else
 				if my.normal_vector(0) == 0 then
-					my.n_normal(0) = 1
+					my.n_normal(0) = 0
 					my.n_normal(1) = 2
 				else
 					my.n_normal(0) = 1
