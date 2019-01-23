@@ -1613,7 +1613,7 @@ sub store_vector(type as Integer,angle as Double){
 				end if
 			else
 				if my.normal_vector(0) == 0 then
-					my.n_normal(0) = 0
+					my.n_normal(0) = 1
 					my.n_normal(1) = 2
 				else
 					my.n_normal(0) = 1
@@ -1660,7 +1660,7 @@ sub store_vector(type as Integer,angle as Double){
 					my.n_normal(1) = 2
 				else
 					my.n_normal(0) = 1
-					my.n_normal(1) = 0
+					my.n_normal(1) = 2
 				end if
 			end if
 		else
@@ -2907,7 +2907,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
