@@ -2371,7 +2371,7 @@ function is_appear_surface() as Boolean{
 						ret = true
 						my.angle_surface = -1
 						my.b_type =3
-						my.touch(2) = -1
+						my.touch(2) = 1
 					else
 						ret = false
 					end if
@@ -2780,7 +2780,7 @@ function is_disappear_surface() as Boolean{
 		n_v(i) = my.forward_vector(i)
 		x(i) = my.touch(i)
 	next i
-
+//‚±‚±‰½‚â‚Á‚Ä‚é‚©‚í‚©‚ç‚ñ
 	normal(0) = pre(1) * n_v(2) - pre(2) * n_v(1)
 	normal(1) = pre(2) * n_v(0) - pre(0) * n_v(2)
 	normal(2) = pre(0) * n_v(1) - pre(1) * n_v(0)
@@ -2859,9 +2859,9 @@ sub step_surface(){
 		my.Z = my.Z - pre(2)
 		back_surface(2)
 	end if
-	if my.is_back then
+//	if my.is_back then
 		update_touch()
-	end if
+//	end if
 	
 	PrintLn("myX is "&my.X)
 	PrintLn("myY is "&my.Y)
@@ -3120,7 +3120,7 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = -1;
+    Position_x = -30;
     Position_y = -4;
     Size_x = 931;
     Size_y = 909;
