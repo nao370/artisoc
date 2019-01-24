@@ -50,13 +50,13 @@ UNIVERSE {
         Dim fin(0, 0)[20][40][40] As Boolean = (32000*0);
         Dim is_void(0, 0)[20][40][40] As Boolean = (32000*0);
         AgtType void_voxel(0, 0)[0] {
-            Dim ID(0, 0) As Integer = ();
-            Dim X(0, 0) As Double = ();
-            Dim Y(0, 0) As Double = ();
-            Dim Z(0, 0) As Double = ();
-            Dim Layer(0, 0) As Integer = ();
-            Dim Direction(0, 0) As Double = ();
-            Dim Angle(0, 0) As Double = ();
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Z(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
         }
     }
     Dim CameraPointer(0, 0) As Agt = (0);
@@ -132,13 +132,15 @@ sub draw_fin(){
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
 			for i = 0 to GetWidthSpace(universe.map) -1
-				if is_in_area(i,j,k) then
-					universe.map.fin(i,j,k)= true
-					universe.num_fin = universe.num_fin + 1
-					if universe.map.is_void(i,j,k) then
-						universe.num_fill_fin = universe.num_fill_fin + 1
-					else
-						universe.num_void_fin = universe.num_void_fin +1
+				if not universe.map.fin(i,j,k) then
+					if is_in_area(i,j,k) then
+						universe.map.fin(i,j,k)= true
+						universe.num_fin = universe.num_fin + 1
+						if universe.map.is_void(i,j,k) then
+							universe.num_fill_fin = universe.num_fill_fin + 1
+						else
+							universe.num_void_fin = universe.num_void_fin +1
+						end if
 					end if
 				end if
 			next i
@@ -184,13 +186,13 @@ sub draw_voxel(){
 	dim count as Integer
 	dim one as Agt
 	
-	set = CreateAgtMulti(universe.map.void_voxel,my.num_void_fin)
+	set = CreateAgtMulti(universe.map.void_voxel,universe.num_void_fin)
 	count = 0
 	
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
 			for i = 0 to GetWidthSpace(universe.map) -1
-				if universe.map.is_void(i,j,k) then
+				if universe.map.is_void(i,j,k) and not universe.map.fin(i,j,k) then
 					one = GetAgt(set,count)
 					one.X = i
 					one.Y = j
@@ -200,6 +202,8 @@ sub draw_voxel(){
 			next i
 		next j
 	next k
+
+	println("a")
 	
 }
 
@@ -3051,7 +3055,7 @@ Agt_Step{
 // Simulation Definition Division
 //-------------------------------------------------------
 Single_Simulation {
-    Step_Max = 0;
+    Step_Max = 50;
     Time_Max = 0;
     End_Condition = "";
     Exec_Wait = 0;
@@ -3072,7 +3076,7 @@ Single_Simulation {
 Repeat_Simulation {
     Value_Change = None;
     Initial_Value_Change_None {
-        Repeat_Max = 10;
+        Repeat_Max = 1;
     }
 }
 
@@ -3314,8 +3318,8 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 917;
-    Position_y = 365;
+    Position_x = 1298;
+    Position_y = 368;
     Size_x = 706;
     Size_y = 546;
     Map_Cell_Size = -1;
@@ -3382,10 +3386,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 100;
-    Position_y = 100;
-    Size_x = 613;
-    Size_y = 506;
+    Position_x = 0;
+    Position_y = 0;
+    Size_x = 1298;
+    Size_y = 909;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3394,19 +3398,40 @@ Map3D_Output {
         Space_Path_Name = Universe.map;
         Layer = 0;
         Space_3D_PositionD = 0.0,0.0,0.0;
-        Ruled_Line_Display = No;
+        Ruled_Line_Display = Yes;
         Origin_Position = Left_Top;
         Display_Object_Type = None;
         Image_File_Path_Name = "";
         Model_3D_File_Path_Name = "";
         Agent3D_Output {
+                Agent_3D_Name = "voxel";
+                Agent_Path_Name = Universe.map.void_voxel;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Quadrartic_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -6684877;
+                Color_Variable_Path_Name = Universe.map.void_voxel.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+        Agent3D_Output {
                 Agent_3D_Name = "barrier";
                 Agent_Path_Name = Universe.map.barrier;
                 Display_Object_Type = Image_File;
-                Display_Object_Image_Id = Cylinder;
+                Display_Object_Image_Id = Quadrartic_Prism;
                 Model_3D_File_Path_Name = "";
                 Color_Type = None;
-                Color_Value = -1;
+                Color_Value = -16776961;
                 Color_Variable_Path_Name = Universe.map.barrier.ID;
                 Smooth_Movement = No;
                 Draw_line = No;
@@ -3428,7 +3453,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -3513,11 +3538,11 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
-    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
-    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
+    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
 }
 
 
