@@ -791,9 +791,19 @@ function is_pause() as Boolean{
 		end if
 	next i
 	
-	nx = Int(my.X) + minus(0)
-	ny = Int(my.Y) + minus(1)
-	nz = Int(my.Z) + minus(2)
+	nx = Int(my.X)// + minus(0)
+	ny = Int(my.Y)// + minus(1)
+	nz = Int(my.Z)// + minus(2)
+
+	if nx != my.X then
+		nx = minus(0)
+	end if
+	if ny != my.y then
+		ny = minus(1)
+	end if
+	if nz != my.z then
+		nz = minus(2)
+	end if
 	
 	PrintLn("myX is "&my.X)
 	PrintLn("myY is "&my.Y)
@@ -2947,7 +2957,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
-	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3236,8 +3245,8 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 923;
-    Position_y = 359;
+    Position_x = 917;
+    Position_y = 365;
     Size_x = 706;
     Size_y = 546;
     Map_Cell_Size = -1;
