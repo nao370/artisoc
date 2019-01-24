@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(80, 150, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(20, 40, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -47,8 +47,17 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[80][150][40] As Boolean = (480000*0);
-        Dim is_void(0, 0)[80][150][40] As Boolean = (480000*0);
+        Dim fin(0, 0)[20][40][40] As Boolean = (32000*0);
+        Dim is_void(0, 0)[20][40][40] As Boolean = (32000*0);
+        AgtType void_voxel(0, 0)[0] {
+            Dim ID(0, 0) As Integer = ();
+            Dim X(0, 0) As Double = ();
+            Dim Y(0, 0) As Double = ();
+            Dim Z(0, 0) As Double = ();
+            Dim Layer(0, 0) As Integer = ();
+            Dim Direction(0, 0) As Double = ();
+            Dim Angle(0, 0) As Double = ();
+        }
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -82,7 +91,7 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.6)
+	make_rubble_mix(0.4)
 	make_void()
 	println("")
 	println("start")
@@ -110,7 +119,7 @@ Univ_Step_Begin{
 
 Univ_Step_End{
 	draw_fin()
-	if universe.num_fin == 480000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+	if universe.num_fin == 128000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
 	end if
 }
@@ -164,7 +173,34 @@ function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
 }
 
 Univ_Finish{
+	draw_voxel()
+}
 
+sub draw_voxel(){
+	dim set as AgtSet
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim count as Integer
+	dim one as Agt
+	
+	set = CreateAgtMulti(universe.map.void_voxel,my.num_void_fin)
+	count = 0
+	
+	for k= 0 to 39
+		for j = 0 to GetHeightSpace(universe.map) -1
+			for i = 0 to GetWidthSpace(universe.map) -1
+				if universe.map.is_void(i,j,k) then
+					one = GetAgt(set,count)
+					one.X = i
+					one.Y = j
+					one.Z = k
+					count = count + 1
+				end if
+			next i
+		next j
+	next k
+	
 }
 
 sub make_rubble_mix(rate as Double){
@@ -703,7 +739,6 @@ sub back_surface(n as Integer){
 		else
 			//ここに入りたくない
 			println("disapミスってる？？")
-			ExitSimulation()
 		end if
 		my.is_back = true
 		prev_forward()
@@ -2876,8 +2911,10 @@ sub step_surface(){
 	dim f(3) as Double
 	dim n as Integer
 	dim i as Integer
+	dim b as Integer
 
 	n = my.dis_surface
+	b = my.b_type
 	for i =0 to 2
 		pre(i) = GetHistory(my.touch(i),1)
 		f(i) = GetHistory(my.forward_vector(i),1)
@@ -2887,6 +2924,16 @@ sub step_surface(){
 		println(i&" pre :"&pre(i) )
 		println("touch"&my.touch(i))
 	next i
+
+	if b < 3 then
+		if b == 0 then
+			f(0) = 0
+		elseif b == 1 then
+			f(1) = 0
+		elseif b == 2 then
+			f(2) = 0
+		end if
+	end if
 
 	PrintLn("myX is "&my.X)
 	PrintLn("myY is "&my.Y)
@@ -2958,7 +3005,11 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
-	
+	}
+
+
+
+
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -2976,6 +3027,22 @@ Agt_Step{
 
 }
 #end_rule UNIVERSE.MAP.BARRIER
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.VOID_VOXEL
+Agt_Init{
+
+}
+
+Agt_Step{
+
+}
+#end_rule UNIVERSE.MAP.VOID_VOXEL
 
 
 
@@ -3005,7 +3072,7 @@ Single_Simulation {
 Repeat_Simulation {
     Value_Change = None;
     Initial_Value_Change_None {
-        Repeat_Max = 1;
+        Repeat_Max = 10;
     }
 }
 
@@ -3036,7 +3103,7 @@ Map_Output {
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
     Axis_Label = "", "";
-    Draw_Range = 0, 0, 80, 150;
+    Draw_Range = 0, 0, 20, 40;
     Ruled_Line = No;
     Text_Display = No;
     Text_Display_Variable_Name = "";
@@ -3247,8 +3314,8 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 923;
-    Position_y = 359;
+    Position_x = 917;
+    Position_y = 365;
     Size_x = 706;
     Size_y = 546;
     Map_Cell_Size = -1;
@@ -3286,6 +3353,73 @@ Time_Graph {
         Expression_Value_Display = No;
         Effective_Fraction_Figures = 0;
         Graph_Element_Color = (0, 51, 255);
+    }
+}
+
+
+//-------------------------------------------------------
+//  3 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map3D_Output {
+    Map3D_Name = "finish_map";
+    Disable = Yes;
+    Background_Image_Display = No;
+    Background_Image_Type = Fixed_Value;
+    Background_Image_Folder_Name = "";
+    Background_Image_Folder_Variable_Name = Dummy;
+    Background_Color = -1;
+    FastDraw = No;
+    Line_Display = No;
+    Camera_Position_Type = Mouse;
+    Camera_Position_Agent_Name = Universe.CameraPointer;
+    Light_Position_Type = Coordinate;
+    Light_Position = 0.0,0.0,0.0;
+    Light_Position_Agent_Name = Dummy;
+    Output_Group_Name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Position_x = 100;
+    Position_y = 100;
+    Size_x = 613;
+    Size_y = 506;
+    Map_Cell_Size = -1;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Space3D_Output {
+        Space_3D_Name = "map";
+        Space_Path_Name = Universe.map;
+        Layer = 0;
+        Space_3D_PositionD = 0.0,0.0,0.0;
+        Ruled_Line_Display = No;
+        Origin_Position = Left_Top;
+        Display_Object_Type = None;
+        Image_File_Path_Name = "";
+        Model_3D_File_Path_Name = "";
+        Agent3D_Output {
+                Agent_3D_Name = "barrier";
+                Agent_Path_Name = Universe.map.barrier;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Cylinder;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -1;
+                Color_Variable_Path_Name = Universe.map.barrier.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
     }
 }
 
@@ -3357,7 +3491,7 @@ Space_Map_Initial_Value {
     Background_Image_File_Path_Name = "";
     Origin_Position = Left_Bottom;
     Space_Variable {
-        Variable = Universe.map.fin,(480000*0);
+        Variable = Universe.map.fin,(32000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3365,7 +3499,7 @@ Space_Map_Initial_Value {
         Max_Value_Color = 0, 255, 255;
     }
     Space_Variable {
-        Variable = Universe.map.is_void,(480000*0);
+        Variable = Universe.map.is_void,(32000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3382,7 +3516,7 @@ Window_Rectangle {
     Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
-    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
+    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
 
