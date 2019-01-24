@@ -185,8 +185,13 @@ sub draw_voxel(){
 	dim k as Integer
 	dim count as Integer
 	dim one as Agt
+	dim sum as Integer
+	dim num as Integer
+
+	sum  = GetWidthSpace(universe.map) * GetHeightSpace(universe.map) * 40
+	num = sum - universe.num_void_fin
 	
-	set = CreateAgtMulti(universe.map.void_voxel,universe.num_void_fin)
+	set = CreateAgtMulti(universe.map.void_voxel,num)
 	count = 0
 	
 	for k= 0 to 39
@@ -198,7 +203,7 @@ sub draw_voxel(){
 					one.Y = j
 					one.Z = k
 					count = count + 1
-					println("a")
+					println(count)
 				end if
 			next i
 		next j
@@ -3054,7 +3059,7 @@ Agt_Step{
 // Simulation Definition Division
 //-------------------------------------------------------
 Single_Simulation {
-    Step_Max = 50;
+    Step_Max = 100;
     Time_Max = 0;
     End_Condition = "";
     Exec_Wait = 0;
@@ -3317,8 +3322,8 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 1298;
-    Position_y = 368;
+    Position_x = 1340;
+    Position_y = 320;
     Size_x = 706;
     Size_y = 546;
     Map_Cell_Size = -1;
@@ -3390,14 +3395,14 @@ Map3D_Output {
     Size_x = 1298;
     Size_y = 909;
     Map_Cell_Size = -1;
-    Draw_Timing = Simulation_Step;
+    Draw_Timing = Simulation_End;
     Draw_Interval = 1;
     Space3D_Output {
         Space_3D_Name = "map";
         Space_Path_Name = Universe.map;
         Layer = 0;
         Space_3D_PositionD = 0.0,0.0,0.0;
-        Ruled_Line_Display = No;
+        Ruled_Line_Display = Yes;
         Origin_Position = Left_Top;
         Display_Object_Type = None;
         Image_File_Path_Name = "";
@@ -3452,7 +3457,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -3537,11 +3542,11 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
-    Window_Name = Output_Setting_Window, 746, 346, 480, 350;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
-    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
+    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
 
 

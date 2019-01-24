@@ -123,13 +123,15 @@ sub draw_fin(){
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
 			for i = 0 to GetWidthSpace(universe.map) -1
-				if is_in_area(i,j,k) then
-					universe.map.fin(i,j,k)= true
-					universe.num_fin = universe.num_fin + 1
-					if universe.map.is_void(i,j,k) then
-						universe.num_fill_fin = universe.num_fill_fin + 1
-					else
-						universe.num_void_fin = universe.num_void_fin +1
+				if not universe.map.fin(i,j,k) then
+					if is_in_area(i,j,k) then
+						universe.map.fin(i,j,k)= true
+						universe.num_fin = universe.num_fin + 1
+						if universe.map.is_void(i,j,k) then
+							universe.num_fill_fin = universe.num_fill_fin + 1
+						else
+							universe.num_void_fin = universe.num_void_fin +1
+						end if
 					end if
 				end if
 			next i
@@ -147,7 +149,7 @@ function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
 	if universe.map.fin(x,y,z) then
 		ret = false
 	else
-		MakeOneAgtSetAroundPosition(tmp,universe.map,x,y,0,r,universe.map.insect)
+		MakeAgtSet(tmp,universe.map.insect)
 		if CountAgtSet(tmp) > 0 then
 			ret = false
 			for each one in tmp
@@ -3261,8 +3263,8 @@ Time_Graph {
     FastDraw = Yes;
     Position_x = 0;
     Position_y = 0;
-    Size_x = 1920;
-    Size_y = 909;
+    Size_x = 1413;
+    Size_y = 910;
     Map_Cell_Size = -1;
     Axis_Label = "stepêî", "É{ÉNÉZÉãêî";
     Draw_By_JFree_Chart = Yes;
@@ -3306,7 +3308,7 @@ Time_Graph {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -3391,9 +3393,9 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 1384, 443;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
     Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
 }
