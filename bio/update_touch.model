@@ -82,7 +82,7 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	ClearConsoleScreen()
-	make_rubble_mix(0.3)
+	make_rubble_mix(0.4)
 	make_void()
 	println("")
 	println("start")
@@ -1347,98 +1347,128 @@ sub back_step(){
 		my.X = pre(0) + k(2) * u(0)
 		my.y = pre(1) + k(2) * u(1)
 		my.z = pre(2) + k(2) * u(2)
-
+		back_0()
+		
 		if not is_step() then
 			my.X = pre(0) + k(1) * u(0)
 			my.y = pre(1) + k(1) * u(1)
 			my.z = pre(2) + k(1) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(0) * u(0)
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
+				back_0()
 			end if
 		end if
 	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
 		my.X = pre(0) + k(1) * u(0)
 		my.y = pre(1) + k(1) * u(1)
 		my.z = pre(2) + k(1) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(2) * u(0)
 			my.y = pre(1) + k(2) * u(1)
 			my.z = pre(2) + k(2) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(0) * u(0)
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
+				back_0()
 			end if
 		end if
 	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
 		my.X = pre(0) + k(2) * u(0)
 		my.y = pre(1) + k(2) * u(1)
 		my.z = pre(2) + k(2) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(0) * u(0)
 			my.y = pre(1) + k(0) * u(1)
 			my.z = pre(2) + k(0) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(1) * u(0)
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
+				back_0()
 			end if
 		end if
 	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
 		my.X = pre(0) + k(0) * u(0)
 		my.y = pre(1) + k(0) * u(1)
 		my.z = pre(2) + k(0) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(2) * u(0)
 			my.y = pre(1) + k(2) * u(1)
 			my.z = pre(2) + k(2) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(1) * u(0)
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
+				back_0()
 			end if
 		end if
 	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
 		my.X = pre(0) + k(1) * u(0)
 		my.y = pre(1) + k(1) * u(1)
 		my.z = pre(2) + k(1) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(0) * u(0)
 			my.y = pre(1) + k(0) * u(1)
 			my.z = pre(2) + k(0) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(2) * u(0)
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
+				back_0()
 			end if
 		end if
 	else			
 		my.X = pre(0) + k(0) * u(0)
 		my.y = pre(1) + k(0) * u(1)
 		my.z = pre(2) + k(0) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(1) * u(0)
 			my.y = pre(1) + k(1) * u(1)
 			my.z = pre(2) + k(1) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(2) * u(0)
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
+				back_0()
 			end if
 		end if
+	end if
+}
+
+sub back_0(){
+	if my.X < 0 then
+		my.X = 0
+	end if
+	if my.Y < 0 then
+		my.Y = 0
+	end if
+	if my.Z < 0 then
+		my.Z = 0
 	end if
 }
 
@@ -1578,7 +1608,7 @@ sub store_vector(type as Integer,angle as Double){
 			else
 				if my.normal_vector(0) == 0 then
 					my.n_normal(0) = 0
-					my.n_normal(1) = 2
+					my.n_normal(1) = 1//2
 				else
 					my.n_normal(0) = 0
 					my.n_normal(1) = 1
@@ -1623,7 +1653,7 @@ sub store_vector(type as Integer,angle as Double){
 					my.n_normal(0) = 0
 					my.n_normal(1) = 2
 				else
-					my.n_normal(0) = 1
+					my.n_normal(0) = 0//1
 					my.n_normal(1) = 2
 				end if
 			end if
@@ -2917,9 +2947,7 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
-	}
-
-
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3128,7 +3156,7 @@ Map3D_Output {
     Font_Background_Color = 255, 255, 255;
     Position_x = 3;
     Position_y = -5;
-    Size_x = 931;
+    Size_x = 757;
     Size_y = 909;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
@@ -3209,9 +3237,9 @@ Time_Graph {
     Legend_Pos = Top;
     FastDraw = Yes;
     Position_x = 923;
-    Position_y = 305;
+    Position_y = 359;
     Size_x = 706;
-    Size_y = 600;
+    Size_y = 546;
     Map_Cell_Size = -1;
     Axis_Label = "", "";
     Draw_By_JFree_Chart = Yes;
@@ -3255,7 +3283,7 @@ Time_Graph {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -3279,8 +3307,8 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1628;
-    Console_Position_y = -9;
+    Console_Position_x = 1409;
+    Console_Position_y = -11;
     Console_Size_x = 681;
     Console_Size_y = 905;
     Componen_Tree_Position_x = 803;
@@ -3340,7 +3368,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
