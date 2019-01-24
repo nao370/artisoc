@@ -110,7 +110,7 @@ Univ_Step_Begin{
 
 Univ_Step_End{
 	draw_fin()
-	if universe.num_fin == 128000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+	if universe.num_fin == 480000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
 	end if
 }
@@ -1348,98 +1348,128 @@ sub back_step(){
 		my.X = pre(0) + k(2) * u(0)
 		my.y = pre(1) + k(2) * u(1)
 		my.z = pre(2) + k(2) * u(2)
-
+		back_0()
+		
 		if not is_step() then
 			my.X = pre(0) + k(1) * u(0)
 			my.y = pre(1) + k(1) * u(1)
 			my.z = pre(2) + k(1) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(0) * u(0)
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
+				back_0()
 			end if
 		end if
 	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
 		my.X = pre(0) + k(1) * u(0)
 		my.y = pre(1) + k(1) * u(1)
 		my.z = pre(2) + k(1) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(2) * u(0)
 			my.y = pre(1) + k(2) * u(1)
 			my.z = pre(2) + k(2) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(0) * u(0)
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
+				back_0()
 			end if
 		end if
 	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
 		my.X = pre(0) + k(2) * u(0)
 		my.y = pre(1) + k(2) * u(1)
 		my.z = pre(2) + k(2) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(0) * u(0)
 			my.y = pre(1) + k(0) * u(1)
 			my.z = pre(2) + k(0) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(1) * u(0)
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
+				back_0()
 			end if
 		end if
 	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
 		my.X = pre(0) + k(0) * u(0)
 		my.y = pre(1) + k(0) * u(1)
 		my.z = pre(2) + k(0) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(2) * u(0)
 			my.y = pre(1) + k(2) * u(1)
 			my.z = pre(2) + k(2) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(1) * u(0)
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
+				back_0()
 			end if
 		end if
 	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
 		my.X = pre(0) + k(1) * u(0)
 		my.y = pre(1) + k(1) * u(1)
 		my.z = pre(2) + k(1) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(0) * u(0)
 			my.y = pre(1) + k(0) * u(1)
 			my.z = pre(2) + k(0) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(2) * u(0)
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
+				back_0()
 			end if
 		end if
 	else			
 		my.X = pre(0) + k(0) * u(0)
 		my.y = pre(1) + k(0) * u(1)
 		my.z = pre(2) + k(0) * u(2)
+		back_0()
 
 		if not is_step() then
 			my.X = pre(0) + k(1) * u(0)
 			my.y = pre(1) + k(1) * u(1)
 			my.z = pre(2) + k(1) * u(2)
+			back_0()
 
 			if not is_step() then
 				my.X = pre(0) + k(2) * u(0)
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
+				back_0()
 			end if
 		end if
+	end if
+}
+
+sub back_0(){
+	if my.X < 0 then
+		my.X = 0
+	end if
+	if my.Y < 0 then
+		my.Y = 0
+	end if
+	if my.Z < 0 then
+		my.Z = 0
 	end if
 }
 
@@ -1579,7 +1609,7 @@ sub store_vector(type as Integer,angle as Double){
 			else
 				if my.normal_vector(0) == 0 then
 					my.n_normal(0) = 0
-					my.n_normal(1) = 2
+					my.n_normal(1) = 1//2
 				else
 					my.n_normal(0) = 0
 					my.n_normal(1) = 1
@@ -1624,7 +1654,7 @@ sub store_vector(type as Integer,angle as Double){
 					my.n_normal(0) = 0
 					my.n_normal(1) = 2
 				else
-					my.n_normal(0) = 1
+					my.n_normal(0) = 0//1
 					my.n_normal(1) = 2
 				end if
 			end if
@@ -2918,8 +2948,7 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
-	}
-
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -2966,7 +2995,7 @@ Single_Simulation {
 Repeat_Simulation {
     Value_Change = None;
     Initial_Value_Change_None {
-        Repeat_Max = 10;
+        Repeat_Max = 1;
     }
 }
 
@@ -3128,7 +3157,7 @@ Map3D_Output {
     Font_Background_Color = 255, 255, 255;
     Position_x = 3;
     Position_y = -5;
-    Size_x = 931;
+    Size_x = 757;
     Size_y = 909;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
@@ -3208,10 +3237,10 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 37;
-    Position_y = 21;
+    Position_x = 923;
+    Position_y = 359;
     Size_x = 706;
-    Size_y = 600;
+    Size_y = 546;
     Map_Cell_Size = -1;
     Axis_Label = "", "";
     Draw_By_JFree_Chart = Yes;
@@ -3279,8 +3308,8 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1260;
-    Console_Position_y = -5;
+    Console_Position_x = 1409;
+    Console_Position_y = -11;
     Console_Size_x = 681;
     Console_Size_y = 905;
     Componen_Tree_Position_x = 803;
