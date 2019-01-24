@@ -2876,8 +2876,10 @@ sub step_surface(){
 	dim f(3) as Double
 	dim n as Integer
 	dim i as Integer
+	dim b as Integer
 
 	n = my.dis_surface
+	b = my.b_type
 	for i =0 to 2
 		pre(i) = GetHistory(my.touch(i),1)
 		f(i) = GetHistory(my.forward_vector(i),1)
@@ -2887,6 +2889,16 @@ sub step_surface(){
 		println(i&" pre :"&pre(i) )
 		println("touch"&my.touch(i))
 	next i
+
+	if b < 3 then
+		if b == 0 then
+			f(0) = 0
+		elseif b == 1 then
+			f(1) = 0
+		elseif b == 2 then
+			f(2) = 0
+		end if
+	end if
 
 	PrintLn("myX is "&my.X)
 	PrintLn("myY is "&my.Y)
@@ -3240,25 +3252,25 @@ Time_Graph {
     Font_Background_Color = 255, 255, 255;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
-    Graph_Name = "fin";
-    Title = "fin";
+    Graph_Name = "探索したボクセルの数";
+    Title = "探索したボクセルの数";
     Disable = No;
     Background_Color = 255, 255, 255;
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 923;
-    Position_y = 359;
-    Size_x = 706;
-    Size_y = 546;
+    Position_x = 0;
+    Position_y = 0;
+    Size_x = 1409;
+    Size_y = 905;
     Map_Cell_Size = -1;
-    Axis_Label = "", "";
+    Axis_Label = "step数", "ボクセル数";
     Draw_By_JFree_Chart = Yes;
     Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
     ScaleAuto = Yes, Yes;
     Output_Group_Name = "";
     Output {
-        Graph_Element_Name = "fin";
+        Graph_Element_Name = "合計";
         Line_Color = 0, 0, 255;
         Line_Width = 3;
         Marker_Id = 0;
@@ -3268,7 +3280,7 @@ Time_Graph {
         Graph_Element_Color = (255, 0, 0);
     }
     Output {
-        Graph_Element_Name = "void";
+        Graph_Element_Name = "障害物なし";
         Line_Color = 255, 0, 0;
         Line_Width = 2;
         Marker_Id = 0;
@@ -3278,7 +3290,7 @@ Time_Graph {
         Graph_Element_Color = (0, 255, 0);
     }
     Output {
-        Graph_Element_Name = "fill";
+        Graph_Element_Name = "障害物あり";
         Line_Color = 0, 0, 255;
         Line_Width = 2;
         Marker_Id = 0;

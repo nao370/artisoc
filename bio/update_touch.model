@@ -2972,8 +2972,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	}
 
 
-
-
 #end_rule UNIVERSE.MAP.INSECT
 
 
