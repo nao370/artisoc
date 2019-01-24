@@ -198,12 +198,11 @@ sub draw_voxel(){
 					one.Y = j
 					one.Z = k
 					count = count + 1
+					println("a")
 				end if
 			next i
 		next j
 	next k
-
-	println("a")
 	
 }
 
@@ -3386,8 +3385,8 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 0;
-    Position_y = 0;
+    Position_x = 23;
+    Position_y = -10;
     Size_x = 1298;
     Size_y = 909;
     Map_Cell_Size = -1;
@@ -3398,20 +3397,20 @@ Map3D_Output {
         Space_Path_Name = Universe.map;
         Layer = 0;
         Space_3D_PositionD = 0.0,0.0,0.0;
-        Ruled_Line_Display = Yes;
+        Ruled_Line_Display = No;
         Origin_Position = Left_Top;
         Display_Object_Type = None;
         Image_File_Path_Name = "";
         Model_3D_File_Path_Name = "";
         Agent3D_Output {
-                Agent_3D_Name = "voxel";
-                Agent_Path_Name = Universe.map.void_voxel;
+                Agent_3D_Name = "barrier";
+                Agent_Path_Name = Universe.map.barrier;
                 Display_Object_Type = Image_File;
                 Display_Object_Image_Id = Quadrartic_Prism;
                 Model_3D_File_Path_Name = "";
                 Color_Type = None;
-                Color_Value = -6684877;
-                Color_Variable_Path_Name = Universe.map.void_voxel.ID;
+                Color_Value = -16776961;
+                Color_Variable_Path_Name = Universe.map.barrier.ID;
                 Smooth_Movement = No;
                 Draw_line = No;
                 Line_AgtSet_Variable_Path_Name = "";
@@ -3425,14 +3424,14 @@ Map3D_Output {
                 Magnify_Variable_Path_Name = "";
         }
         Agent3D_Output {
-                Agent_3D_Name = "barrier";
-                Agent_Path_Name = Universe.map.barrier;
+                Agent_3D_Name = "void";
+                Agent_Path_Name = Universe.map.void_voxel;
                 Display_Object_Type = Image_File;
                 Display_Object_Image_Id = Quadrartic_Prism;
                 Model_3D_File_Path_Name = "";
                 Color_Type = None;
-                Color_Value = -16776961;
-                Color_Variable_Path_Name = Universe.map.barrier.ID;
+                Color_Value = -10027264;
+                Color_Variable_Path_Name = Universe.map.void_voxel.ID;
                 Smooth_Movement = No;
                 Draw_line = No;
                 Line_AgtSet_Variable_Path_Name = "";
