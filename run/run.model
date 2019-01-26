@@ -54,7 +54,7 @@ UNIVERSE {
     Dim num_fin(0, 0) <6000>  As Integer = (0);
     Dim num_void_fin(0, 0) As Integer = (0);
     Dim num_fill_fin(0, 0) As Integer = (0);
-    Dim num_insect(0, 0) As Integer = ();
+    Dim num_insect(0, 0) As Integer = (0);
 }
 
 
@@ -3191,7 +3191,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, 0, 0, 800, 700;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
