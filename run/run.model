@@ -54,6 +54,7 @@ UNIVERSE {
     Dim num_fin(0, 0) <6000>  As Integer = (0);
     Dim num_void_fin(0, 0) As Integer = (0);
     Dim num_fill_fin(0, 0) As Integer = (0);
+    Dim num_insect(0, 0) As Integer = ();
 }
 
 
@@ -82,6 +83,7 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
+	universe.num_insect = 1
 	ClearConsoleScreen()
 	make_rubble_mix(0.6)
 	make_void()
@@ -111,7 +113,7 @@ Univ_Step_Begin{
 
 Univ_Step_End{
 	draw_fin()
-	if (GetCountStep() mod 500 ) == 0 then
+	if (GetCountStep() mod 1000 ) == 0 then
 		write_csv()
 	end if
 	if universe.num_fin == 480000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
@@ -124,9 +126,11 @@ sub write_csv(){
 	dim j as Integer
 	dim k as Integer
 	dim n as Integer
+	dim m as Integer
 
-	n = GetCountStep() / 500
-	OpenFileCSV("voxel_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
+	n = GetCountStep() / 1000
+	m = universe.num_insect
+	OpenFileCSV("voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
 
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
@@ -196,7 +200,6 @@ Univ_Finish{
 	println("num_fin_sum : "&universe.num_fin)
 	println("num_fin_barrier : "&universe.num_fill_fin)
 	println("num_fin_voxel : "&universe.num_void_fin)
-	ScreenShotPNG("map","map.png")
 }
 
 sub make_rubble_mix(rate as Double){
@@ -216,6 +219,7 @@ sub make_rubble_mix(rate as Double){
 	width = GetWidthSpace(universe.map)
 	max = height * width * 40
 	tmp_number = height * 40 * 2 + width * 40 * 2 - 40 * 4
+	println("tmp_number is"&tmp_number)
 
 	Do While tmp_rate < rate
 		x = Int(Rnd() * (width-2)) + 2
@@ -231,8 +235,9 @@ sub make_rubble_mix(rate as Double){
 			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
 		end if		
 		tmp_rate = tmp_number / max
-//		PrintLn("rate is "&tmp_rate)
+		PrintLn("rate is "&tmp_rate)
 	Loop
+			println("tmp_number is"&tmp_number)
 }
 
 function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as integer)as Integer{
@@ -250,88 +255,113 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	flag = false
 	ret = 64
 	set = CreateAgtMulti(universe.map.barrier,64)
-	if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //…•½‚É’u‚­
-		for each one in set
-			t = GetAgtEntry(set,one)
-			c = t / 8
-			b = t Mod 8
-			if not universe.map.is_void(x+b,y+c,z) then
-				one.X = x + b
-				one.Y = y + c
-				one.Z = z
-				universe.map.is_void(x+b,y+c,z) = true
-				if z == 0 then
-					flag = true
-				else
-					if universe.map.is_void(x+b,y+c,z-1) then
+	if not universe.map.is_void(x,y,z) then
+		if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //…•½‚É’u‚­
+			for each one in set
+				t = GetAgtEntry(set,one)
+				c = t / 8
+				b = t Mod 8
+				if not universe.map.is_void(x+b,y+c,z) then
+					one.X = x + b
+					one.Y = y + c
+					one.Z = z
+					universe.map.is_void(x+b,y+c,z) = true
+					if z == 0 then
 						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z-1) then
+							flag = true
+						end if
 					end if
-				end if
-			else
-				AddAgt(kill,one)
-				ret = ret - 1
-			end if
-		next one
-		if  not flag then
-			DelAgtSet(set,set)
-			ret = 0
-		end if
-	elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // c’·‚É’u‚­
-		for each one in set
-			t = GetAgtEntry(set,one)
-			a = t / 8
-			b = t Mod 8
-			if not universe.map.is_void(x,y+b,z+a) then
-				one.X = x
-				one.Y = y + b
-				one.Z = z + a
-				universe.map.is_void(x,y+b,z+a) = true
-				if z == 0 then
-					flag = true
 				else
-					if universe.map.is_void(x,y+b,z-1) then
-						flag = true
-					end if
+					AddAgt(kill,one)
+					ret = ret - 1
 				end if
-			else
-				AddAgt(kill,one)
-				ret = ret - 1
+			next one
+			DelAgtSet(set,kill)
+			for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
 			end if
-		next one
-		if  not flag then
-			DelAgtSet(set,set)
-			ret = 0
-		end if
-	elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // ‰¡’·‚É’u‚­
-		for each one in set
-			t = GetAgtEntry(set,one)
-			a = t / 8
-			c = t Mod 8
-			if not universe.map.is_void(x+c,y,z+a) then
-				one.X = x + c
-				one.Y = y
-				one.Z = z + a
-				universe.map.is_void(x+c,y,z+a) = true
-				if z == 0 then
-					flag = true
+		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // c’·‚É’u‚­
+			for each one in set
+				t = GetAgtEntry(set,one)
+				a = t / 8
+				b = t Mod 8
+				if not universe.map.is_void(x,y+b,z+a) then
+					one.X = x
+					one.Y = y + b
+					one.Z = z + a
+					universe.map.is_void(x,y+b,z+a) = true
+					if z == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x,y+b,z-1) then
+							flag = true
+						end if
+					end if
 				else
-					if universe.map.is_void(x+c,y,z-1) then
-						flag = true
-					end if
+					AddAgt(kill,one)
+					ret = ret - 1
 				end if
-			else
-				AddAgt(kill,one)
-				ret = ret - 1
+			next one
+			DelAgtSet(set,kill)
+			for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
+			end if		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // ‰¡’·‚É’u‚­
+			for each one in set
+				t = GetAgtEntry(set,one)
+				a = t / 8
+				c = t Mod 8
+				if not universe.map.is_void(x+c,y,z+a) then
+					one.X = x + c
+					one.Y = y
+					one.Z = z + a
+					universe.map.is_void(x+c,y,z+a) = true
+					if z == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+c,y,z-1) then
+							flag = true
+						end if
+					end if
+				else
+					AddAgt(kill,one)
+					ret = ret - 1
+				end if
+			next one
+			DelAgtSet(set,kill)
+			for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
 			end if
-		next one
-		if  not flag then
-			DelAgtSet(set,set)
+		else
 			ret = 0
 		end if
 	else
 		ret = 0
 	end if
-	DelAgtSet(kill,kill)
+	
+	 
 	return ret
 }
 
@@ -348,11 +378,10 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	dim kill as AgtSet
 
 	ret = 64
-		flag = false
-	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
+	flag = false
 	set = CreateAgtMulti(universe.map.barrier,64)
 	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 40 - 4 then
-		if CountAgtSet(temp) == 0 then
+		if not universe.map.is_void(x,y,z) then
 			for each one in set
 				t = GetAgtEntry(set,one)
 				a = t  / 16 
@@ -372,20 +401,30 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 						end if
 					end if
 		  	else
-					AddAgt(kill,one)
+		  		AddAgt(kill,one)
 					ret = ret - 1		  		
 		  	end if		  	
 			next one
+			DelAgtSet(set,kill)
+			for each one in kill
+				DelAgt(one)
+			next one
 			if  not flag then
-				DelAgtSet(set,set)
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
 				ret = 0
 			end if
-		 end if
 		else
 			ret = 0
 		end if
-	DelAgtSet(kill,kill)
-		return ret
+	else
+		ret = 0
+	end if
+		
+	 
+	return ret
 }
 
 function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as integer)as Integer{
@@ -401,19 +440,18 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		dim kill as AgtSet
 
 	ret = 64
-		flag = false
-	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
+	flag = false
 	set = CreateAgtMulti(universe.map.barrier,64)
-	if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
-	//‰¡’·‚Ì’Œ‚ðì‚é
-		if CountAgtSet(temp) == 0 then
+	if not universe.map.is_void(x,y,z) then
+		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
+		//‰¡’·‚Ì’Œ‚ðì‚é
 			for each one in set
 				t = GetAgtEntry(set,one)
 	  		a = t  / 32 
 	  		b = t Mod (32)
 	  		c = b / 16
 	  		b = b Mod 16
- 				if not universe.map.is_void(x+b,y+c,z+a) then
+				if not universe.map.is_void(x+b,y+c,z+a) then
 		  		one.X = x + b
 		  		one.Y = y + c
 		  		one.Z = z + a
@@ -426,101 +464,99 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 						end if
 					end if
 		  	else
-					AddAgt(kill,one)
+		 	 		AddAgt(kill,one)
 					ret = ret - 1		  		
 		  	end if
 	  	next one
-	  	if  not flag then
-			DelAgtSet(set,set)
-			ret = 0
-		end if
-	  end if	 
-	elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
-	//c’·‚Ì’Œ‚ðì‚é
-		if CountAgtSet(temp) == 0 then
-  		for each one in set
-  			t = GetAgtEntry(set,one)
-  			a = t  / 32 
-  			b = t Mod (32)
-  			c = b / 2
-  			b = b Mod 2
- 				if not universe.map.is_void(x+b,y+c,z+a) then
-	  			one.X = x + b
- 		 			one.Y = y + c
- 		 			one.Z = z + a
- 		 			universe.map.is_void(x+b,y+c,z+a) = true
- 		 			if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
- 		 		else
-					AddAgt(kill,one)
-					ret = ret - 1		  	 		 		
- 		 		end if
-  		next one
-  		if  not flag then
-			DelAgtSet(set,set)
-			ret = 0
-		end if
-  	end if
-  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //—§‚Á‚Ä‚é’Œ‚ðì‚é
-		if CountAgtSet(temp) == 0 then
-  		for each one in set
-  			t = GetAgtEntry(set,one)
-  			a = t  / 4 
-  			b = t Mod (4)
-  			c = b / 2
-  			b = b Mod 2
- 				if not universe.map.is_void(x+b,y+c,z+a) then
-	  			one.X = x + b
- 		 			one.Y = y + c
- 		 			one.Z = z + a
- 		 			universe.map.is_void(x+b,y+c,z+a) = true
- 		 			if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
- 		 		else
-					AddAgt(kill,one)
-					ret = ret - 1		  	 		 		
- 		 		end if
-  		next one
-  		if  not flag then
-				DelAgtSet(set,set)
+	  	DelAgtSet(set,kill)
+	  	for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
 				ret = 0
 			end if
-  	end if  
-  else
-  	ret = 0
+		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
+		//c’·‚Ì’Œ‚ðì‚é
+	 		for each one in set
+	 			t = GetAgtEntry(set,one)
+	 			a = t  / 32 
+	 			b = t Mod (32)
+	 			c = b / 2
+	 			b = b Mod 2
+				if not universe.map.is_void(x+b,y+c,z+a) then
+	  			one.X = x + b
+		 			one.Y = y + c
+		 			one.Z = z + a
+		 			universe.map.is_void(x+b,y+c,z+a) = true
+		 			if z == 0 then
+						flag = true
+					elseif universe.map.is_void(x+b,y+c,z-1) then
+							flag = true
+					end if
+				else
+					AddAgt(kill,one)
+					ret = ret - 1		  	 		 		
+		 		end if
+	 		next one
+	 		DelAgtSet(set,kill)
+	 		for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
+			end if
+	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //—§‚Á‚Ä‚é’Œ‚ðì‚é
+	 		for each one in set
+	 			t = GetAgtEntry(set,one)
+	 			a = t  / 4 
+	 			b = t Mod (4)
+	 			c = b / 2
+	 			b = b Mod 2
+				if not universe.map.is_void(x+b,y+c,z+a) then
+	  			one.X = x + b
+		 			one.Y = y + c
+		 			one.Z = z + a
+		 			universe.map.is_void(x+b,y+c,z+a) = true
+		 			if z == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z-1) then
+							flag = true
+						end if
+					end if
+		 		else
+			 		AddAgt(kill,one)
+					ret = ret - 1		  	 		 		
+		 		end if
+	 		next one
+	 		DelAgtSet(set,kill)
+	 		for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
+			end if
+	  else
+	  	ret = 0
+		end if
+	else
+		ret = 0
 	end if
-	DelAgtSet(kill,kill)
+	 
 	return ret
 }
-
-function is_void(tmp as AgtSet,z as Integer)as Boolean{
-	dim one as Agt
-	dim ret as Boolean
-
-	ret = true
-	if CountAgtSet(tmp) == 0 then
-		ret = true
-	else
-		for each one in tmp
-			if one.Z == z then
-				ret = false
-				break
-			end if
-		next one
-	end if
-
-	return ret
-	
 #end_rule UNIVERSE
 
 
@@ -3155,7 +3191,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, 833, 0, 854, 1017;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
