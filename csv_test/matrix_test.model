@@ -49,20 +49,12 @@ UNIVERSE {
         }
         Dim fin(0, 0)[20][40][40] As Boolean = (32000*0);
         Dim is_void(0, 0)[20][40][40] As Boolean = (32000*0);
-        AgtType void_voxel(0, 0)[0] {
-            Dim ID(0, 0) As Integer = (0);
-            Dim X(0, 0) As Double = (0.0);
-            Dim Y(0, 0) As Double = (0.0);
-            Dim Z(0, 0) As Double = (0.0);
-            Dim Layer(0, 0) As Integer = (0);
-            Dim Direction(0, 0) As Double = (0.0);
-            Dim Angle(0, 0) As Double = (0.0);
-        }
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
     Dim num_void_fin(0, 0) As Integer = (0);
     Dim num_fill_fin(0, 0) As Integer = (0);
+    Dim num_insect(0, 0) As Integer = (0);
 }
 
 
@@ -90,8 +82,9 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
+	universe.num_insect = 1
 	ClearConsoleScreen()
-	make_rubble_mix(0.4)
+	make_rubble_mix(0.6)
 	make_void()
 	println("")
 	println("start")
@@ -119,9 +112,38 @@ Univ_Step_Begin{
 
 Univ_Step_End{
 	draw_fin()
-	if universe.num_fin == 128000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+	if (GetCountStep() mod 1000 ) == 0 then
+//		write_csv()
+	end if
+	if universe.num_fin == 32000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
 	end if
+}
+
+sub write_csv(){
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim n as Integer
+	dim m as Integer
+
+	n = GetCountStep() / 1000
+	m = universe.num_insect
+	OpenFileCSV("voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
+
+	for k= 0 to 39
+		for j = 0 to GetHeightSpace(universe.map) -1
+			for i = 0 to GetWidthSpace(universe.map) -1
+				WriteFileCSV(n,i,false)
+				WriteFileCSV(n,j,false)
+				WriteFileCSV(n,k,false)
+				WriteFileCSV(n,universe.map.fin(i,j,k),false)
+				WriteFileCSV(n,universe.map.is_void(i,j,k),true)
+			next i
+		next j
+	next k
+
+	CloseFileCSV(n)
 }
 
 sub draw_fin(){
@@ -155,9 +177,8 @@ function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
 	dim r as Double
 
 	r = 20
-	if universe.map.fin(x,y,z) then
-		ret = false
-	else
+	if not universe.map.fin(x,y,z) then
+		//MakeAgtSet(tmp,universe.map.insect)
 		MakeOneAgtSetAroundPosition(tmp,universe.map,x,y,0,r,universe.map.insect)
 		if CountAgtSet(tmp) > 0 then
 			ret = false
@@ -175,40 +196,9 @@ function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
 }
 
 Univ_Finish{
-	draw_voxel()
-}
-
-sub draw_voxel(){
-	dim set as AgtSet
-	dim i as Integer
-	dim j as Integer
-	dim k as Integer
-	dim count as Integer
-	dim one as Agt
-	dim sum as Integer
-	dim num as Integer
-
-	sum  = GetWidthSpace(universe.map) * GetHeightSpace(universe.map) * 40
-	num = sum - universe.num_void_fin
-	
-	set = CreateAgtMulti(universe.map.void_voxel,num)
-	count = 0
-	
-	for k= 0 to 39
-		for j = 0 to GetHeightSpace(universe.map) -1
-			for i = 0 to GetWidthSpace(universe.map) -1
-				if universe.map.is_void(i,j,k) and not universe.map.fin(i,j,k) then
-					one = GetAgt(set,count)
-					one.X = i
-					one.Y = j
-					one.Z = k
-					count = count + 1
-					println(count)
-				end if
-			next i
-		next j
-	next k
-	
+	println("num_fin_sum : "&universe.num_fin)
+	println("num_fin_barrier : "&universe.num_fill_fin)
+	println("num_fin_voxel : "&universe.num_void_fin)
 }
 
 sub make_rubble_mix(rate as Double){
@@ -228,6 +218,7 @@ sub make_rubble_mix(rate as Double){
 	width = GetWidthSpace(universe.map)
 	max = height * width * 40
 	tmp_number = height * 40 * 2 + width * 40 * 2 - 40 * 4
+	println("tmp_number is"&tmp_number)
 
 	Do While tmp_rate < rate
 		x = Int(Rnd() * (width-2)) + 2
@@ -245,6 +236,7 @@ sub make_rubble_mix(rate as Double){
 		tmp_rate = tmp_number / max
 		PrintLn("rate is "&tmp_rate)
 	Loop
+			println("tmp_number is"&tmp_number)
 }
 
 function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as integer)as Integer{
@@ -262,88 +254,113 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	flag = false
 	ret = 64
 	set = CreateAgtMulti(universe.map.barrier,64)
-	if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //水平に置く
-		for each one in set
-			t = GetAgtEntry(set,one)
-			c = t / 8
-			b = t Mod 8
-			if not universe.map.is_void(x+b,y+c,z) then
-				one.X = x + b
-				one.Y = y + c
-				one.Z = z
-				universe.map.is_void(x+b,y+c,z) = true
-				if z == 0 then
-					flag = true
-				else
-					if universe.map.is_void(x+b,y+c,z-1) then
+	if not universe.map.is_void(x,y,z) then
+		if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //水平に置く
+			for each one in set
+				t = GetAgtEntry(set,one)
+				c = t / 8
+				b = t Mod 8
+				if not universe.map.is_void(x+b,y+c,z) then
+					one.X = x + b
+					one.Y = y + c
+					one.Z = z
+					universe.map.is_void(x+b,y+c,z) = true
+					if z == 0 then
 						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z-1) then
+							flag = true
+						end if
 					end if
-				end if
-			else
-				AddAgt(kill,one)
-				ret = ret - 1
-			end if
-		next one
-		if  not flag then
-			DelAgtSet(set,set)
-			ret = 0
-		end if
-	elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // 縦長に置く
-		for each one in set
-			t = GetAgtEntry(set,one)
-			a = t / 8
-			b = t Mod 8
-			if not universe.map.is_void(x,y+b,z+a) then
-				one.X = x
-				one.Y = y + b
-				one.Z = z + a
-				universe.map.is_void(x,y+b,z+a) = true
-				if z == 0 then
-					flag = true
 				else
-					if universe.map.is_void(x,y+b,z-1) then
-						flag = true
-					end if
+					AddAgt(kill,one)
+					ret = ret - 1
 				end if
-			else
-				AddAgt(kill,one)
-				ret = ret - 1
+			next one
+			DelAgtSet(set,kill)
+			for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
 			end if
-		next one
-		if  not flag then
-			DelAgtSet(set,set)
-			ret = 0
-		end if
-	elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // 横長に置く
-		for each one in set
-			t = GetAgtEntry(set,one)
-			a = t / 8
-			c = t Mod 8
-			if not universe.map.is_void(x+c,y,z+a) then
-				one.X = x + c
-				one.Y = y
-				one.Z = z + a
-				universe.map.is_void(x+c,y,z+a) = true
-				if z == 0 then
-					flag = true
+		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // 縦長に置く
+			for each one in set
+				t = GetAgtEntry(set,one)
+				a = t / 8
+				b = t Mod 8
+				if not universe.map.is_void(x,y+b,z+a) then
+					one.X = x
+					one.Y = y + b
+					one.Z = z + a
+					universe.map.is_void(x,y+b,z+a) = true
+					if z == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x,y+b,z-1) then
+							flag = true
+						end if
+					end if
 				else
-					if universe.map.is_void(x+c,y,z-1) then
-						flag = true
-					end if
+					AddAgt(kill,one)
+					ret = ret - 1
 				end if
-			else
-				AddAgt(kill,one)
-				ret = ret - 1
+			next one
+			DelAgtSet(set,kill)
+			for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
+			end if		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // 横長に置く
+			for each one in set
+				t = GetAgtEntry(set,one)
+				a = t / 8
+				c = t Mod 8
+				if not universe.map.is_void(x+c,y,z+a) then
+					one.X = x + c
+					one.Y = y
+					one.Z = z + a
+					universe.map.is_void(x+c,y,z+a) = true
+					if z == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+c,y,z-1) then
+							flag = true
+						end if
+					end if
+				else
+					AddAgt(kill,one)
+					ret = ret - 1
+				end if
+			next one
+			DelAgtSet(set,kill)
+			for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
 			end if
-		next one
-		if  not flag then
-			DelAgtSet(set,set)
+		else
 			ret = 0
 		end if
 	else
 		ret = 0
 	end if
-	DelAgtSet(kill,kill)
+	
+	 
 	return ret
 }
 
@@ -360,11 +377,10 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	dim kill as AgtSet
 
 	ret = 64
-		flag = false
-	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
+	flag = false
 	set = CreateAgtMulti(universe.map.barrier,64)
 	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 40 - 4 then
-		if CountAgtSet(temp) == 0 then
+		if not universe.map.is_void(x,y,z) then
 			for each one in set
 				t = GetAgtEntry(set,one)
 				a = t  / 16 
@@ -384,20 +400,30 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 						end if
 					end if
 		  	else
-					AddAgt(kill,one)
+		  		AddAgt(kill,one)
 					ret = ret - 1		  		
 		  	end if		  	
 			next one
+			DelAgtSet(set,kill)
+			for each one in kill
+				DelAgt(one)
+			next one
 			if  not flag then
-				DelAgtSet(set,set)
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
 				ret = 0
 			end if
-		 end if
 		else
 			ret = 0
 		end if
-	DelAgtSet(kill,kill)
-		return ret
+	else
+		ret = 0
+	end if
+		
+	 
+	return ret
 }
 
 function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as integer)as Integer{
@@ -413,19 +439,18 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		dim kill as AgtSet
 
 	ret = 64
-		flag = false
-	MakeOneAgtSetAroundPosition(temp,universe.map,x,y,0,0,universe.map.barrier)
+	flag = false
 	set = CreateAgtMulti(universe.map.barrier,64)
-	if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
-	//横長の柱を作る
-		if CountAgtSet(temp) == 0 then
+	if not universe.map.is_void(x,y,z) then
+		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
+		//横長の柱を作る
 			for each one in set
 				t = GetAgtEntry(set,one)
 	  		a = t  / 32 
 	  		b = t Mod (32)
 	  		c = b / 16
 	  		b = b Mod 16
- 				if not universe.map.is_void(x+b,y+c,z+a) then
+				if not universe.map.is_void(x+b,y+c,z+a) then
 		  		one.X = x + b
 		  		one.Y = y + c
 		  		one.Z = z + a
@@ -438,101 +463,99 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 						end if
 					end if
 		  	else
-					AddAgt(kill,one)
+		 	 		AddAgt(kill,one)
 					ret = ret - 1		  		
 		  	end if
 	  	next one
-	  	if  not flag then
-			DelAgtSet(set,set)
-			ret = 0
-		end if
-	  end if	 
-	elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
-	//縦長の柱を作る
-		if CountAgtSet(temp) == 0 then
-  		for each one in set
-  			t = GetAgtEntry(set,one)
-  			a = t  / 32 
-  			b = t Mod (32)
-  			c = b / 2
-  			b = b Mod 2
- 				if not universe.map.is_void(x+b,y+c,z+a) then
-	  			one.X = x + b
- 		 			one.Y = y + c
- 		 			one.Z = z + a
- 		 			universe.map.is_void(x+b,y+c,z+a) = true
- 		 			if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
- 		 		else
-					AddAgt(kill,one)
-					ret = ret - 1		  	 		 		
- 		 		end if
-  		next one
-  		if  not flag then
-			DelAgtSet(set,set)
-			ret = 0
-		end if
-  	end if
-  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //立ってる柱を作る
-		if CountAgtSet(temp) == 0 then
-  		for each one in set
-  			t = GetAgtEntry(set,one)
-  			a = t  / 4 
-  			b = t Mod (4)
-  			c = b / 2
-  			b = b Mod 2
- 				if not universe.map.is_void(x+b,y+c,z+a) then
-	  			one.X = x + b
- 		 			one.Y = y + c
- 		 			one.Z = z + a
- 		 			universe.map.is_void(x+b,y+c,z+a) = true
- 		 			if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
- 		 		else
-					AddAgt(kill,one)
-					ret = ret - 1		  	 		 		
- 		 		end if
-  		next one
-  		if  not flag then
-				DelAgtSet(set,set)
+	  	DelAgtSet(set,kill)
+	  	for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
 				ret = 0
 			end if
-  	end if  
-  else
-  	ret = 0
+		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
+		//縦長の柱を作る
+	 		for each one in set
+	 			t = GetAgtEntry(set,one)
+	 			a = t  / 32 
+	 			b = t Mod (32)
+	 			c = b / 2
+	 			b = b Mod 2
+				if not universe.map.is_void(x+b,y+c,z+a) then
+	  			one.X = x + b
+		 			one.Y = y + c
+		 			one.Z = z + a
+		 			universe.map.is_void(x+b,y+c,z+a) = true
+		 			if z == 0 then
+						flag = true
+					elseif universe.map.is_void(x+b,y+c,z-1) then
+							flag = true
+					end if
+				else
+					AddAgt(kill,one)
+					ret = ret - 1		  	 		 		
+		 		end if
+	 		next one
+	 		DelAgtSet(set,kill)
+	 		for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
+			end if
+	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //立ってる柱を作る
+	 		for each one in set
+	 			t = GetAgtEntry(set,one)
+	 			a = t  / 4 
+	 			b = t Mod (4)
+	 			c = b / 2
+	 			b = b Mod 2
+				if not universe.map.is_void(x+b,y+c,z+a) then
+	  			one.X = x + b
+		 			one.Y = y + c
+		 			one.Z = z + a
+		 			universe.map.is_void(x+b,y+c,z+a) = true
+		 			if z == 0 then
+						flag = true
+					else
+						if universe.map.is_void(x+b,y+c,z-1) then
+							flag = true
+						end if
+					end if
+		 		else
+			 		AddAgt(kill,one)
+					ret = ret - 1		  	 		 		
+		 		end if
+	 		next one
+	 		DelAgtSet(set,kill)
+	 		for each one in kill
+				DelAgt(one)
+			next one
+			if  not flag then
+				for each one in set
+					universe.map.is_void(one.X,one.Y,one.Z) = false
+					DelAgt(one)
+				next one
+				ret = 0
+			end if
+	  else
+	  	ret = 0
+		end if
+	else
+		ret = 0
 	end if
-	DelAgtSet(kill,kill)
+	 
 	return ret
 }
-
-function is_void(tmp as AgtSet,z as Integer)as Boolean{
-	dim one as Agt
-	dim ret as Boolean
-
-	ret = true
-	if CountAgtSet(tmp) == 0 then
-		ret = true
-	else
-		for each one in tmp
-			if one.Z == z then
-				ret = false
-				break
-			end if
-		next one
-	end if
-
-	return ret
-	
 #end_rule UNIVERSE
 
 
@@ -542,11 +565,6 @@ function is_void(tmp as AgtSet,z as Integer)as Boolean{
 // Agent Rule
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.INSECT
-//Include "bend.inc"
-//Include "vector.inc"
-//Include "surface.inc"
-//Include "calculate.inc"
-
 Agt_Init{
 my.Direction = 60.1
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
@@ -563,38 +581,18 @@ Agt_Step{
 dim i as Integer
 
 	if different_surface() then
-		println("b_type"& my.b_type)
-			for i =0 to 2
-		println(i&" th  : touch"&my.touch(i))
-	next i
 		determining_vector()
 		update_normal_vector()
-	PrintLn("normalX is "&my.normal_vector(0))
-	PrintLn("normalY is "&my.normal_vector(1))
-	PrintLn("normalZ is "&my.normal_vector(2))
 	else
 		if is_bend() then
 			determining_bend()
-			println("bend")
 		end if
 	end if
 	forward_step()
 	clear_val()
-
-	PrintLn("myX is "&my.X)
-	PrintLn("myY is "&my.Y)
-	PrintLn("myZ is "&my.Z)
-
-	PrintLn("normalX is "&my.normal_vector(0))
-	PrintLn("normalY is "&my.normal_vector(1))
-	PrintLn("normalZ is "&my.normal_vector(2))
 	if my.normal_vector(0) == 0 and my.normal_vector(1) == 0 and my.normal_vector(2) == 0 then
 		PauseSimulation()
 	end if
-
-	println("do_type"& my.do_type)
-
-	println("")
 			
 }
 
@@ -675,8 +673,6 @@ sub forward_step() {
 	delete_touch_vector()
 	update_normal()
 
-	println("do_type : "&my.do_type)
-	println("")
 	if not is_step() then
 		back_step()
 	end if
@@ -693,9 +689,7 @@ function is_differernt()as Boolean{
 		ret = false
 	else
 		f = my.forward_vector(n)//GetHistory(my.forward_vector(n),1)
-		PrintLn("")
-		PrintLn("is_differrent")
-		PrintLn("dis_surface :"&n)
+		
 		if f != 0 and my.ap_or_dis == -1 then
 			ret = true
 		else
@@ -726,10 +720,6 @@ sub back_surface(n as Integer){
 		end if
 	next i
 
-	PrintLn("myX is "&my.X)
-	PrintLn("myY is "&my.Y)
-	PrintLn("myZ is "&my.Z)
-
 	if not universe.map.is_void(a(0),a(1),a(2)) then
 		pre = GetHistory(my.touch(n),1)
 		if n == 0 and universe.map.is_void(a(0)+ pre + f(0),a(1),a(2)) then
@@ -747,6 +737,7 @@ sub back_surface(n as Integer){
 		else
 			//ここに入りたくない
 			println("disapミスってる？？")
+			ExitSimulation()
 		end if
 		my.is_back = true
 		prev_forward()
@@ -759,7 +750,6 @@ sub prev_forward(){
 	
 	for i = 0 to 2
 		my.forward_vector(i) = GetHistory(my.forward_vector(i),1)
-		PrintLn("f("&i&") : "&my.forward_vector(i))
 		my.touch(i) = GetHistory(my.touch(i),1)
 	next i
 	my.do_type = GetHistory(my.do_type,1)
@@ -787,22 +777,18 @@ function is_step() as Boolean{
 
 	if is_filled() then
 		ret = false
-		println("filled")
 	else
 		if is_float() then
 			ret = false
-			println("float")
 		else
 			if not is_jump() then
 				if is_pause() then
 					ret = false
-					println("pause")
 				else
 					ret = true
 				end if
 			else
 				ret = false
-				PrintLn("jump")
 			end if
 		end if
 	end if
@@ -849,14 +835,6 @@ function is_pause() as Boolean{
 		nz = minus(2)
 	end if
 	
-	PrintLn("myX is "&my.X)
-	PrintLn("myY is "&my.Y)
-	PrintLn("myZ is "&my.Z)
-
-	
-	PrintLn("touchX is "&my.touch(0))
-	PrintLn("touchY is "&my.touch(1))
-	PrintLn("touchZ is "&my.touch(2))
 	
 	type = my.do_type
 
@@ -878,7 +856,6 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
-							println("1")
 						end if
 					else
 						ret = false
@@ -899,7 +876,6 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
-							println("2")
 						end if
 					else
 						ret = false
@@ -926,7 +902,6 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
-							println("3")
 						end if
 					else
 						ret = false
@@ -947,7 +922,6 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
-							println("4")
 						end if
 					else
 						ret = false
@@ -972,7 +946,7 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
-							println("5")
+							//println("5")
 						end if
 					else
 						ret = false
@@ -993,7 +967,7 @@ function is_pause() as Boolean{
 							ret = false
 						else
 							ret = true
-							println("6")
+							//println("6")
 						end if
 					else
 						ret = false
@@ -1255,10 +1229,10 @@ function is_filled() as Boolean{
 	x(1) = my.Y
 	x(2) = my.Z
 
-		println("近いマス")
+		//println("近いマス")
 	for i = 0 to 2
 		a(i) = close_num(x(i))
-		println("a("&i&")"&"is"&a(i))
+		//println("a("&i&")"&"is"&a(i))
 	next i
 
 	ret = false
@@ -1277,10 +1251,10 @@ function is_filled() as Boolean{
 	 			
 	 		elseif universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
 	 			if abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
-	 				println("どのマスに埋まったか")
-	 				println("x :"&a(0)-g(0)+i)
-	 				println("y :"&a(1)-g(1)+j)
-	 				println("z :"&a(2)-g(2)+k)
+	 				//println("どのマスに埋まったか")
+	 				//println("x :"&a(0)-g(0)+i)
+	 				//println("y :"&a(1)-g(1)+j)
+	 				//println("z :"&a(2)-g(2)+k)
 	 				ret = true
 	 				return ret
 	 			end if
@@ -1351,19 +1325,19 @@ sub back_step(){
 	dim i as Integer
 	dim ak(3) as Double 
 
-	println("今いる場所")
-	println("x ;" & my.X)
-	println("y ;" & my.y)
-	println("z ;" & my.z)
+	//println("今いる場所")
+	//println("x ;" & my.X)
+	//println("y ;" & my.y)
+	//println("z ;" & my.z)
 			
 	pre(0) = GetHistory(my.X,1)
 	pre(1) = GetHistory(my.y,1)
 	pre(2) = GetHistory(my.z,1)
 
-	println("さっきいた場所")
-	println("x ;" & pre(0))
-	println("y ;" & pre(1))
-	println("z ;" & pre(2))
+	//println("さっきいた場所")
+	//println("x ;" & pre(0))
+	//println("y ;" & pre(1))
+	//println("z ;" & pre(2))
 
 	k(0) = 0
 	k(1) = 0
@@ -1552,9 +1526,9 @@ sub determining_bend(){
 	for i = 0 to 2	
 		prob(i) = Abs(my.touch(i)) / sum
 	next i
-	PrintLn("X is "&my.forward_vector(0))
-	PrintLn("Y is "&my.forward_vector(1))
-	PrintLn("Z is "&my.forward_vector(2))
+	//printLn("X is "&my.forward_vector(0))
+	//printLn("Y is "&my.forward_vector(1))
+	//printLn("Z is "&my.forward_vector(2))
 
 
 	if r < prob(0) and my.normal_vector(0) != 0 then
@@ -1573,12 +1547,12 @@ sub determining_bend(){
 		my.do_type = 1
 		my.normal_vector(2) = my.touch(2)
 	else
-		println("あり得ない方向に曲がった")
+		//println("あり得ない方向に曲がった")
 	end if
 
-	PrintLn("X is "&my.forward_vector(0))
-	PrintLn("Y is "&my.forward_vector(1))
-	PrintLn("Z is "&my.forward_vector(2))
+	//printLn("X is "&my.forward_vector(0))
+	//printLn("Y is "&my.forward_vector(1))
+	//printLn("Z is "&my.forward_vector(2))
 
 }
 
@@ -1623,7 +1597,7 @@ sub store_vector(type as Integer,angle as Double){
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
 	my.next_vector(2,2) = 0
-	PrintLn("dis : "&my.dis_surface)
+	//printLn("dis : "&my.dis_surface)
 	if type > 2 then
 	//±の障害物見てベクトルの方向を決める
 		if type == 3 then
@@ -1755,7 +1729,7 @@ sub store_vector(type as Integer,angle as Double){
 				end if
 			end if
 		else
-			println("type miss")
+			//println("type miss")
 		end if
 	else
 		if type == 0 then
@@ -1767,14 +1741,11 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,1) = 0
 			my.next_vector(1,2) = 0
 			
-			u(0) = 1
-			u(1) = 0
-			u(2) = 0
-
 			if not my.is_hemi then
 				my.next_vector(2,0) = my.forward_vector(0)
 				my.next_vector(2,1) = Abs(my.forward_vector(2)) * pre_t(1) * my.ap_or_dis
 				my.next_vector(2,2) = Abs(my.forward_vector(1)) * pre_t(2) * my.ap_or_dis
+				matrix()
 			end if
 
 			if my.normal_vector(1) == 0 then
@@ -1794,15 +1765,12 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,0) = 0
 			my.next_vector(1,1) = -1
 			my.next_vector(1,2) = 0
-			
-			u(0) = 0
-			u(1) = 1
-			u(2) = 0
 
 			if not my.is_hemi then
 				my.next_vector(2,0) = Abs(my.forward_vector(2)) * pre_t(0) * my.ap_or_dis
 				my.next_vector(2,1) = my.forward_vector(1)
 				my.next_vector(2,2) = Abs(my.forward_vector(0)) * pre_t(2) * my.ap_or_dis
+				matrix()
 			end if
 
 			if my.normal_vector(0) == 0 then
@@ -1822,15 +1790,12 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,0) = 0
 			my.next_vector(1,1) = 0
 			my.next_vector(1,2) = -1
-			
-			u(0) = 0
-			u(1) = 0
-			u(2) = 1
 
 			if not my.is_hemi then
 				my.next_vector(2,0) = Abs(my.forward_vector(1)) * pre_t(0) * my.ap_or_dis
 				my.next_vector(2,1) = Abs(my.forward_vector(0)) * pre_t(1) * my.ap_or_dis
 				my.next_vector(2,2) = my.forward_vector(2)
+				matrix()
 			end if
 
 			if my.normal_vector(1) == 0 then
@@ -1850,36 +1815,79 @@ sub store_vector(type as Integer,angle as Double){
 	print_vector()
 }
 
-sub calculate_matrix(){
+sub matrix(){
+	dim x(3) as Double
+	dim y(3) as Double
+	dim b(3) as Double
+	dim R(3,3) as Double
+	dim i as Integer
 	dim theta as Double
-	dim n(3) as Double
+	dim j as Integer
+	dim n as Integer
 
-	theta = DegreeToRad(my.angle_surface)
-	if my.b_type == 0 then
-		n(0) = 1
-		n(1) = 0
-		n(2) = 0
-	elseif my.b_type == 1 then
-		n(0) = 0
-		n(1) = 1
-		n(2) = 0	
+	x(0) = my.forward_vector(0)
+	x(1) = my.forward_vector(1)
+	x(2) = my.forward_vector(2)
+
+	n = my.b_type
+	
+	for i = 0 to 2
+		PrintLn("x("&i&") : " & x(i))
+	next i
+	PrintLn("b_type :"&n)
+
+	theta = calculate_theta()
+
+	if n == 0 then
+		b(0) = 1
+		b(1) = 0
+		b(2) = 0
+	elseif n == 1 then
+		b(0) = 0
+	 	b(1) = 1
+		b(2) = 0
+	elseif n == 2 then
+		b(0) = 0
+		b(1) = 0
+		b(2) = 1
 	else
-		n(0) = 0
-		n(1) = 0
-		n(2) = 1	
+		println("miss")
 	end if
 
-	my.matrix(0,0) = Cos(theta) + (n(0)^2) * (1 - Cos(theta))
-	my.matrix(0,1) = n(0) * n(1) * (1 - Cos(theta)) - (n(2)) * (sin(theta))
-	my.matrix(0,2) = n(2) * n(0) * (1 - Cos(theta)) + (n(1)) * (sin(theta))
-	my.matrix(1,0) = n(0) * n(1) * (1 - Cos(theta)) + (n(2)) * (sin(theta))
-	my.matrix(1,1) = Cos(theta) + (n(1)^2) * (1 - Cos(theta))
-	my.matrix(1,2) = n(1) * n(2) * (1 - Cos(theta)) - (n(0)) * (sin(theta))
-	my.matrix(2,0) = n(2) * n(0) * (1 - Cos(theta)) - (n(1)) * (sin(theta))
-	my.matrix(2,1) = n(1) * n(2) * (1 - Cos(theta)) + (n(0)) * (sin(theta))
-	my.matrix(2,2) = Cos(theta) + (n(2)^2) * (1 - Cos(theta))
+	R(0,0) = b(0)^2 * (1 - Cos(theta)) + Cos(theta)
+	R(0,1) = b(0) * b(1) * (1 - Cos(theta)) - b(2) * Sin(theta)
+	R(0,2) = b(2) * b(0) * (1 - Cos(theta)) + b(1) * Sin(theta)
+
+	R(1,0) = b(0) * b(1) * (1 - Cos(theta)) + b(2) * Sin(theta)
+	R(1,1) = b(1)^2 * (1 - Cos(theta)) + Cos(theta)
+	R(1,2) = b(1) * b(2) * (1 - Cos(theta)) - b(0) * Sin(theta)
+
+	R(2,0) = b(2) * b(0) * (1 - Cos(theta)) - b(1) * Sin(theta)
+	R(2,1) = b(1) * b(2) * (1 - Cos(theta)) + b(0) * Sin(theta)
+	R(2,2) = b(2)^2 * (1 - Cos(theta)) + Cos(theta)
+
+	println("")
+	for j = 0 to 2
+	for i = 0 to 2
+		PrintLn("R("&i&","&j&") : "&R(i,j))
+	next i
+	next j
+	println("")
+	
+	for i = 0 to 2
+		y(i) = x(0) * R(i,0) + x(1) * R(i,1) + x(2) * R(i,2)
+		PrintLn("y("&i&") : " & y(i))
+	next i
+
+	for i = 0 to 2
+		PrintLn("next_vector("&i&") : " & my.next_vector(2,i))
+	next i
+
 }
 
+Function calculate_theta() as Double{
+	return DegreeToRad(90)
+}
 
 sub select_vector(){
 //my.next_vectorから1つ確率で選んでmy.forward_vectorに入れる
@@ -1912,8 +1920,8 @@ sub select_vector(){
 		my.forward_vector(2) = my.next_vector(2,2)
 	end if
 
-	println("my.forward_vector is")
-	println("x : "&my.forward_vector(0)&"     y : "&my.forward_vector(1)&"       z : "&my.forward_vector(2))
+	//println("my.forward_vector is")
+	//println("x : "&my.forward_vector(0)&"     y : "&my.forward_vector(1)&"       z : "&my.forward_vector(2))
 
 	my.do_type = select_do_type()
 }
@@ -1922,12 +1930,12 @@ sub print_vector(){
 	dim i as Integer
 
 	for i = 0 to 2
-		println("")
-		PrintLn(i& "th next_vector")
-		PrintLn("next_vector(0)"&my.next_vector(i,0))
-		PrintLn("next_vector(1)"&my.next_vector(i,1))
-		PrintLn("next_vector(2)"&my.next_vector(i,2))
-		PrintLn("next_normal is"&my.n_normal(i))
+		//println("")
+		//printLn(i& "th next_vector")
+		//printLn("next_vector(0)"&my.next_vector(i,0))
+		//printLn("next_vector(1)"&my.next_vector(i,1))
+		//printLn("next_vector(2)"&my.next_vector(i,2))
+		//printLn("next_normal is"&my.n_normal(i))
 	next i
 }
 
@@ -1937,11 +1945,11 @@ sub set_normal_vector(n as Integer){
 	dim f as Double
 
 	f = set_foward(n)
-	println("forward is"&f)
+	//println("forward is"&f)
 	for i = 0 to 2
 	//方向を鑑みて1or-1をいれる
-	println("i is"&i)
-	println("ap_or_dis is"&my.ap_or_dis)
+	//println("i is"&i)
+	//println("ap_or_dis is"&my.ap_or_dis)
 	a = f * my.ap_or_dis * (-1)
 	if a != 0 then
 		a = a / Abs(a)
@@ -1950,7 +1958,7 @@ sub set_normal_vector(n as Integer){
 		if my.normal_vector(i) == 0 then
 			my.normal_vector(i) = a
 		end if
-		println(i&"th next normal vector"&my.normal_vector(i))
+		//println(i&"th next normal vector"&my.normal_vector(i))
 	else
 		my.normal_vector(i) = 0
 	end if
@@ -2098,13 +2106,13 @@ function different_surface() as Boolean{
 	ret = false
 	if is_appear_surface() then
 			my.ap_or_dis = 1
-			println("appear")
+			//println("appear")
 			ret = true
 	else
 		if is_disappear_surface() then
 			my.ap_or_dis = -1
 			ret = true
-			println("disappear")
+			//println("disappear")
 		end if
 	end if
 	
@@ -2507,7 +2515,7 @@ function is_disappear_surface() as Boolean{
 		else
 			f(i) = 0
 		end if
-		println("f("&i&") is"&f(i))
+		//println("f("&i&") is"&f(i))
 	next i
 
 	if axis == 0 then
@@ -2521,7 +2529,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 5
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
-						println("0")
+						//println("0")
 					else
 						ret = false
 					end if
@@ -2534,7 +2542,7 @@ function is_disappear_surface() as Boolean{
 							my.b_type = 5
 							my.dis_surface = 1
 							my.touch(0) = -f(0)
-							println("1")
+							//println("1")
 						else
 							ret = false
 						end if
@@ -2543,7 +2551,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 5
 						my.dis_surface = 2
 						my.touch(0) = -f(0)
-						println("2")
+						//println("2")
 					end if
 				end if
 			else
@@ -2558,7 +2566,7 @@ function is_disappear_surface() as Boolean{
 							my.b_type = 5
 							my.dis_surface = 2
 							my.touch(0) = -f(0)
-							println("3")
+							//println("3")
 						else
 							ret = false
 						end if
@@ -2567,7 +2575,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 5
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
-						println("4")
+						//println("4")
 					end if
 				end if
 			end if
@@ -2585,13 +2593,13 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 1
 						my.dis_surface = 2
 						my.touch(0) = -f(0)
-						println("5")
+						//println("5")
 					elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 2
 						my.touch(1) = -f(1)
-						println("6")
+						//println("6")
 					else
 						ret = false
 					end if
@@ -2601,7 +2609,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 1
 						my.dis_surface = 2
 						my.touch(0) = -f(0)
-						println("7")
+						//println("7")
 					else
 						ret = false
 					end if
@@ -2616,7 +2624,7 @@ function is_disappear_surface() as Boolean{
 					my.b_type = 0
 					my.dis_surface = 2
 					my.touch(1) = -f(1)
-					println("8")
+					//println("8")
 				else
 					ret = false
 				end if
@@ -2635,13 +2643,13 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 2
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
-						println("9")
+						//println("9")
 					elseif universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx,ny - my.normal_vector(1),nz+f(2)) then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 1
 						my.touch(2) = -f(2)
-						println("10")
+						//println("10")
 					else
 						ret = false
 					end if
@@ -2651,7 +2659,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 2
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
-						println("11")
+						//println("11")
 					else
 						ret = false
 					end if
@@ -2666,7 +2674,7 @@ function is_disappear_surface() as Boolean{
 					my.b_type = 0
 					my.dis_surface = 1
 					my.touch(2) = -f(2)
-					println("12")
+					//println("12")
 				else
 					ret = false
 				end if
@@ -2685,7 +2693,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 4
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
-						println("13")
+						//println("13")
 					else
 						ret = false
 					end if
@@ -2698,7 +2706,7 @@ function is_disappear_surface() as Boolean{
 							my.b_type = 4
 							my.dis_surface = 0
 							my.touch(1) = -f(1)
-							println("14")
+							//println("14")
 						else
 							ret = false
 						end if
@@ -2707,7 +2715,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 4
 						my.dis_surface = 2
 						my.touch(1) = -f(1)
-						println("15")
+						//println("15")
 					end if
 				end if
 			else
@@ -2722,7 +2730,7 @@ function is_disappear_surface() as Boolean{
 							my.b_type = 4
 							my.dis_surface = 2
 							my.touch(1) = -f(1)
-							println("16")
+							//println("16")
 						else
 							ret = false
 						end if
@@ -2731,7 +2739,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 4
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
-						println("17")
+						//println("17")
 					end if
 				end if
 			end if
@@ -2749,13 +2757,13 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 2
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
-						println("18")
+						//println("18")
 					elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 0
 						my.touch(2) = -f(2)
-						println("19")
+						//println("19")
 					else
 						ret = false
 					end if
@@ -2765,7 +2773,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 2
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
-						println("20")
+						//println("20")
 					else
 						ret = false
 					end if
@@ -2780,7 +2788,7 @@ function is_disappear_surface() as Boolean{
 					my.b_type = 1
 					my.dis_surface = 0
 					my.touch(2) = -f(2)
-					println("21")
+					//println("21")
 				else
 					ret = false
 				end if
@@ -2799,7 +2807,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 3
 						my.dis_surface = 0
 						my.touch(2) = -f(2)
-						println("22")
+						//println("22")
 					else
 						ret = false
 					end if
@@ -2812,7 +2820,7 @@ function is_disappear_surface() as Boolean{
 							my.b_type = 3
 							my.dis_surface = 0
 							my.touch(2) = -f(2)
-							println("23")
+							//println("23")
 						else
 							ret = false
 						end if
@@ -2821,7 +2829,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 3
 						my.dis_surface = 1
 						my.touch(2) = -f(2)
-						println("24")
+						//println("24")
 					end if
 				end if
 			else
@@ -2836,7 +2844,7 @@ function is_disappear_surface() as Boolean{
 							my.b_type = 3
 							my.dis_surface = 1
 							my.touch(2) = -f(2)
-							println("25")
+							//println("25")
 						else
 							ret = false
 						end if
@@ -2845,7 +2853,7 @@ function is_disappear_surface() as Boolean{
 						my.b_type = 3
 						my.dis_surface = 0
 						my.touch(2) = -f(2)
-						println("26")
+						//println("26")
 					end if
 				end if
 			end if
@@ -2906,9 +2914,9 @@ function is_disappear_surface() as Boolean{
 		y(2) = x(2)
 	end if
 
-	println("")
+	//println("")
 	for i = 0 to 2		
-		println("y"&i&"is "&y(i))
+		//println("y"&i&"is "&y(i))
 		my.touch(i) = y(i)
 	next i
 } 
@@ -2929,8 +2937,8 @@ sub step_surface(){
 		if f(i) != 0 then
 			f(i) = f(i) / Abs(f(i))
 		end if
-		println(i&" pre :"&pre(i) )
-		println("touch"&my.touch(i))
+		//println(i&" pre :"&pre(i) )
+		//println("touch"&my.touch(i))
 	next i
 
 	if b < 3 then
@@ -2943,9 +2951,9 @@ sub step_surface(){
 		end if
 	end if
 
-	PrintLn("myX is "&my.X)
-	PrintLn("myY is "&my.Y)
-	PrintLn("myZ is "&my.Z)
+	//printLn("myX is "&my.X)
+	//printLn("myY is "&my.Y)
+	//printLn("myZ is "&my.Z)
 
 	if n == 0 then
 		my.X = my.X - pre(0)
@@ -2967,9 +2975,9 @@ sub step_surface(){
 		update_touch()
 	end if
 	
-	PrintLn("myX is "&my.X)
-	PrintLn("myY is "&my.Y)
-	PrintLn("myZ is "&my.Z)
+	//printLn("myX is "&my.X)
+	//printLn("myY is "&my.Y)
+	//printLn("myZ is "&my.Z)
 	
 	my.dis_surface = -1	
 }
@@ -3013,11 +3021,7 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
-	}
-
-
-
-
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3040,26 +3044,10 @@ Agt_Step{
 
 
 //-------------------------------------------------------
-// Agent Rule
-//-------------------------------------------------------
-#begin_rule UNIVERSE.MAP.VOID_VOXEL
-Agt_Init{
-
-}
-
-Agt_Step{
-
-}
-#end_rule UNIVERSE.MAP.VOID_VOXEL
-
-
-
-
-//-------------------------------------------------------
 // Simulation Definition Division
 //-------------------------------------------------------
 Single_Simulation {
-    Step_Max = 100;
+    Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
     Exec_Wait = 0;
@@ -3080,137 +3068,69 @@ Single_Simulation {
 Repeat_Simulation {
     Value_Change = None;
     Initial_Value_Change_None {
-        Repeat_Max = 1;
+        Repeat_Max = 10;
     }
 }
 
 
 //-------------------------------------------------------
-// 2 Dimension Map Display Definition Division
+// Time Graph Output Definition Division
 //-------------------------------------------------------
-Map_Output {
-    Map_Space_Name = "Universe.map";
-    Map_Name = "map";
-    Title = "map";
-    Disable = Yes;
-    Background_Color = 255, 255, 255;
-    Position_x = 1497;
-    Position_y = 133;
-    Size_x = 551;
-    Size_y = 872;
-    Map_Cell_Size = 19;
-    Remarks = Yes;
-    Legend_Pos = Top;
+Time_Graph {
     Font_Name = "Dialog";
     Font_Char_Set = 81;
     Font_Size = 12.0;
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    FastDraw = Yes;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
-    Axis_Label = "", "";
-    Draw_Range = 0, 0, 20, 40;
-    Ruled_Line = No;
-    Text_Display = No;
-    Text_Display_Variable_Name = "";
-    Chess_Type_Display_Position = Yes;
-    Background_Transparent = No;
-    Target_Layer = 0;
-    Coordinate_Display = No;
-    Space_Kind = Square_2D;
-    BG_Pict = No;
-    BG_Type = 0;
-    BG_Var_Name = "";
-    BG_File_Name = "";
-    Origin_Position = 2;
+    Graph_Name = "探索したボクセルの数";
+    Title = "探索したボクセルの数";
+    Disable = Yes;
+    Background_Color = 255, 255, 255;
+    Remarks = Yes;
+    Legend_Pos = Top;
+    FastDraw = Yes;
+    Position_x = 0;
+    Position_y = 0;
+    Size_x = 1434;
+    Size_y = 910;
+    Map_Cell_Size = -1;
+    Axis_Label = "step数", "ボクセル数";
+    Draw_By_JFree_Chart = Yes;
+    Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
+    ScaleAuto = Yes, Yes;
     Output_Group_Name = "";
     Output {
-        Map_Element_Name = "insect";
-        Map_Element = Agent_Variable;
-        Output_Expression = "Universe.map.insect";
-        Draw_Line = No;
-        Collection_Name = "";
-        Line_Type = 0;
-        Line_Arrow = 0;
-        Line_Width = 0;
-        Line_Color = 0, 0, 0;
-        Line_Type_Variable = "";
-        Line_Arrow_Variable = "";
-        Line_Width_Variable = "";
-        Line_Color_Variable = "";
-        Agent_Color = 255,0,0;
-        Marker_Id = 1;
-        Effective_Figures = 0;
-        Format_Id = 0;
-        Agent_Image_Direction = No;
-        Icon_Type = 0;
-        Icon_Var_Name = "";
-        Icon_Transparent = No;
-        Icon_Enlarg_Reduce = No;
-        Icon_File_Name = "";
-        Num_Display = No;
-        Num_Var_Name = "";
-        Agent_Image_Magnify_by_value = Yes;
-        Agent_Image_Magnify_Value = 1.0;
-        Agent_Image_Magnify_Variable_Name = "Universe.map.insect.ID";
-        Agent_Image_Transparency_by_value = Yes;
-        Agent_Image_Transparency_Value = 0.0;
-        Agent_Image_Transparency_Variable_Name = "Universe.map.insect.ID";
+        Graph_Element_Name = "合計";
+        Line_Color = 0, 0, 255;
+        Line_Width = 3;
+        Marker_Id = 0;
+        Output_Expression = "universe.num_fin";
+        Expression_Value_Display = No;
+        Effective_Fraction_Figures = 0;
+        Graph_Element_Color = (255, 0, 0);
     }
     Output {
-        Map_Element_Name = "barrier";
-        Map_Element = Agent_Variable;
-        Output_Expression = "Universe.map.barrier";
-        Draw_Line = No;
-        Collection_Name = "";
-        Line_Type = 0;
-        Line_Arrow = 0;
-        Line_Width = 0;
-        Line_Color = 0, 0, 0;
-        Line_Type_Variable = "";
-        Line_Arrow_Variable = "";
-        Line_Width_Variable = "";
-        Line_Color_Variable = "";
-        Agent_Color = 0,0,255;
-        Marker_Id = 2;
-        Effective_Figures = 0;
-        Format_Id = 0;
-        Agent_Image_Direction = No;
-        Icon_Type = 0;
-        Icon_Var_Name = "";
-        Icon_Transparent = No;
-        Icon_Enlarg_Reduce = No;
-        Icon_File_Name = "";
-        Num_Display = No;
-        Num_Var_Name = "";
-        Agent_Image_Magnify_by_value = Yes;
-        Agent_Image_Magnify_Value = 1.0;
-        Agent_Image_Magnify_Variable_Name = "Universe.map.barrier.ID";
-        Agent_Image_Transparency_by_value = Yes;
-        Agent_Image_Transparency_Value = 0.0;
-        Agent_Image_Transparency_Variable_Name = "Universe.map.barrier.ID";
+        Graph_Element_Name = "障害物なし";
+        Line_Color = 255, 0, 0;
+        Line_Width = 2;
+        Marker_Id = 0;
+        Output_Expression = "universe.num_void_fin";
+        Expression_Value_Display = No;
+        Effective_Fraction_Figures = 0;
+        Graph_Element_Color = (0, 255, 0);
     }
     Output {
-        Map_Element_Name = "fin";
-        Map_Element = Space_Variable;
-        Output_Expression = "Universe.map.fin";
-        Space_Color_Direct_RGB = No;
-        Space_Draw_Range = 0.0, 1.0;
-        Space_Color_Min = 255, 255, 255;
-        Space_Color_Max = 204, 204, 0;
-        Marker_Id = 6;
-        Icon_Type = 0;
-        Icon_Var_Name = "";
-        Icon_Transparent = No;
-        Icon_Enlarg_Reduce = No;
-        Icon_File_Name = "";
-        Num_Display = No;
-        Num_Var_Name = "";
-        Space_Variable_Transparency_by_value = Yes;
-        Space_Variable_Transparency_Value = 0.0;
-        Space_Variable_Transparency_Variable_Name = "Universe.map.fin";
+        Graph_Element_Name = "障害物あり";
+        Line_Color = 0, 0, 255;
+        Line_Width = 2;
+        Marker_Id = 0;
+        Output_Expression = "universe.num_fill_fin";
+        Expression_Value_Display = No;
+        Effective_Fraction_Figures = 0;
+        Graph_Element_Color = (0, 51, 255);
     }
 }
 
@@ -3220,7 +3140,7 @@ Map_Output {
 //-------------------------------------------------------
 Map3D_Output {
     Map3D_Name = "map";
-    Disable = No;
+    Disable = Yes;
     Background_Image_Display = No;
     Background_Image_Type = Fixed_Value;
     Background_Image_Folder_Name = "";
@@ -3240,10 +3160,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 3;
-    Position_y = -5;
-    Size_x = 757;
-    Size_y = 909;
+    Position_x = 100;
+    Position_y = 100;
+    Size_x = 500;
+    Size_y = 300;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3252,8 +3172,8 @@ Map3D_Output {
         Space_Path_Name = Universe.map;
         Layer = 0;
         Space_3D_PositionD = 0.0,0.0,0.0;
-        Ruled_Line_Display = Yes;
-        Origin_Position = Left_Top;
+        Ruled_Line_Display = No;
+        Origin_Position = Left_Bottom;
         Display_Object_Type = None;
         Image_File_Path_Name = "";
         Model_3D_File_Path_Name = "";
@@ -3264,7 +3184,7 @@ Map3D_Output {
                 Display_Object_Image_Id = Sphere_Prism;
                 Model_3D_File_Path_Name = "";
                 Color_Type = None;
-                Color_Value = -65536;
+                Color_Value = -52429;
                 Color_Variable_Path_Name = Universe.map.insect.ID;
                 Smooth_Movement = No;
                 Draw_line = No;
@@ -3285,158 +3205,8 @@ Map3D_Output {
                 Display_Object_Image_Id = Quadrartic_Prism;
                 Model_3D_File_Path_Name = "";
                 Color_Type = None;
-                Color_Value = -16777012;
-                Color_Variable_Path_Name = Universe.map.barrier.ID;
-                Smooth_Movement = No;
-                Draw_line = No;
-                Line_AgtSet_Variable_Path_Name = "";
-                Line_Type = 1;
-                Line_Type_Variable_Path_Name = "";
-                Line_Arrow = 1;
-                Line_Arrow_Variable_Path_Name = "";
-                Line_Color = -16777216;
-                Line_Color_Variable_Path_Name = "";
-                Magnify_Value = 1.0;
-                Magnify_Variable_Path_Name = "";
-        }
-    }
-}
-
-
-//-------------------------------------------------------
-// Time Graph Output Definition Division
-//-------------------------------------------------------
-Time_Graph {
-    Font_Name = "Dialog";
-    Font_Char_Set = 81;
-    Font_Size = 12.0;
-    Font_Style = 0;
-    Font_Color = 0, 0, 0;
-    Font_Background_Color = 255, 255, 255;
-    Draw_Timing = Simulation_Step;
-    Draw_Interval = 1;
-    Graph_Name = "fin";
-    Title = "fin";
-    Disable = No;
-    Background_Color = 255, 255, 255;
-    Remarks = Yes;
-    Legend_Pos = Top;
-    FastDraw = Yes;
-    Position_x = 1340;
-    Position_y = 320;
-    Size_x = 706;
-    Size_y = 546;
-    Map_Cell_Size = -1;
-    Axis_Label = "", "";
-    Draw_By_JFree_Chart = Yes;
-    Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
-    ScaleAuto = Yes, Yes;
-    Output_Group_Name = "";
-    Output {
-        Graph_Element_Name = "fin";
-        Line_Color = 0, 0, 255;
-        Line_Width = 3;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (255, 0, 0);
-    }
-    Output {
-        Graph_Element_Name = "void";
-        Line_Color = 255, 0, 0;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_void_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 255, 0);
-    }
-    Output {
-        Graph_Element_Name = "fill";
-        Line_Color = 0, 0, 255;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_fill_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 51, 255);
-    }
-}
-
-
-//-------------------------------------------------------
-//  3 Dimension Map Display Definition Division
-//-------------------------------------------------------
-Map3D_Output {
-    Map3D_Name = "finish_map";
-    Disable = Yes;
-    Background_Image_Display = No;
-    Background_Image_Type = Fixed_Value;
-    Background_Image_Folder_Name = "";
-    Background_Image_Folder_Variable_Name = Dummy;
-    Background_Color = -1;
-    FastDraw = No;
-    Line_Display = No;
-    Camera_Position_Type = Mouse;
-    Camera_Position_Agent_Name = Universe.CameraPointer;
-    Light_Position_Type = Coordinate;
-    Light_Position = 0.0,0.0,0.0;
-    Light_Position_Agent_Name = Dummy;
-    Output_Group_Name = "";
-    Font_Name = "Dialog";
-    Font_Char_Set = 81;
-    Font_Size = 12.0;
-    Font_Style = 0;
-    Font_Color = 0, 0, 0;
-    Font_Background_Color = 255, 255, 255;
-    Position_x = 23;
-    Position_y = -10;
-    Size_x = 1298;
-    Size_y = 909;
-    Map_Cell_Size = -1;
-    Draw_Timing = Simulation_End;
-    Draw_Interval = 1;
-    Space3D_Output {
-        Space_3D_Name = "map";
-        Space_Path_Name = Universe.map;
-        Layer = 0;
-        Space_3D_PositionD = 0.0,0.0,0.0;
-        Ruled_Line_Display = Yes;
-        Origin_Position = Left_Top;
-        Display_Object_Type = None;
-        Image_File_Path_Name = "";
-        Model_3D_File_Path_Name = "";
-        Agent3D_Output {
-                Agent_3D_Name = "barrier";
-                Agent_Path_Name = Universe.map.barrier;
-                Display_Object_Type = Image_File;
-                Display_Object_Image_Id = Quadrartic_Prism;
-                Model_3D_File_Path_Name = "";
-                Color_Type = None;
                 Color_Value = -16776961;
                 Color_Variable_Path_Name = Universe.map.barrier.ID;
-                Smooth_Movement = No;
-                Draw_line = No;
-                Line_AgtSet_Variable_Path_Name = "";
-                Line_Type = 1;
-                Line_Type_Variable_Path_Name = "";
-                Line_Arrow = 1;
-                Line_Arrow_Variable_Path_Name = "";
-                Line_Color = -16777216;
-                Line_Color_Variable_Path_Name = "";
-                Magnify_Value = 1.0;
-                Magnify_Variable_Path_Name = "";
-        }
-        Agent3D_Output {
-                Agent_3D_Name = "void";
-                Agent_Path_Name = Universe.map.void_voxel;
-                Display_Object_Type = Image_File;
-                Display_Object_Image_Id = Quadrartic_Prism;
-                Model_3D_File_Path_Name = "";
-                Color_Type = None;
-                Color_Value = -10027264;
-                Color_Variable_Path_Name = Universe.map.void_voxel.ID;
                 Smooth_Movement = No;
                 Draw_line = No;
                 Line_AgtSet_Variable_Path_Name = "";
@@ -3481,12 +3251,12 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1409;
-    Console_Position_y = -11;
+    Console_Position_x = 1431;
+    Console_Position_y = 1;
     Console_Size_x = 681;
     Console_Size_y = 905;
-    Componen_Tree_Position_x = 803;
-    Componen_Tree_Position_y = 38;
+    Componen_Tree_Position_x = 153;
+    Componen_Tree_Position_y = 28;
     Componen_Tree_Size_x = 839;
     Componen_Tree_Size_y = 383;
     Console_Background_Color = 16777215;
@@ -3543,10 +3313,10 @@ Space_Map_Initial_Value {
 //-------------------------------------------------------
 Window_Rectangle {
     Window_Name = Main_Window, -11, -11, 1942, 1042;
-    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
-    Window_Name = Map_3D_Setting_Window, 508, 263, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
+    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
 }
 
 
