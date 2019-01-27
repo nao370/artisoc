@@ -47,16 +47,15 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[800][1500][40] As Boolean = ();
-        Dim is_void(0, 0)[800][1500][40] As Boolean = ();
+        Dim fin(0, 0)[800][1500][40] As Boolean = (48000000*0);
+        Dim is_void(0, 0)[800][1500][40] As Boolean = (48000000*0);
     }
-    Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
     Dim num_insect(0, 0) As Integer = (0);
-    Dim num_0(0, 0) As Integer = ();
-    Dim num_1(0, 0) As Integer = ();
-    Dim num_2(0, 0) As Integer = ();
-    Dim num_3(0, 0) As Integer = ();
+    Dim num_0(0, 0) As Integer = (0);
+    Dim num_1(0, 0) As Integer = (0);
+    Dim num_2(0, 0) As Integer = (0);
+    Dim num_3(0, 0) As Integer = (0);
 }
 
 
@@ -3179,7 +3178,7 @@ Space_Map_Initial_Value {
     Background_Image_File_Path_Name = "";
     Origin_Position = Left_Bottom;
     Space_Variable {
-        Variable = Universe.map.fin,(1920000*0);
+        Variable = Universe.map.fin,(48000000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3187,7 +3186,7 @@ Space_Map_Initial_Value {
         Max_Value_Color = 0, 255, 255;
     }
     Space_Variable {
-        Variable = Universe.map.is_void,(1920000*0);
+        Variable = Universe.map.is_void,(48000000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";

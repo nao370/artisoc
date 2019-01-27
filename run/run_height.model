@@ -3091,7 +3091,7 @@ Time_Graph {
         Output_Expression = "universe.num_0 + universe.num_1";
         Expression_Value_Display = No;
         Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (238, 238, 238);
+        Graph_Element_Color = (255, 102, 0);
     }
     Output {
         Graph_Element_Name = "20 ~ 29";
