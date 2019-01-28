@@ -242,12 +242,28 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	dim ret as Integer
 	dim flag as Boolean
 	dim kill as AgtSet
+	dim i as integer
+	dim j as integer
 
 	flag = false
 	ret = 64
 	set = CreateAgtMulti(universe.map.barrier,64)
 	if not universe.map.is_void(x,y,z) then
 		if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //…•½‚É’u‚­
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
 			for each one in set
 				t = GetAgtEntry(set,one)
 				c = t / 8
@@ -257,13 +273,6 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 					one.Y = y + c
 					one.Z = z
 					universe.map.is_void(x+b,y+c,z) = true
-					if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
 				else
 					AddAgt(kill,one)
 					ret = ret - 1
@@ -274,6 +283,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				DelAgt(one)
 			next one
 			if  not flag then
+				println("delete")
 				for each one in set
 					universe.map.is_void(one.X,one.Y,one.Z) = false
 					DelAgt(one)
@@ -281,6 +291,20 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				ret = 0
 			end if
 		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // c’·‚É’u‚­
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
 			for each one in set
 				t = GetAgtEntry(set,one)
 				a = t / 8
@@ -290,13 +314,6 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 					one.Y = y + b
 					one.Z = z + a
 					universe.map.is_void(x,y+b,z+a) = true
-					if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x,y+b,z-1) then
-							flag = true
-						end if
-					end if
 				else
 					AddAgt(kill,one)
 					ret = ret - 1
@@ -307,12 +324,28 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				DelAgt(one)
 			next one
 			if  not flag then
+				println("delete")
 				for each one in set
 					universe.map.is_void(one.X,one.Y,one.Z) = false
 					DelAgt(one)
 				next one
 				ret = 0
-			end if		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // ‰¡’·‚É’u‚­
+			end if		
+		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // ‰¡’·‚É’u‚­
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
 			for each one in set
 				t = GetAgtEntry(set,one)
 				a = t / 8
@@ -322,13 +355,6 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 					one.Y = y
 					one.Z = z + a
 					universe.map.is_void(x+c,y,z+a) = true
-					if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+c,y,z-1) then
-							flag = true
-						end if
-					end if
 				else
 					AddAgt(kill,one)
 					ret = ret - 1
@@ -339,6 +365,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				DelAgt(one)
 			next one
 			if  not flag then
+				println("delete")
 				for each one in set
 					universe.map.is_void(one.X,one.Y,one.Z) = false
 					DelAgt(one)
@@ -351,7 +378,6 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	else
 		ret = 0
 	end if
-	
 	 
 	return ret
 }
@@ -367,12 +393,28 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	dim ret as integer
 	dim flag as Boolean
 	dim kill as AgtSet
+	dim i as integer
+	dim j as integer
 
 	ret = 64
 	flag = false
 	set = CreateAgtMulti(universe.map.barrier,64)
 	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 40 - 4 then
 		if not universe.map.is_void(x,y,z) then
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
 			for each one in set
 				t = GetAgtEntry(set,one)
 				a = t  / 16 
@@ -384,13 +426,6 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 		  		one.Y = y + c
 		  		one.Z = z + a
 		  		universe.map.is_void(x+b,y+c,z+a) = true
-		  		if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
 		  	else
 		  		AddAgt(kill,one)
 					ret = ret - 1		  		
@@ -401,6 +436,7 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 				DelAgt(one)
 			next one
 			if  not flag then
+				println("delete")
 				for each one in set
 					universe.map.is_void(one.X,one.Y,one.Z) = false
 					DelAgt(one)
@@ -429,6 +465,8 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	dim ret as Integer
 	dim flag as Boolean
 		dim kill as AgtSet
+			dim i as integer
+	dim j as integer
 
 	ret = 64
 	flag = false
@@ -436,6 +474,20 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	if not universe.map.is_void(x,y,z) then
 		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
 		//‰¡’·‚Ì’Œ‚ğì‚é
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
 			for each one in set
 				t = GetAgtEntry(set,one)
 	  		a = t  / 32 
@@ -447,13 +499,6 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		  		one.Y = y + c
 		  		one.Z = z + a
 		  		universe.map.is_void(x+b,y+c,z+a) = true
-		  		if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
 		  	else
 		 	 		AddAgt(kill,one)
 					ret = ret - 1		  		
@@ -464,6 +509,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				DelAgt(one)
 			next one
 			if  not flag then
+				println("delete")
 				for each one in set
 					universe.map.is_void(one.X,one.Y,one.Z) = false
 					DelAgt(one)
@@ -472,6 +518,20 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 			end if
 		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
 		//c’·‚Ì’Œ‚ğì‚é
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
 	 		for each one in set
 	 			t = GetAgtEntry(set,one)
 	 			a = t  / 32 
@@ -483,11 +543,6 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		 			one.Y = y + c
 		 			one.Z = z + a
 		 			universe.map.is_void(x+b,y+c,z+a) = true
-		 			if z == 0 then
-						flag = true
-					elseif universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-					end if
 				else
 					AddAgt(kill,one)
 					ret = ret - 1		  	 		 		
@@ -498,6 +553,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				DelAgt(one)
 			next one
 			if  not flag then
+				println("delete")
 				for each one in set
 					universe.map.is_void(one.X,one.Y,one.Z) = false
 					DelAgt(one)
@@ -505,6 +561,20 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				ret = 0
 			end if
 	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //—§‚Á‚Ä‚é’Œ‚ğì‚é
+	  	Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
 	 		for each one in set
 	 			t = GetAgtEntry(set,one)
 	 			a = t  / 4 
@@ -516,13 +586,6 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 		 			one.Y = y + c
 		 			one.Z = z + a
 		 			universe.map.is_void(x+b,y+c,z+a) = true
-		 			if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
 		 		else
 			 		AddAgt(kill,one)
 					ret = ret - 1		  	 		 		
@@ -533,6 +596,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				DelAgt(one)
 			next one
 			if  not flag then
+				println("delete")
 				for each one in set
 					universe.map.is_void(one.X,one.Y,one.Z) = false
 					DelAgt(one)
