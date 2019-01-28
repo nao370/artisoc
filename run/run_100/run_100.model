@@ -47,15 +47,11 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[800][1500][40] As Boolean = (48000000*0);
-        Dim is_void(0, 0)[800][1500][40] As Boolean = (48000000*0);
+        Dim fin(0, 0)[800][1500][40] As Boolean = ();
+        Dim is_void(0, 0)[800][1500][40] As Boolean = ();
     }
     Dim num_fin(0, 0) <6000>  As Integer = (0);
     Dim num_insect(0, 0) As Integer = (0);
-    Dim num_0(0, 0) As Integer = (0);
-    Dim num_1(0, 0) As Integer = (0);
-    Dim num_2(0, 0) As Integer = (0);
-    Dim num_3(0, 0) As Integer = (0);
 }
 
 
@@ -87,9 +83,9 @@ Univ_Init{
 	ClearConsoleScreen()
 	make_rubble_mix(0.6)
 	make_void()
+	OpenFileCSV("step_100_"&GetCountSimulationNumber()&".csv",1,3)
 	println("")
 	println("start")
-	OpenFileCSV("step_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_.csv",1,3)
 }
 
 sub make_void(){
@@ -114,20 +110,12 @@ Univ_Step_Begin{
 
 Univ_Step_End{
 	draw_fin()
-	if (GetCountStep() mod 100 ) == 0 then
-		write_step()
-	end if
 	if (GetCountStep() mod 1000 ) == 0 then
 		write_csv()
 	end if
 	if universe.num_fin == 48000000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
 	end if
-}
-
-sub write_step(){
-	WriteFileCSV(1,GetCountStep(),false)
-	WriteFileCSV(1,universe.num_fin,true)
 }
 
 sub write_csv(){
@@ -153,7 +141,7 @@ sub write_csv(){
 		next j
 	next k
 
-	CloseFileCSV(n)
+	CloseFileCSV(n+1)
 }
 
 sub draw_fin(){
@@ -168,15 +156,6 @@ sub draw_fin(){
 					if is_in_area(i,j,k) then
 						universe.map.fin(i,j,k)= true
 						universe.num_fin = universe.num_fin + 1
-						if k < 10 then
-							universe.num_0 = universe.num_0 + 1
-						elseif k < 20 then
-							universe.num_1 = universe.num_1 + 1
-						elseif k < 30 then
-							universe.num_2 = universe.num_2 + 1
-						else
-							universe.num_3 = universe.num_3 + 1
-						end if 
 					end if
 				end if
 			next i
@@ -230,6 +209,7 @@ sub make_rubble_mix(rate as Double){
 	width = GetWidthSpace(universe.map)
 	max = height * width * 40
 	tmp_number = height * 40 * 2 + width * 40 * 2 - 40 * 4
+	println("tmp_number is"&tmp_number)
 
 	Do While tmp_rate < rate
 		x = Int(Rnd() * (width-2)) + 2
@@ -247,6 +227,7 @@ sub make_rubble_mix(rate as Double){
 		tmp_rate = tmp_number / max
 		PrintLn("rate is "&tmp_rate)
 	Loop
+			println("tmp_number is"&tmp_number)
 }
 
 function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as integer)as Integer{
@@ -576,7 +557,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.INSECT
 Agt_Init{
-my.Direction = 60.1
+my.Direction = rnd() * 360
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 my.do_type = 1
@@ -3050,68 +3031,6 @@ Repeat_Simulation {
 
 
 //-------------------------------------------------------
-// Time Graph Output Definition Division
-//-------------------------------------------------------
-Time_Graph {
-    Font_Name = "Dialog";
-    Font_Char_Set = 81;
-    Font_Size = 12.0;
-    Font_Style = 0;
-    Font_Color = 0, 0, 0;
-    Font_Background_Color = 255, 255, 255;
-    Draw_Timing = Simulation_Step;
-    Draw_Interval = 1;
-    Graph_Name = "探索したボクセルの数";
-    Title = "探索したボクセルの数";
-    Disable = No;
-    Background_Color = 255, 255, 255;
-    Remarks = Yes;
-    Legend_Pos = Top;
-    FastDraw = Yes;
-    Position_x = 0;
-    Position_y = 0;
-    Size_x = 1434;
-    Size_y = 910;
-    Map_Cell_Size = -1;
-    Axis_Label = "step数", "ボクセル数";
-    Draw_By_JFree_Chart = Yes;
-    Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
-    ScaleAuto = Yes, Yes;
-    Output_Group_Name = "";
-    Output {
-        Graph_Element_Name = "合計";
-        Line_Color = 0, 0, 255;
-        Line_Width = 3;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (255, 0, 0);
-    }
-    Output {
-        Graph_Element_Name = "障害物なし";
-        Line_Color = 255, 0, 0;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_void_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 255, 0);
-    }
-    Output {
-        Graph_Element_Name = "障害物あり";
-        Line_Color = 0, 0, 255;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_fill_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 51, 255);
-    }
-}
-
-
-//-------------------------------------------------------
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
@@ -3178,7 +3097,7 @@ Space_Map_Initial_Value {
     Background_Image_File_Path_Name = "";
     Origin_Position = Left_Bottom;
     Space_Variable {
-        Variable = Universe.map.fin,(48000000*0);
+        Variable = Universe.map.fin,(1920000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3186,7 +3105,7 @@ Space_Map_Initial_Value {
         Max_Value_Color = 0, 255, 255;
     }
     Space_Variable {
-        Variable = Universe.map.is_void,(48000000*0);
+        Variable = Universe.map.is_void,(1920000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";

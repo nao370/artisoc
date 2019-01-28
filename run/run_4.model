@@ -82,7 +82,7 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
-	universe.num_insect = 4
+	universe.num_insect = 100
 	ClearConsoleScreen()
 	make_rubble_mix(0.6)
 	make_void()
@@ -115,7 +115,7 @@ Univ_Step_End{
 	if (GetCountStep() mod 1000 ) == 0 then
 		write_csv()
 	end if
-	if universe.num_fin == 1920000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+	if universe.num_fin == 48000000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
 	end if
 }
@@ -197,8 +197,6 @@ function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
 
 Univ_Finish{
 	println("num_fin_sum : "&universe.num_fin)
-	println("num_fin_barrier : "&universe.num_fill_fin)
-	println("num_fin_voxel : "&universe.num_void_fin)
 }
 
 sub make_rubble_mix(rate as Double){
@@ -3190,7 +3188,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, 0, 0, 800, 700;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
