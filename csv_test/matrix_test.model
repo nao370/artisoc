@@ -2990,47 +2990,60 @@ sub step_surface(){
 }
 
 function calculate_theta() as Double{
-	dim i as Integer
-	dim nor(3) as Double
-	dim pnor(3) as Double
-	dim no as Double
-	dim p as Double
 	dim theta as Double
-	
-/*	for i = 0 to 2
-		if i != n then
-			nor(i) = my.forward_vector(i)
-			pnor(i) = GetHistory(my.forward_vector(i),1)
-		else
-			nor(i) = 0
-			pnor(i) = 0
-		end if
-		if nor(i) != 0 then
-			no = nor(i)
-		end if
-		if pnor(i) != 0 then
-			p = pnor(i)
+	dim n as Integer
+	dim i as Integer
+	dim jud as Double
+	dim f as Double
+
+	for i = 0 to 2
+		if my.normal_vector(i) != 0 then
+			n = my.normal_vector(i)//³‚©‚ç‚Ó‚ê‚Ä‚é‚©‚Ç‚¤‚©
+			break
 		end if
 	next i
-
-	if no * p > 0 then
-		if sign > 0 then
-			theta = DegreeToRad(270)
+	if my.b_type == 0 then
+		if i == 1 then
+			f = my.forward_vector(2)
+		elseif i == 2 then
+			f = my.forward_vector(1)
 		else
-			theta = DegreeToRad(90)
+			println("miss")
+		end if
+	elseif my.b_type == 1 then
+		if i == 0 then
+			f = my.forward_vector(2)
+		elseif i == 2 then
+			f = my.forward_vector(0)
+		else
+			println("miss")
+		end if
+	elseif my.b_type == 2 then
+		if i == 0 then
+			f = my.forward_vector(0)
+		elseif i == 1 then
+			f = my.forward_vector(1)
+		else
+			println("miss")
 		end if
 	else
-		if sign < 0 then
-			theta = DegreeToRad(270)
-		else
-			theta = DegreeToRad(90)
-		end if
-	end if*/
+		println("miss")
+	end if
 
-	theta = DegreeToRad(90)
+	jud = f * n * my.ap_or_dis
+
+	if jud > 0 then
+		theta = DegreeToRad(90)
+	elseif jud < 0 then
+		theta = DegreeToRad(270)
+	else
+		println("miss")
+		println("jud :"&jud)
+		theta = DegreeToRad(90)
+	end if
 
 	return theta
-	}
+	
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3107,7 +3120,7 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 6;
+    Position_x = 0;
     Position_y = 1;
     Size_x = 1121;
     Size_y = 824;
@@ -3174,7 +3187,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -3259,7 +3272,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
