@@ -13,7 +13,7 @@ Version = 4.0;
 //-------------------------------------------------------
 UNIVERSE {
     Space map(0,0),Square_2D(160, 300, !Loop, North, 1, Map_3D){
-        AgtType insect(0, 0)[1] {
+        AgtType insect(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
             Dim Y(0, 0) <2>  As Double = (0.0);
@@ -62,18 +62,6 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
-    UNIVERSE.MAP.INSECT.X = 1(1.0);
-    UNIVERSE.MAP.INSECT.Y = 1(1.0);
-    UNIVERSE.MAP.INSECT.Z = 1(0.0);
-    UNIVERSE.MAP.INSECT.LAYER = 1(0);
-    UNIVERSE.MAP.INSECT.DIRECTION = 1(0.0);
-    UNIVERSE.MAP.INSECT.ANGLE = 1(0.0);
-    UNIVERSE.MAP.INSECT.FORWARD_VECTOR = 1(3*0.0);
-    UNIVERSE.MAP.INSECT.BASE_VECTOR = 1(3*0.0);
-    UNIVERSE.MAP.INSECT.ANGLE_SURFACE = 1(0.0);
-    UNIVERSE.MAP.INSECT.B_TYPE = 1(0);
-    UNIVERSE.MAP.INSECT.NORMAL_VECTOR = 1(2*0.0, 1.0);
-    UNIVERSE.MAP.INSECT.TOUCH = 1(3*0);
 }
 
 
@@ -83,6 +71,7 @@ Initial_Value {
 #begin_rule UNIVERSE
 Univ_Init{
 	universe.num_insect = 4
+	CreateAgtMulti(universe.map.insect,universe.num_insect)
 	ClearConsoleScreen()
 	make_rubble_mix(0.6)
 	make_void()
@@ -112,7 +101,7 @@ Univ_Step_Begin{
 
 Univ_Step_End{
 	draw_fin()
-	if (GetCountStep() mod 1000 ) == 0 then
+	if (GetCountStep() mod 2000 ) == 0 then
 		write_csv()
 	end if
 	if universe.num_fin == 1920000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
@@ -127,7 +116,7 @@ sub write_csv(){
 	dim n as Integer
 	dim m as Integer
 
-	n = GetCountStep() / 1000
+	n = GetCountStep() / 2000
 	m = universe.num_insect
 	OpenFileCSV("voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
 
@@ -197,8 +186,6 @@ function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
 
 Univ_Finish{
 	println("num_fin_sum : "&universe.num_fin)
-	println("num_fin_barrier : "&universe.num_fill_fin)
-	println("num_fin_voxel : "&universe.num_void_fin)
 }
 
 sub make_rubble_mix(rate as Double){
@@ -566,9 +553,12 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.INSECT
 Agt_Init{
-my.Direction = 60.1
+my.Direction = Rnd()*360
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
+my.X = 1
+my.Y = 1
+my.Z = 0
 my.do_type = 1
 my.ap_or_dis = 1
 my.position_type = 0
@@ -3190,7 +3180,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, 0, 0, 800, 700;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;

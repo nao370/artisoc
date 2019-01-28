@@ -53,10 +53,10 @@ UNIVERSE {
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
     Dim num_insect(0, 0) As Integer = (0);
-    Dim num_0(0, 0) As Integer = ();
-    Dim num_1(0, 0) As Integer = ();
-    Dim num_2(0, 0) As Integer = ();
-    Dim num_3(0, 0) As Integer = ();
+    Dim num_0(0, 0) As Integer = (0);
+    Dim num_1(0, 0) As Integer = (0);
+    Dim num_2(0, 0) As Integer = (0);
+    Dim num_3(0, 0) As Integer = (0);
 }
 
 
@@ -132,7 +132,7 @@ sub write_csv(){
 
 	n = GetCountStep() / 1000
 	m = universe.num_insect
-	OpenFileCSV("voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
+	OpenFileCSV("voxel_"&m&"_height_"&GetCountStep()&".csv",n,3)
 
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
