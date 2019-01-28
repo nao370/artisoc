@@ -84,7 +84,7 @@ Initial_Value {
 Univ_Init{
 	universe.num_insect = 1
 	ClearConsoleScreen()
-	make_rubble_mix(0.6)
+	make_rubble_mix(0.2)
 	make_void()
 	println("")
 	println("start")
@@ -113,9 +113,9 @@ Univ_Step_Begin{
 Univ_Step_End{
 	draw_fin()
 	if (GetCountStep() mod 1000 ) == 0 then
-//		write_csv()
+		write_csv()
 	end if
-	if universe.num_fin == 32000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+	if universe.num_fin == 480000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
 	end if
 }
@@ -1741,6 +1741,10 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,1) = 0
 			my.next_vector(1,2) = 0
 			
+			u(0) = 1
+			u(1) = 0
+			u(2) = 0
+
 			if not my.is_hemi then
 				my.next_vector(2,0) = my.forward_vector(0)
 				my.next_vector(2,1) = Abs(my.forward_vector(2)) * pre_t(1) * my.ap_or_dis
@@ -1765,6 +1769,10 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,0) = 0
 			my.next_vector(1,1) = -1
 			my.next_vector(1,2) = 0
+			
+			u(0) = 0
+			u(1) = 1
+			u(2) = 0
 
 			if not my.is_hemi then
 				my.next_vector(2,0) = Abs(my.forward_vector(2)) * pre_t(0) * my.ap_or_dis
@@ -1790,6 +1798,10 @@ sub store_vector(type as Integer,angle as Double){
 			my.next_vector(1,0) = 0
 			my.next_vector(1,1) = 0
 			my.next_vector(1,2) = -1
+			
+			u(0) = 0
+			u(1) = 0
+			u(2) = 1
 
 			if not my.is_hemi then
 				my.next_vector(2,0) = Abs(my.forward_vector(1)) * pre_t(0) * my.ap_or_dis
@@ -1825,16 +1837,14 @@ sub matrix(){
 	dim j as Integer
 	dim n as Integer
 
+	n = my.b_type
 	x(0) = my.forward_vector(0)
 	x(1) = my.forward_vector(1)
 	x(2) = my.forward_vector(2)
 
-	n = my.b_type
-	
 	for i = 0 to 2
 		PrintLn("x("&i&") : " & x(i))
 	next i
-	PrintLn("b_type :"&n)
 
 	theta = calculate_theta()
 
@@ -1844,14 +1854,13 @@ sub matrix(){
 		b(2) = 0
 	elseif n == 1 then
 		b(0) = 0
-	 	b(1) = 1
+		b(1) = 1
 		b(2) = 0
 	elseif n == 2 then
 		b(0) = 0
 		b(1) = 0
 		b(2) = 1
 	else
-		println("miss")
 	end if
 
 	R(0,0) = b(0)^2 * (1 - Cos(theta)) + Cos(theta)
@@ -1883,11 +1892,9 @@ sub matrix(){
 		PrintLn("next_vector("&i&") : " & my.next_vector(2,i))
 	next i
 
+	println("")
 }
 
-Function calculate_theta() as Double{
-	return DegreeToRad(90)
-}
 
 sub select_vector(){
 //my.next_vectorから1つ確率で選んでmy.forward_vectorに入れる
@@ -2982,7 +2989,7 @@ sub step_surface(){
 	my.dis_surface = -1	
 }
 
-function calculate_theta(n as Integer,sign as Integer) as Double{
+function calculate_theta() as Double{
 	dim i as Integer
 	dim nor(3) as Double
 	dim pnor(3) as Double
@@ -2990,7 +2997,7 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	dim p as Double
 	dim theta as Double
 	
-	for i = 0 to 2
+/*	for i = 0 to 2
 		if i != n then
 			nor(i) = my.forward_vector(i)
 			pnor(i) = GetHistory(my.forward_vector(i),1)
@@ -3018,10 +3025,12 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 		else
 			theta = DegreeToRad(90)
 		end if
-	end if
+	end if*/
+
+	theta = DegreeToRad(90)
 
 	return theta
-	
+	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3074,68 +3083,6 @@ Repeat_Simulation {
 
 
 //-------------------------------------------------------
-// Time Graph Output Definition Division
-//-------------------------------------------------------
-Time_Graph {
-    Font_Name = "Dialog";
-    Font_Char_Set = 81;
-    Font_Size = 12.0;
-    Font_Style = 0;
-    Font_Color = 0, 0, 0;
-    Font_Background_Color = 255, 255, 255;
-    Draw_Timing = Simulation_Step;
-    Draw_Interval = 1;
-    Graph_Name = "探索したボクセルの数";
-    Title = "探索したボクセルの数";
-    Disable = Yes;
-    Background_Color = 255, 255, 255;
-    Remarks = Yes;
-    Legend_Pos = Top;
-    FastDraw = Yes;
-    Position_x = 0;
-    Position_y = 0;
-    Size_x = 1434;
-    Size_y = 910;
-    Map_Cell_Size = -1;
-    Axis_Label = "step数", "ボクセル数";
-    Draw_By_JFree_Chart = Yes;
-    Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
-    ScaleAuto = Yes, Yes;
-    Output_Group_Name = "";
-    Output {
-        Graph_Element_Name = "合計";
-        Line_Color = 0, 0, 255;
-        Line_Width = 3;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (255, 0, 0);
-    }
-    Output {
-        Graph_Element_Name = "障害物なし";
-        Line_Color = 255, 0, 0;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_void_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 255, 0);
-    }
-    Output {
-        Graph_Element_Name = "障害物あり";
-        Line_Color = 0, 0, 255;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_fill_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 51, 255);
-    }
-}
-
-
-//-------------------------------------------------------
 //  3 Dimension Map Display Definition Division
 //-------------------------------------------------------
 Map3D_Output {
@@ -3160,10 +3107,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 100;
-    Position_y = 100;
-    Size_x = 500;
-    Size_y = 300;
+    Position_x = 6;
+    Position_y = 1;
+    Size_x = 1121;
+    Size_y = 824;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3173,7 +3120,7 @@ Map3D_Output {
         Layer = 0;
         Space_3D_PositionD = 0.0,0.0,0.0;
         Ruled_Line_Display = No;
-        Origin_Position = Left_Bottom;
+        Origin_Position = Left_Top;
         Display_Object_Type = None;
         Image_File_Path_Name = "";
         Model_3D_File_Path_Name = "";
@@ -3184,7 +3131,7 @@ Map3D_Output {
                 Display_Object_Image_Id = Sphere_Prism;
                 Model_3D_File_Path_Name = "";
                 Color_Type = None;
-                Color_Value = -52429;
+                Color_Value = -65485;
                 Color_Variable_Path_Name = Universe.map.insect.ID;
                 Smooth_Movement = No;
                 Draw_line = No;
@@ -3251,8 +3198,8 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1431;
-    Console_Position_y = 1;
+    Console_Position_x = 1669;
+    Console_Position_y = 8;
     Console_Size_x = 681;
     Console_Size_y = 905;
     Componen_Tree_Position_x = 153;
