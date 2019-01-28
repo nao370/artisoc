@@ -47,8 +47,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[20][40][40] As Boolean = (32000*0);
-        Dim is_void(0, 0)[20][40][40] As Boolean = (32000*0);
+        Dim fin(0, 0)[20][40][16] As Boolean = (12800*0);
+        Dim is_void(0, 0)[20][40][16] As Boolean = (12800*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -95,10 +95,10 @@ dim i as Integer
 dim j as Integer
 dim k as Integer
 
-for k= 0 to 39
+for k= 0 to 15
 for j = 0 to GetHeightSpace(universe.map) -1
 for i = 0 to GetWidthSpace(universe.map) -1
-	if i == 0 or j == GetHeightSpace(universe.map)-1 or j == 0 or i == GetWidthSpace(universe.map) - 1 or k == 39 then
+	if i == 0 or j == GetHeightSpace(universe.map)-1 or j == 0 or i == GetWidthSpace(universe.map) - 1 or k == 15 then
 		universe.map.is_void(i,j,k) = true
 	end if
 next i
@@ -113,7 +113,7 @@ Univ_Step_Begin{
 Univ_Step_End{
 	draw_fin()
 	if (GetCountStep() mod 1000 ) == 0 then
-		write_csv()
+//		write_csv()
 	end if
 	if universe.num_fin == 480000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
@@ -131,7 +131,7 @@ sub write_csv(){
 	m = universe.num_insect
 	OpenFileCSV("voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
 
-	for k= 0 to 39
+	for k= 0 to 15
 		for j = 0 to GetHeightSpace(universe.map) -1
 			for i = 0 to GetWidthSpace(universe.map) -1
 				WriteFileCSV(n,i,false)
@@ -151,7 +151,7 @@ sub draw_fin(){
 	dim j as Integer
 	dim k as Integer
 
-	for k= 0 to 39
+	for k= 0 to 15
 		for j = 0 to GetHeightSpace(universe.map) -1
 			for i = 0 to GetWidthSpace(universe.map) -1
 				if not universe.map.fin(i,j,k) then
@@ -216,14 +216,14 @@ sub make_rubble_mix(rate as Double){
 	tmp_rate = 0
 	height = GetHeightSpace(universe.map)
 	width = GetWidthSpace(universe.map)
-	max = height * width * 40
-	tmp_number = height * 40 * 2 + width * 40 * 2 - 40 * 4
+	max = height * width * 16
+	tmp_number = height * 16 * 2 + width * 16 * 2 - 16 * 4
 	println("tmp_number is"&tmp_number)
 
 	Do While tmp_rate < rate
 		x = Int(Rnd() * (width-2)) + 2
 		y = Int(Rnd() * (height-2)) + 2
-		z = Int(Rnd() * (40))
+		z = Int(Rnd() * (16))
 		pattern = Int(Rnd() * 3)
 		r = Rnd() * 100
 		if r < 33 then
@@ -288,7 +288,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				next one
 				ret = 0
 			end if
-		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // 縦長に置く
+		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 16- 8 then // 縦長に置く
 			for each one in set
 				t = GetAgtEntry(set,one)
 				a = t / 8
@@ -320,7 +320,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 					DelAgt(one)
 				next one
 				ret = 0
-			end if		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // 横長に置く
+			end if		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 16 - 8 then // 横長に置く
 			for each one in set
 				t = GetAgtEntry(set,one)
 				a = t / 8
@@ -379,7 +379,7 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	ret = 64
 	flag = false
 	set = CreateAgtMulti(universe.map.barrier,64)
-	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 40 - 4 then
+	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 16 - 4 then
 		if not universe.map.is_void(x,y,z) then
 			for each one in set
 				t = GetAgtEntry(set,one)
@@ -442,7 +442,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	flag = false
 	set = CreateAgtMulti(universe.map.barrier,64)
 	if not universe.map.is_void(x,y,z) then
-		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
+		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 16 -2  then
 		//横長の柱を作る
 			for each one in set
 				t = GetAgtEntry(set,one)
@@ -478,7 +478,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				next one
 				ret = 0
 			end if
-		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
+		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 16 -2 then
 		//縦長の柱を作る
 	 		for each one in set
 	 			t = GetAgtEntry(set,one)
@@ -512,7 +512,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				next one
 				ret = 0
 			end if
-	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //立ってる柱を作る
+	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 16 - 16 then //立ってる柱を作る
 	 		for each one in set
 	 			t = GetAgtEntry(set,one)
 	 			a = t  / 4 
@@ -600,6 +600,7 @@ sub clear_val(){
 //毎ステップ初期化必要な変数を初期化する関数
 	my.dis_surface = -1
 	my.is_back = false
+	my.is_hemi = false
 }
 
 
@@ -1847,6 +1848,7 @@ sub matrix(){
 	next i
 
 	theta = calculate_theta()
+	println("theta :"&RadToDegree(theta))
 
 	if n == 0 then
 		b(0) = 1
@@ -1875,14 +1877,9 @@ sub matrix(){
 	R(2,1) = b(1) * b(2) * (1 - Cos(theta)) + b(0) * Sin(theta)
 	R(2,2) = b(2)^2 * (1 - Cos(theta)) + Cos(theta)
 
-	println("")
-	for j = 0 to 2
 	for i = 0 to 2
-		PrintLn("R("&i&","&j&") : "&R(i,j))
+		PrintLn("forward_vector("&i&") : " & my.forward_vector(i))
 	next i
-	next j
-	println("")
-	
 	for i = 0 to 2
 		y(i) = x(0) * R(i,0) + x(1) * R(i,1) + x(2) * R(i,2)
 		PrintLn("y("&i&") : " & y(i))
@@ -1902,6 +1899,7 @@ sub select_vector(){
 	dim prob(3) as Double
 	dim r as Double
 	dim sum_diff as Double
+	dim flag as Boolean
 	
 	make_base_vector()
 	sum_diff = calclator_sum_diff()
@@ -1909,7 +1907,19 @@ sub select_vector(){
 		prob(i) = calculate_probabilistic(my.next_vector(i,0),my.next_vector(i,1),my.next_vector(i,2),sum_diff)
 	next i
 	r = Rnd()
-	
+
+	//test用
+	if my.next_vector(2,0) == 0 and my.next_vector(2,0) == 0 and my.next_vector(2,0) == 0 then
+		flag = false
+	else
+		flag = true
+	end if	
+	if flag then
+		set_normal_vector(my.n_normal(2))		
+		my.forward_vector(0) = my.next_vector(2,0)
+		my.forward_vector(1) = my.next_vector(2,1)
+		my.forward_vector(2) = my.next_vector(2,2)
+	else
 	if r < prob(0) then
 		set_normal_vector(my.n_normal(0))
 		my.forward_vector(0) = my.next_vector(0,0)
@@ -1925,6 +1935,7 @@ sub select_vector(){
 		my.forward_vector(0) = my.next_vector(2,0)
 		my.forward_vector(1) = my.next_vector(2,1)
 		my.forward_vector(2) = my.next_vector(2,2)
+	end if
 	end if
 
 	//println("my.forward_vector is")
@@ -2096,7 +2107,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 function is_bend() as Boolean{
 	dim ret as Boolean
 
-	if Rnd() < 0.01 then
+	if Rnd() < 0.1 then
 		ret = true
 	else
 		ret = false
@@ -3020,9 +3031,9 @@ function calculate_theta() as Double{
 		end if
 	elseif my.b_type == 2 then
 		if i == 0 then
-			f = my.forward_vector(0)
-		elseif i == 1 then
 			f = my.forward_vector(1)
+		elseif i == 1 then
+			f = my.forward_vector(0)
 		else
 			println("miss")
 		end if
@@ -3031,6 +3042,9 @@ function calculate_theta() as Double{
 	end if
 
 	jud = f * n * my.ap_or_dis
+	println("forward"&f)
+	println("normal" &n)
+	println("ap_or_dis"& my.ap_or_dis)
 
 	if jud > 0 then
 		theta = DegreeToRad(90)
@@ -3043,7 +3057,7 @@ function calculate_theta() as Double{
 	end if
 
 	return theta
-	
+	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3120,10 +3134,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 0;
-    Position_y = 1;
+    Position_x = 5;
+    Position_y = 0;
     Size_x = 1121;
-    Size_y = 824;
+    Size_y = 911;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3132,7 +3146,7 @@ Map3D_Output {
         Space_Path_Name = Universe.map;
         Layer = 0;
         Space_3D_PositionD = 0.0,0.0,0.0;
-        Ruled_Line_Display = No;
+        Ruled_Line_Display = Yes;
         Origin_Position = Left_Top;
         Display_Object_Type = None;
         Image_File_Path_Name = "";
@@ -3187,7 +3201,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 136, 49;
+    Display_Area = 0, 0, 198, 66;
     Display_Type = 0;
 }
 
@@ -3211,12 +3225,12 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1669;
-    Console_Position_y = 8;
+    Console_Position_x = 1641;
+    Console_Position_y = -1;
     Console_Size_x = 681;
     Console_Size_y = 905;
-    Componen_Tree_Position_x = 153;
-    Componen_Tree_Position_y = 28;
+    Componen_Tree_Position_x = 1121;
+    Componen_Tree_Position_y = -8;
     Componen_Tree_Size_x = 839;
     Componen_Tree_Size_y = 383;
     Console_Background_Color = 16777215;
@@ -3250,7 +3264,7 @@ Space_Map_Initial_Value {
     Background_Image_File_Path_Name = "";
     Origin_Position = Left_Bottom;
     Space_Variable {
-        Variable = Universe.map.fin,(32000*0);
+        Variable = Universe.map.fin,(12800*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3258,7 +3272,7 @@ Space_Map_Initial_Value {
         Max_Value_Color = 0, 255, 255;
     }
     Space_Variable {
-        Variable = Universe.map.is_void,(32000*0);
+        Variable = Universe.map.is_void,(12800*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3272,7 +3286,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -11, -11, 1942, 1042;
     Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
