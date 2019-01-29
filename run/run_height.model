@@ -3039,7 +3039,7 @@ Single_Simulation {
 Repeat_Simulation {
     Value_Change = None;
     Initial_Value_Change_None {
-        Repeat_Max = 10;
+        Repeat_Max = 1;
     }
 }
 
