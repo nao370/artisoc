@@ -3158,7 +3158,7 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 0;
+    Exec_Wait = 9;
     Exec_Wait_Max = 1000;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
