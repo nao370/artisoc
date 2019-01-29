@@ -1911,7 +1911,7 @@ sub matrix(){
 	x(1) = my.forward_vector(1)
 	x(2) = my.forward_vector(2)
 
-	for i = 0 to 2
+/*	for i = 0 to 2
 		PrintLn("x("&i&") : " & x(i))
 	next i
 
@@ -1920,24 +1920,24 @@ sub matrix(){
 	next i
 
 	println("b_type :"&my.b_type)
-
+*/
 	theta = calculate_theta()
-	println("theta :"&RadToDegree(theta))
+	//println("theta :"&RadToDegree(theta))
 
-	println("")
+	//println("")
 
 	if n == 0 then
-		b(0) = 1
+		b(0) = -1
 		b(1) = 0
 		b(2) = 0
 	elseif n == 1 then
 		b(0) = 0
-		b(1) = 1
+		b(1) = -1
 		b(2) = 0
 	elseif n == 2 then
 		b(0) = 0
 		b(1) = 0
-		b(2) = 1
+		b(2) = -1
 	else
 	end if
 
@@ -1957,7 +1957,6 @@ sub matrix(){
 		y(i) = x(0) * R(i,0) + x(1) * R(i,1) + x(2) * R(i,2)
 		PrintLn("y("&i&") : " & y(i))
 	next i
-println("")
 	for i = 0 to 2
 		PrintLn("next_vector("&i&") : " & my.next_vector(2,i))
 	next i
@@ -3090,13 +3089,13 @@ function calculate_theta() as Double{
 		if i == 1 then
 			f = my.forward_vector(2)
 		elseif i == 2 then
-			f = my.forward_vector(1)
+			f = -my.forward_vector(1)
 		else
 			println("miss")
 		end if
 	elseif my.b_type == 1 then
 		if i == 0 then
-			f = my.forward_vector(2)
+			f = -my.forward_vector(2)
 		elseif i == 2 then
 			f = my.forward_vector(0)
 		else
@@ -3106,7 +3105,7 @@ function calculate_theta() as Double{
 		if i == 0 then
 			f = my.forward_vector(1)
 		elseif i == 1 then
-			f = my.forward_vector(0)
+			f = -my.forward_vector(0)
 		else
 			println("miss")
 		end if
@@ -3115,10 +3114,10 @@ function calculate_theta() as Double{
 	end if
 
 	jud = f * n * my.ap_or_dis
-	println("forward"&f)
+	/*println("forward"&f)
 	println("normal" &n)
 	println("ap_or_dis"& my.ap_or_dis)
-
+*/
 	if jud > 0 then
 		theta = DegreeToRad(90)
 	elseif jud < 0 then
@@ -3209,7 +3208,7 @@ Map3D_Output {
     Font_Background_Color = 255, 255, 255;
     Position_x = 5;
     Position_y = 0;
-    Size_x = 1121;
+    Size_x = 1043;
     Size_y = 911;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
@@ -3298,13 +3297,13 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1641;
-    Console_Position_y = -1;
+    Console_Position_x = 1645;
+    Console_Position_y = -6;
     Console_Size_x = 681;
     Console_Size_y = 905;
-    Componen_Tree_Position_x = 1121;
+    Componen_Tree_Position_x = 1084;
     Componen_Tree_Position_y = -8;
-    Componen_Tree_Size_x = 839;
+    Componen_Tree_Size_x = 876;
     Componen_Tree_Size_y = 383;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
