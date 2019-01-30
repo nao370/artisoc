@@ -67,7 +67,7 @@ UNIVERSE {
 //-------------------------------------------------------
 Initial_Value {
     UNIVERSE.NUM_INSECT = 1(2);
-    UNIVERSE.T = 1(100);
+    UNIVERSE.T = 1(50);
     UNIVERSE.ALPHA = 1(0.8);
 }
 
@@ -593,8 +593,6 @@ dim i as Integer
 	end if
 	forward_step()
 	clear_val()
-
-	println("iD :"&my.ID&"    forward(0) :"&my.forward_vector(0)&"    forward(1) : "&my.forward_vector(1)&"  forward(2):"&my.forward_vector(2))
 }
 
 function is_control() as Boolean{
@@ -659,54 +657,84 @@ sub repulsive_barrier(){
 	dim d as Double
 	dim n as Integer
 	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim max(3) as Integer
+	dim min(3) as Integer
 
 	r = 2
 	n = get_surface()
-	MakeOneAgtSetAroundOwn(objectset,r,universe.map.barrier,false)
-	if CountAgtSet(objectset) > 0 then
-			if n == 0 then
-					for each one in objectset
-						if one.X == my.X then
-							diff(0) = my.X - one.X
-							diff(1) = my.Y - one.Y
-							diff(2) = my.Z - one.Z
-							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+	min(0) = Int(my.X)-2
+	min(1) = Int(my.Y)-2
+	min(2) = Int(my.Z)-2
+
+	max(0) = Int(my.X)+2
+	max(1) = Int(my.Y)+2
+	max(2) = Int(my.Z)+2
+
+	for i = 0 to 2
+		if min(i) < 0 then
+			min(i) = 0
+		end if
+	next i
+
+	if max(0) >=  GetWidthSpace(universe.map) then
+		max(0) = GetWidthSpace(universe.map)
+	end if
+	if max(1) >=  GetheightSpace(universe.map) then
+		max(1) = GetheightSpace(universe.map)
+	end if
+	if max(2) >=  40 then
+		max(2) = 39
+	end if
 	
-							for i = 0 to 2
-								my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
-							next i
-						end if
-					next one
-			elseif n == 1 then
-				for each one in objectset
-						if one.Y == my.Y then
-							diff(0) = my.X - one.X
-							diff(1) = my.Y - one.Y
-							diff(2) = my.Z - one.Z
-							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-	
-							for i = 0 to 2
-								my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
-							next i
-						end if
-					next one
-			elseif n == 2 then
-				for each one in objectset
-						if one.Z == my.Z then
-							diff(0) = my.X - one.X
-							diff(1) = my.Y - one.Y
-							diff(2) = my.Z - one.Z
-							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-	
-							for i = 0 to 2
-								my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
-							next i
-						end if
-					next one
-			else
-				PrintLn("miss")
-			end if
+	if n == 0 then
+		for j = min(2) to max(2) step 1
+			for i = min(1) to max(1) step 1
+				if universe.map.is_void(my.X,i,j) then
+					diff(0) = 0
+					diff(1) = my.Y - i
+					diff(2) = my.Z - j
+					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+						
+					for k = 0 to 2
+						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
+					next k
+				end if
+			next i
+		next j
+	elseif n == 1 then
+		for j = min(2) to max(2) step 1
+			for i = min(0) to max(0) step 1
+				if universe.map.is_void(i,my.Y,j) then
+					diff(0) = my.X - i
+					diff(1) = 0
+					diff(2) = my.Z - j
+					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+						
+					for k = 0 to 2
+						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
+					next k
+				end if
+			next i
+		next j
+	elseif n == 2 then
+		for j = min(1) to max(1) step 1
+			for i = min(0) to max(0) step 1
+				if universe.map.is_void(i,j,my.Z) then
+					diff(0) = my.X - i
+					diff(1) = my.Y - j
+					diff(2) = 0
+					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+						
+					for k = 0 to 2
+						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
+					next k
+				end if
+			next i
+		next j
 	else
+		println("miss")
 	end if
 }
 
@@ -3207,10 +3235,10 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 884;
-    Position_y = 606;
-    Size_x = 884;
-    Size_y = 303;
+    Position_x = 403;
+    Position_y = 598;
+    Size_x = 403;
+    Size_y = 299;
     Map_Cell_Size = -1;
     Axis_Label = "stepêî", "É{ÉNÉZÉãêî";
     Draw_By_JFree_Chart = Yes;
@@ -3275,10 +3303,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 882;
-    Position_y = 0;
-    Size_x = 884;
-    Size_y = 606;
+    Position_x = 403;
+    Position_y = 299;
+    Size_x = 403;
+    Size_y = 299;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3408,14 +3436,14 @@ Others_Data {
     Debug_Position_y = 8;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = -1;
-    Console_Position_y = 575;
-    Console_Size_x = 884;
-    Console_Size_y = 303;
+    Console_Position_x = 0;
+    Console_Position_y = 448;
+    Console_Size_x = 403;
+    Console_Size_y = 448;
     Componen_Tree_Position_x = 0;
-    Componen_Tree_Position_y = 606;
-    Componen_Tree_Size_x = 884;
-    Componen_Tree_Size_y = 303;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 806;
+    Componen_Tree_Size_y = 897;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -3469,9 +3497,9 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, 950, 0, 980, 1030;
     Window_Name = Output_Setting_Window, 746, 346, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Artisoc_Help_Window, 10, 10, 796, 853;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
     Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
 }
