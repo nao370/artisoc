@@ -242,9 +242,9 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 
 	flag = false
 	ret = 64
-	set = CreateAgtMulti(universe.map.barrier,64)
 	if not universe.map.is_void(x,y,z) then
 		if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //…•½‚É’u‚­
+			set = CreateAgtMulti(universe.map.barrier,64)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -286,6 +286,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				ret = 0
 			end if
 		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // c’·‚É’u‚­
+			set = CreateAgtMulti(universe.map.barrier,64)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -327,6 +328,7 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				ret = 0
 			end if		
 		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // ‰¡’·‚É’u‚­
+			set = CreateAgtMulti(universe.map.barrier,64)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -393,9 +395,9 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 
 	ret = 64
 	flag = false
-	set = CreateAgtMulti(universe.map.barrier,64)
 	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 40 - 4 then
 		if not universe.map.is_void(x,y,z) then
+			set = CreateAgtMulti(universe.map.barrier,64)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -465,9 +467,9 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 
 	ret = 64
 	flag = false
-	set = CreateAgtMulti(universe.map.barrier,64)
 	if not universe.map.is_void(x,y,z) then
 		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
+		set = CreateAgtMulti(universe.map.barrier,64)
 		//‰¡’·‚Ì’Œ‚ğì‚é
 			Do While Not flag
 				if z == 0 then
@@ -512,6 +514,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				ret = 0
 			end if
 		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
+			set = CreateAgtMulti(universe.map.barrier,64)
 		//c’·‚Ì’Œ‚ğì‚é
 			Do While Not flag
 				if z == 0 then
@@ -556,6 +559,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				ret = 0
 			end if
 	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //—§‚Á‚Ä‚é’Œ‚ğì‚é
+	  	set = CreateAgtMulti(universe.map.barrier,64)
 	  	Do While Not flag
 				if z == 0 then
 					flag = true
@@ -620,8 +624,8 @@ Agt_Init{
 my.Direction = Rnd()*360
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
-my.X = 1
-my.Y = 1
+my.X = 1 + rnd()
+my.Y = 1 + rnd()
 my.Z = 0
 my.do_type = 1
 my.ap_or_dis = 1
