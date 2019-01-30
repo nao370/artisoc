@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(800, 1500, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(160, 300, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -47,8 +47,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[800][1500][40] As Boolean = ();
-        Dim is_void(0, 0)[800][1500][40] As Boolean = ();
+        Dim fin(0, 0)[160][300][40] As Boolean = ();
+        Dim is_void(0, 0)[160][300][40] As Boolean = ();
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -212,13 +212,17 @@ sub make_rubble_mix(rate as Double){
 	dim z as integer
 	dim r as Double
 	dim pattern as Integer
+	dim goal as Integer
+	dim set as AgtSet
 
 	tmp_rate = 0
 	height = GetHeightSpace(universe.map)
 	width = GetWidthSpace(universe.map)
 	max = height * width * 40
-	tmp_number = height * 40 * 2 + width * 40 * 2 - 40 * 4
-	println("tmp_number is"&tmp_number)
+	tmp_number = 0
+
+//	goal = rate * max
+	set = CreateAgtMulti(universe.map.barrier,max)
 
 	Do While tmp_rate < rate
 		x = Int(Rnd() * (width-2)) + 2
@@ -227,19 +231,35 @@ sub make_rubble_mix(rate as Double){
 		pattern = Int(Rnd() * 3)
 		r = Rnd() * 100
 		if r < 33 then
-			tmp_number = tmp_number + make_rubble_board(pattern,x,y,z)
+			tmp_number = make_rubble_board(pattern,x,y,z,set,tmp_number)
 		elseif r < 66 then
-			tmp_number = tmp_number + make_rubble_box(x,y,z)
+			tmp_number = make_rubble_box(x,y,z,set,tmp_number)
 		else
-			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
+			tmp_number = make_rubble_Pillar(pattern,x,y,z,set,tmp_number)
 		end if		
 		tmp_rate = tmp_number / max
 		PrintLn("rate is "&tmp_rate)
 	Loop
-			println("tmp_number is"&tmp_number)
+	delete_0_position(set)
+	println("tmp_number is"&tmp_number)
 }
 
-function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as integer)as Integer{
+sub delete_0_position(set_global as AgtSet){
+	dim one as Agt
+	dim kill as AgtSet
+
+	for each one in set_global
+		if one.X == 0 and one.Y == 0 and one.Z == 0 then
+			AddAgt(kill,one)
+		end if
+	next one
+
+	for each one in kill
+		killAgt(one)
+	next one
+}
+
+function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as integer,set_global as agtset,tmp_number as Integer)as Integer{
 	dim t as Integer
 	dim a as Integer
 	dim b as Integer
@@ -257,7 +277,11 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	ret = 64
 	if not universe.map.is_void(x,y,z) then
 		if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //水平に置く
-			set = CreateAgtMulti(universe.map.barrier,64)
+			for i = 0 to 64
+				one = GetAgt(set_global,i)
+				AddAgt(set,one)
+			next i
+			DelAgtSet(set_global,set)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -299,7 +323,11 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				ret = 0
 			end if
 		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // 縦長に置く
-			set = CreateAgtMulti(universe.map.barrier,64)
+			for i = 0 to 64
+				one = GetAgt(set_global,i)
+				AddAgt(set,one)
+			next i
+			DelAgtSet(set_global,set)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -341,7 +369,11 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 				ret = 0
 			end if		
 		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // 横長に置く
-			set = CreateAgtMulti(universe.map.barrier,64)
+			for i = 0 to 64
+				one = GetAgt(set_global,i)
+				AddAgt(set,one)
+			next i
+			DelAgtSet(set_global,set)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -388,11 +420,12 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	else
 		ret = 0
 	end if
-	 
+	ret = ret + tmp_number
+	
 	return ret
 }
 
-function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
+function make_rubble_box(x as Integer,y as integer, z as integer,set_global as AgtSet,tmp_number as Integer)as Integer{
 	dim t as Integer
 	dim a as Integer
 	dim b as Integer
@@ -410,7 +443,11 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	flag = false
 	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 40 - 4 then
 		if not universe.map.is_void(x,y,z) then
-			set = CreateAgtMulti(universe.map.barrier,64)
+			for i = 0 to 64
+				one = GetAgt(set_global,i)
+				AddAgt(set,one)
+			next i
+			DelAgtSet(set_global,set)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -438,7 +475,7 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 		  		universe.map.is_void(x+b,y+c,z+a) = true
 		  	else
 		  		AddAgt(kill,one)
-					ret = ret - 1		  		
+					ret = ret - 1
 		  	end if		  	
 			next one
 			DelAgtSet(set,kill)
@@ -459,12 +496,12 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	else
 		ret = 0
 	end if
+	ret = ret + tmp_number
 		
-	 
 	return ret
 }
 
-function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as integer)as Integer{
+function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as integer,set_global as AgtSet,tmp_number as Integer)as Integer{
 	dim set as AgtSet
 	dim a as Integer
 	dim b as Integer
@@ -474,16 +511,20 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	dim c as Integer
 	dim ret as Integer
 	dim flag as Boolean
-		dim kill as AgtSet
-			dim i as integer
+	dim kill as AgtSet
+	dim i as integer
 	dim j as integer
 
 	ret = 64
 	flag = false
 	if not universe.map.is_void(x,y,z) then
 		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
-		set = CreateAgtMulti(universe.map.barrier,64)
 		//横長の柱を作る
+			for i = 0 to 64
+				one = GetAgt(set_global,i)
+				AddAgt(set,one)
+			next i
+			DelAgtSet(set_global,set)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -527,8 +568,12 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				ret = 0
 			end if
 		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
-			set = CreateAgtMulti(universe.map.barrier,64)
 		//縦長の柱を作る
+			for i = 0 to 64
+				one = GetAgt(set_global,i)
+				AddAgt(set,one)
+			next i
+			DelAgtSet(set_global,set)
 			Do While Not flag
 				if z == 0 then
 					flag = true
@@ -572,7 +617,11 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 				ret = 0
 			end if
 	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //立ってる柱を作る
-	  	set = CreateAgtMulti(universe.map.barrier,64)
+	  	for i = 0 to 64
+				one = GetAgt(set_global,i)
+				AddAgt(set,one)
+			next i
+			DelAgtSet(set_global,set)
 	  	Do While Not flag
 				if z == 0 then
 					flag = true
@@ -621,9 +670,9 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	else
 		ret = 0
 	end if
+	ret = ret + tmp_number
 	 
 	return ret
-}
 #end_rule UNIVERSE
 
 
@@ -3121,7 +3170,7 @@ Time_Graph {
     Draw_Interval = 1;
     Graph_Name = "探索したボクセルの数";
     Title = "探索したボクセルの数";
-    Disable = No;
+    Disable = Yes;
     Background_Color = 255, 255, 255;
     Remarks = Yes;
     Legend_Pos = Top;
@@ -3170,6 +3219,73 @@ Time_Graph {
 
 
 //-------------------------------------------------------
+//  3 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map3D_Output {
+    Map3D_Name = "map";
+    Disable = No;
+    Background_Image_Display = No;
+    Background_Image_Type = Fixed_Value;
+    Background_Image_Folder_Name = "";
+    Background_Image_Folder_Variable_Name = Dummy;
+    Background_Color = -1;
+    FastDraw = No;
+    Line_Display = No;
+    Camera_Position_Type = Mouse;
+    Camera_Position_Agent_Name = Universe.CameraPointer;
+    Light_Position_Type = Coordinate;
+    Light_Position = 0.0,0.0,0.0;
+    Light_Position_Agent_Name = Dummy;
+    Output_Group_Name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Position_x = 472;
+    Position_y = 448;
+    Size_x = 472;
+    Size_y = 448;
+    Map_Cell_Size = -1;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Space3D_Output {
+        Space_3D_Name = "map";
+        Space_Path_Name = Universe.map;
+        Layer = 0;
+        Space_3D_PositionD = 0.0,0.0,0.0;
+        Ruled_Line_Display = No;
+        Origin_Position = Left_Top;
+        Display_Object_Type = None;
+        Image_File_Path_Name = "";
+        Model_3D_File_Path_Name = "";
+        Agent3D_Output {
+                Agent_3D_Name = "barrier";
+                Agent_Path_Name = Universe.map.barrier;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Quadrartic_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -16776961;
+                Color_Variable_Path_Name = Universe.map.barrier.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+    }
+}
+
+
+//-------------------------------------------------------
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
@@ -3197,14 +3313,14 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 3;
-    Console_Position_y = 2;
-    Console_Size_x = 681;
-    Console_Size_y = 905;
-    Componen_Tree_Position_x = 153;
-    Componen_Tree_Position_y = 28;
-    Componen_Tree_Size_x = 839;
-    Componen_Tree_Size_y = 383;
+    Console_Position_x = 472;
+    Console_Position_y = 0;
+    Console_Size_x = 472;
+    Console_Size_y = 448;
+    Componen_Tree_Position_x = 0;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 300;
+    Componen_Tree_Size_y = 250;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -3258,11 +3374,11 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -10, 0, 980, 1030;
-    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
-    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
+    Window_Name = Main_Window, 86, 65, 800, 700;
+    Window_Name = Output_Setting_Window, 265, 340, 480, 350;
+    Window_Name = Artisoc_Help_Window, 0, 0, 958, 897;
+    Window_Name = Map_3D_Setting_Window, 150, 265, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 265, 245, 450, 540;
 }
 
 
