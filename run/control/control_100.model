@@ -67,8 +67,8 @@ UNIVERSE {
 //-------------------------------------------------------
 Initial_Value {
     UNIVERSE.NUM_INSECT = 1(100);
-    UNIVERSE.T = 1(100);
-    UNIVERSE.ALPHA = 1(0.7000000000000001);
+    UNIVERSE.T = 1(1000);
+    UNIVERSE.ALPHA = 1(0.6000000000000001);
 }
 
 
@@ -83,6 +83,7 @@ Univ_Init{
 	make_void()
 	println("")
 	println("start")
+	OpenFileCSV("graph_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",1,3)
 }
 
 sub make_void(){
@@ -124,21 +125,21 @@ sub write_csv(){
 
 	n = GetCountStep() / 2000
 	m = universe.num_insect
-	OpenFileCSV("control_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
+	OpenFileCSV("control_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&"_T_"&universe.T&".csv",n+1,3)
 
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
 			for i = 0 to GetWidthSpace(universe.map) -1
-				WriteFileCSV(n,i,false)
-				WriteFileCSV(n,j,false)
-				WriteFileCSV(n,k,false)
-				WriteFileCSV(n,universe.map.fin(i,j,k),false)
-				WriteFileCSV(n,universe.map.is_void(i,j,k),true)
+				WriteFileCSV(n+1,i,false)
+				WriteFileCSV(n+1,j,false)
+				WriteFileCSV(n+1,k,false)
+				WriteFileCSV(n+1,universe.map.fin(i,j,k),false)
+				WriteFileCSV(n+1,universe.map.is_void(i,j,k),true)
 			next i
 		next j
 	next k
 
-	CloseFileCSV(n)
+	CloseFileCSV(n+1)
 }
 
 sub draw_fin(){
@@ -173,7 +174,6 @@ function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
 
 	r = 20
 	if not universe.map.fin(x,y,z) then
-		//MakeAgtSet(tmp,universe.map.insect)
 		MakeOneAgtSetAroundPosition(tmp,universe.map,x,y,0,r,universe.map.insect)
 		if CountAgtSet(tmp) > 0 then
 			ret = false
@@ -580,10 +580,12 @@ sub repulsive_insect(){
 			diff(1) = my.Y - one.Y
 			diff(2) = my.Z - one.Z
 			d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-	
-			for i = 0 to 2
-				my.repulsive_vector(0,i) = my.repulsive_vector(0,i) + diff(i) / d ^ 2
-			next i
+
+			if d != 0 then
+				for i = 0 to 2
+					my.repulsive_vector(0,i) = my.repulsive_vector(0,i) + diff(i) / d ^ 2
+				next i
+			end if
 		next one
 	end if
 }
@@ -609,10 +611,12 @@ sub repulsive_barrier(){
 							diff(1) = my.Y - one.Y
 							diff(2) = my.Z - one.Z
 							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-	
-							for i = 0 to 2
-								my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
-							next i
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
 						end if
 					next one
 			elseif n == 1 then
@@ -622,10 +626,12 @@ sub repulsive_barrier(){
 							diff(1) = my.Y - one.Y
 							diff(2) = my.Z - one.Z
 							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-	
-							for i = 0 to 2
-								my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
-							next i
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
 						end if
 					next one
 			elseif n == 2 then
@@ -635,10 +641,12 @@ sub repulsive_barrier(){
 							diff(1) = my.Y - one.Y
 							diff(2) = my.Z - one.Z
 							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-	
-							for i = 0 to 2
-								my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
-							next i
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
 						end if
 					next one
 			else
@@ -3157,7 +3165,7 @@ Control_Panel {
         Slider_Range_Max = 20;
         Slider_Value_Min = 0.0;
         Slider_Value_Step = 0.05;
-        Slider_Value = "14";
+        Slider_Value = "12";
     }
     Panel_Item {
         Item_Type = Edit_Box;
