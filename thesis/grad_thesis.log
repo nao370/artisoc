@@ -1,4 +1,4 @@
-This is e-pTeX, Version 3.14159265-p3.7-160201-2.6 (sjis) (TeX Live 2016/W32TeX) (preloaded format=platex 2016.4.7)  31 JAN 2019 13:23
+This is e-pTeX, Version 3.14159265-p3.7-160201-2.6 (sjis) (TeX Live 2016/W32TeX) (preloaded format=platex 2016.4.7)  1 FEB 2019 12:17
 entering extended mode
  restricted \write18 enabled.
  Source specials enabled.
@@ -64,54 +64,97 @@ Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
 (c:/w32tex/share/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
 File: graphics.cfg 2016/01/02 v1.10 sample graphics configuration
 )
-Package graphics Info: Driver file: dvips.def on input line 95.
+Package graphics Info: Driver file: dvipdfmx.def on input line 95.
 
-(c:/w32tex/share/texmf-dist/tex/latex/graphics/dvips.def
-File: dvips.def 2015/12/30 v3.0k Driver-dependent file (DPC,SPQR)
-))
+(c:/w32tex/share/texmf-dist/tex/latex/dvipdfmx-def/dvipdfmx.def
+File: dvipdfmx.def 2016/04/06 v4.08 LaTeX color/graphics driver for dvipdfmx (T
+eX Live/ChoF)
+
+(c:/w32tex/share/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
+)
+(c:/w32tex/share/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
+)))
 \Gin@req@height=\dimen121
 \Gin@req@width=\dimen122
+)
+(c:/w32tex/share/texmf-dist/tex/latex/caption/subcaption.sty
+Package: subcaption 2016/02/20 v1.1-142 Sub-captions (AR)
+
+(c:/w32tex/share/texmf-dist/tex/latex/caption/caption.sty
+Package: caption 2016/02/21 v3.3-144 Customizing captions (AR)
+
+(c:/w32tex/share/texmf-dist/tex/latex/caption/caption3.sty
+Package: caption3 2016/02/04 v1.7-139 caption3 kernel (AR)
+Package caption3 Info: TeX engine: e-TeX on input line 67.
+\captionmargin=\dimen123
+\captionmargin@=\dimen124
+\captionwidth=\dimen125
+\caption@tempdima=\dimen126
+\caption@indent=\dimen127
+\caption@parindent=\dimen128
+\caption@hangindent=\dimen129
+Package caption Info: Unknown document class (or package),
+(caption)             standard defaults will be used.
+)
+
+Package caption Warning: Unsupported document class (or package) detected,
+(caption)                usage of the caption package is not recommended.
+See the caption package documentation for explanation.
+
+Package caption Info: \@makecaption = \long macro:#1#2->\vskip \abovecaptionski
+p \iftdir \sbox \@tempboxa {#1\hskip 1zw#2}\else \sbox \@tempboxa {#1: #2}\fi \
+ifdim \wd \@tempboxa >\hsize \iftdir #1\hskip 1zw#2\relax \par \else #1: #2\rel
+ax \par \fi \else \global \@minipagefalse \hbox to\hsize {\hfil \box \@tempboxa
+ \hfil }\fi \vskip \belowcaptionskip .
+\c@ContinuedFloat=\count96
+)
+\c@subfigure=\count97
+\c@subtable=\count98
 ) (./grad_thesis.aux)
 \openout1 = `grad_thesis.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 12.
-LaTeX Font Info:    ... okay on input line 12.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 12.
-LaTeX Font Info:    ... okay on input line 12.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 12.
-LaTeX Font Info:    ... okay on input line 12.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 12.
-LaTeX Font Info:    ... okay on input line 12.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 12.
-LaTeX Font Info:    ... okay on input line 12.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 12.
-LaTeX Font Info:    ... okay on input line 12.
-LaTeX Font Info:    Checking defaults for JY1/mc/m/n on input line 12.
-LaTeX Font Info:    ... okay on input line 12.
-LaTeX Font Info:    Checking defaults for JT1/mc/m/n on input line 12.
-LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for JY1/mc/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for JT1/mc/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
 LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <14.4> not available
-(Font)              Font shape `JT1/gt/m/n' tried instead on input line 13.
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line 14.
 LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <14.4> not available
-(Font)              Font shape `JY1/gt/m/n' tried instead on input line 13.
-[0
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line 14.
+ [0
 
 ]
 LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <12> not available
-(Font)              Font shape `JT1/gt/m/n' tried instead on input line 14.
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line 15.
 LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <12> not available
-(Font)              Font shape `JY1/gt/m/n' tried instead on input line 14.
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line 15.
 LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <10.95> not available
-(Font)              Font shape `JT1/gt/m/n' tried instead on input line 18.
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line 19.
 LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <10.95> not available
-(Font)              Font shape `JY1/gt/m/n' tried instead on input line 18.
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line 19.
  [1] (./grad_thesis.toc
-LaTeX Font Info:    Try loading font information for U+msa on input line 5.
+LaTeX Font Info:    Try loading font information for U+msa on input line 4.
 
 (c:/w32tex/share/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 5.
+LaTeX Font Info:    Try loading font information for U+msb on input line 4.
 
 (c:/w32tex/share/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -119,15 +162,55 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 \tf@toc=\write3
 \openout3 = `grad_thesis.toc'.
 
- [2] [3] [4] [5]
-[6] [7] [8] [9] (./grad_thesis.aux) ) 
+ [2]
+Overfull \hbox (0.40509pt too wide) in paragraph at lines 41--46
+\JY1/mc/m/n/10.95 いう手法がある ． フロ ッ キングとは ， 周囲のロボ ッ トに対
+して ， \OT1/cmr/m/n/10.95 Sep-a-ra-tion,Alignment,Chesion
+ []
+
+[3] [4]
+File: png/Untitled.png Graphic file (type bmp)
+ <png/Untitled.png>
+
+LaTeX Warning: Citation `speed' on page 5 undefined on input line 66.
+
+File: png/bend.png Graphic file (type bmp)
+<png/bend.png> [5]
+File: png/vector.png Graphic file (type bmp)
+ <png/vector.png>
+File: png/vector2.png Graphic file (type bmp)
+ <png/vector2.png>
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 109--119
+[][]$[]$ $[]$ 
+ []
+
+[6]
+File: png/rotation.png Graphic file (type bmp)
+ <png/rotation.png>
+File: png/sub.png Graphic file (type bmp)
+ <png/sub.png>
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 139--147
+[][]$[]$ $[]$ 
+ []
+
+
+Overfull \hbox (14.11263pt too wide) detected at line 164
+\OML/cmm/m/it/10.95 R[]\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 ^^^\OT1/cmr/m/n/
+10.95 ) = []
+ []
+
+[7] [8] [9] [10] [11] [12] [13] (./grad_thesis.aux)
+
+LaTeX Warning: There were undefined references.
+
+ ) 
 Here is how much of TeX's memory you used:
- 952 strings out of 493705
- 10847 string characters out of 6152319
- 66198 words of memory out of 5000000
- 4534 multiletter control sequences out of 15000+600000
+ 2318 strings out of 493705
+ 34717 string characters out of 6152319
+ 102992 words of memory out of 5000000
+ 5874 multiletter control sequences out of 15000+600000
  16382 words of font info for 65 fonts, out of 8000000 for 9000
  929 hyphenation exceptions out of 8191
- 25i,4n,26p,254b,196s stack positions out of 5000i,500n,10000p,500000b,80000s
+ 42i,7n,40p,338b,527s stack positions out of 5000i,500n,10000p,500000b,80000s
 
-Output written on grad_thesis.dvi (10 pages, 5368 bytes).
+Output written on grad_thesis.dvi (14 pages, 21744 bytes).

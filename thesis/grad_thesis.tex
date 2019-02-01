@@ -1,10 +1,11 @@
 \documentclass[a4paper,11pt]{jarticle}
 \usepackage{ics-thesis}
 \usepackage{amssymb}
-\usepackage{graphicx}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{subcaption}
 \pagestyle{bachelorthesis}    % 卒論・規定の.styファイルを使う場合
 %
-\title{サイボーグインセクトの群れを用いて倒壊した建物内に捕らわれている被災者を探索するためのフロッキング制御手法の提案}
+\title{サイボーグインセクトによる迅速な被災者発見のための自己組織型移動制御手法の提案}
 \author{北浦 直}
 \supervisor{若宮 直紀 教授}
 \deadline{2019年2月12日}
@@ -31,13 +32,156 @@
 	しかし，倒壊した建物内は人間や災害救助犬が入れないような環境であることが多い．%ここで例とかあったほうがいいかも
 	また，救助活動の中で2次災害が起きてしまう事例も少なくない．
 	そこで，現在の探索手法では探索できないような狭い空間を探索可能で，探索中の2次災害の危険性を低くすることができるサイボーグインセクトを用いた被災者探索の研究がなされている．
+
+	サイボーグインセクトを被災者探索に活用するための研究としてCINEMa(Cyborg Insect Networks for Exploration and Mapping)があげられる．
+	この研究の中では，サイボーグインセクトへ制御を与えて任意の方向へ向かわせたり，サイボーグインセクトが位置推定をするためのアルゴリズムの実験がされていたりする．
+	しかし，CINEMaはがれきなどが散乱するような悪条件下における被災者探索のための構成要素の確立は行われているが，それらを用いて被災者探索を効率的に行うためのアルゴリズムなどは提案されていない．
+	つまり，群で探索しているにも拘らず複数個体がほぼ同一の場所を探索することで空間全体を探索するのにかかる時間が増加してしまう恐れがある．
+		
+	また，自律的なレスキューロボットが行う自律的なアルゴリズムの1つであるフロッキングという手法がある．
+	フロッキングとは，周囲のロボットに対して，Separation,Alignment,Chesionの3つの動作をとることで複数個体が群れとなって動くようなアルゴリズムである．
+	このフロッキングを被災者探索に適用される研究が行われているが，フロッキングをサイボーグインセクトに適用して被災者探索を実現している研究はなされていない．
+	また，これらの研究でなされているフロッキングは基本的に連続で操作を行っており，断続的に制御を行っている研究は少ない．
+	しかし，サイボーグインセクトに与えるフロッキングの制御は生物に電気信号を流すためできるだけ頻度が低いことが望ましい．
 	
-	サイボーグインセクトを被災者探索に活用するための
+	そこで，本研究ではCINEMaで提案されているようなサイボーグインセクトの群れに対するフロッキング制御手法の提案を行う．ここでは，サイボーグインセクトに対する断続的なフロッキング制御でも探索にかかる時間の短縮ができることを確認する．
+	
+	以降，第章では，
 	\section{サイボーグインセクト}
+	この章では，本研究で考えるサイボーグインセクトの概要と，サイボーグインセクトに取り付けられる機材，サイボーグインセクトに関する条件の説明を行う．
 	\section{サイボーグインセクトのモデル}
-	\section{制御モデル}
-	\subsection{フロッキング}
-	\subsection{実装}
+	この章では，サイボーグインセクトが制御を受けていない場合の動きのモデルについて説明を行う．
+	
+	
+	\label{sec:algorithm}
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.5\linewidth]{png/Untitled.png}
+		\caption[アルゴリズムのフローチャート]{制御されていないサイボーグインセクトのアルゴリズムのフローチャート}
+		\label{fig:algorithm}
+	\end{figure}
+	
+	制御をされていないサイボーグインセクトは，図\ref{fig:algorithm}のフローチャートに示されているアルゴリズムに従って行動する．
+	このアルゴリズムでの1stepは0.1秒とする．
+	また，サイボーグインセクトの速度は 60cm/s とする\cite{speed}．
+	
+	\subsection{ランダムに方向を決定する}
+	\label{random}
+	探索が開始されたときに実行される．
+	どの方向に進むのかをランダムに決定する．
+	この時に決定された向きの単位ベクトルを進行方向ベクトルと呼ぶ．
+	
+	\subsection{進行方向ベクトルを変更するかの判定}
+	\label{carb}
+	サイボーグインセクトは，1step毎に現在の進行方向ベクトルを別の進行方向ベクトルに変更するかの判定を行う．
+	この時に，進行方向ベクトルを変更する確率は1\%とする．
+	
+	\subsection{回転角の決定}
+	現在の進行方向ベクトルからどれだけ回転するかの決定を行う．
+	この時，現在の進行方向ベクトルから角度が大きく異なる進行方向ベクトルほど選択する確率が低くなるように設定した．
+	また，現在接している面から別の面へ移動するようなベクトルには回転しないものとする．
+	図\ref{fig:bend}のように赤い矢印であらわされるベクトルには回転する可能性が存在し，青のベクトルのように接する面が変わるベクトルには回転しないものとする．
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.35\linewidth]{png/bend.png}
+		\caption[ベクトルの決定]{回転できるベクトル(赤)と回転できないベクトル(青)の例}
+		\label{fig:bend}
+	\end{figure}
+	
+	ここで，回転する角度は，平均0,分散$\frac{\pi}{6}$の正規分布に従って決定される．
+	
+	\subsection{1step分前進}
+	サイボーグインセクトは，進行方向のベクトルに1step分前進する．
+	また，途中で障害物があったり接している面が途切れたりなどで1step分の距離を進めない場合は，進めるところまで進み，その位置で停止する．
+	
+	\subsection{面と面が構成する境界線に接したかの判定}
+	サイボーグインセクトは，現在いる場所が面と面が構成する境界線に接しているかどうかを1step毎に判定を行う．
+	
+	\subsection{次の進行方向ベクトルの決定}
+	\label{vector}
+	サイボーグインセクトは次の進行方向ベクトルを計算する．次に進行方向ベクトルの候補として，図\ref{fig:vec_surface}のような3種類のベクトルを計算する．この時，サイボーグインセクトがすでに境界線に沿って進んでいる場合は，図\ref{fig:vec_boader}のように，新しく接した境界線に沿うような2つのベクトルを計算する．
+	\begin{enumerate}
+		\item 境界線に平行なベクトル
+		\item 境界線に平行な1.の逆ベクトル
+		\item 現在の方向を保ちつつ，新しく接した面に平行なベクトル
+	\end{enumerate}
+	\begin{figure}
+		\begin{minipage}{0.5\linewidth}
+			\centering
+			\includegraphics[width=1\linewidth]{png/vector.png}
+			\subcaption{面上を進んでいる場合}\label{fig:vec_surface}
+		\end{minipage}
+		\begin{minipage}{0.5\linewidth}
+			\centering
+			\includegraphics[width=1\linewidth]{png/vector2.png}
+			\subcaption{境界線上を進んでいる場合}\label{fig:vec_boader}
+		\end{minipage}\\
+		\caption{次に進む方向のベクトル}
+		\label{fig:vector}
+	\end{figure}
+	
+	それぞれの具体的な計算方法は以下の章で説明する．
+	\subsubsection{境界線に平行なベクトル}
+	\label{boader}
+	新たに接した境界線からベクトルを求めて，そのベクトルに平行な単位ベクトルを次の進行方向ベクトルの候補とする．
+	\ref{fig:vec_boader}のように境界線上を進んでいる場合，新たに接した境界線が2つあるため，その2つを次の進行方向ベクトルの候補とする．
+	
+	\subsubsection{境界線に平行なベクトルの逆ベクトル}
+	\ref{boader}章で求めたベクトルの逆ベクトルを次の進行方向ベクトルの候補とする．
+	
+	\subsubsection{現在の方向を保ちつつ，新しく接した面に平行なベクトル}
+	\label{rotation}
+	このベクトルは，今進んでいる方向ベクトルを接した境界線を軸にして回転することで得られる．今進んでいる方向ベクトルの境界線に垂直な成分と，新しく触れた面のベクトルがなす角を$ \phi $としたときに，$\phi$だけ回転することで，次に進む方向ベクトル$ \vec{x} $　が得られる．
+	$\phi$の求め方は図\ref{fig:rotation}のようになる．
+	
+	\begin{figure}
+		
+		\begin{minipage}{0.5\linewidth}
+			\centering
+			\includegraphics[width=1\linewidth]{png/rotation.png}
+		\end{minipage}
+		\begin{minipage}{0.5\linewidth}
+			\centering
+			\includegraphics[width=1\linewidth]{png/sub.png}
+		\end{minipage}
+		\caption{なす角$\phi$の位置}
+		\label{fig:rotation}
+	\end{figure}
+	
+	境界線に平行なベクトルを$\vec{b} $とした際に，以下のようにあらわされる．
+	\begin{equation}
+	\vec{x} = R_{\vec{b}}(\phi)\vec{v}
+	\end{equation}
+	
+	また，回転行列$R_{\vec{b}}(\phi)$は以下のようになる．
+	
+	\begin{equation}
+	R_{\vec{b}}(\phi)=\left( \begin{array}{ccc}
+	b_x^2(1-\cos\phi)+\cos\phi & b_x b_y (1-\cos\phi) - b_z\sin\phi & b_z b_x (1-\cos\phi) + b_y\sin\phi \\
+	b_x b_y (1-\cos\phi)+b_z \sin\phi & b_y^2 (1-\cos\phi) + \cos\phi & b_y b_z (1-\cos\phi) - b_x\sin\phi \\
+	b_z b_x (1-\cos\phi)- b_y\sin\phi & b_y b_z (1-\cos\phi) + b_x \sin\phi & b_z^2 (1-\cos\phi) + \cos\phi \\
+	\end{array} \right)
+	\end{equation}
+	
+	\subsubsection{ベクトルの決定}
+	\ref{boader}章から\ref{rotation}章で計算したベクトル$\vec{x}_i$から，次に進む方向ベクトルにするものを決定する．
+	次に進む方向ベクトルは，基準ベクトルとの差異による確率に従って決定される．
+	基準ベクトルは，現在の方向ベクトルと重力ベクトルとの和によって計算される．
+	まず，現在の方向ベクトル$ \vec{v} $と重力ベクトル$ \vec{g} $から基準となるベクトル$ \vec{a} $を計算する式は以下の通りである．
+	\begin{equation}
+	\vec{a} = \vec{v} +\frac{49}{60} \vec{g} 
+	\end{equation}
+	ここで，$ \vec{g} $の係数は，0.1秒分の自由落下の計算から求めている．
+	
+	次に，ベクトルを選ぶ計算は以下の式から求められる．
+	\begin{equation}
+	P(\vec{x}_i) = \frac{1}{n-1}(1 - \frac{|\vec{a} - \vec{x}_i |}{\sum_{k=1}^{n}|\vec{a} - \vec{x}_k|})
+	\end{equation}
+	
+	ここで，$ \vec{x}_i $は\ref{boader}章から\ref{rotation}章で計算したベクトルで，$ i = (1,..,n) $である．
+	
+	\section{フロッキング}
+	\section{制御モデル}	
 	\subsection{パラメータ設定}
 	\section{実験結果}
 	\section{おわりに}
@@ -45,6 +189,6 @@
 		%%%%%%%%%%%%%%%%%%%%%
 		% 参考文献リスト
 		%%%%%%%%%%%%%%%%%%%%%
-		\item 
+		\bibitem{}
 	\end{thebibliography}
 \end{document}
