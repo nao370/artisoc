@@ -49,11 +49,11 @@
 	以降，第章では，
 	\section{サイボーグインセクト}
 	この章では，本研究で考えるサイボーグインセクトの概要と，サイボーグインセクトに取り付けられる機材，サイボーグインセクトに関する条件の説明を行う．
+	\section{フロッキング}
+	この章では，フロッキングについて説明する．
 	\section{サイボーグインセクトのモデル}
-	この章では，サイボーグインセクトが制御を受けていない場合の動きのモデルについて説明を行う．
-	
-	
 	\label{sec:algorithm}
+	この章では，サイボーグインセクトが制御を受けていない場合の動きのモデルについて説明を行う．
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.5\linewidth]{png/Untitled.png}
@@ -65,12 +65,12 @@
 	このアルゴリズムでの1stepは0.1秒とする．
 	また，サイボーグインセクトの速度は 60cm/s とする\cite{speed}．
 	
-	\subsection{ランダムに方向を決定する}
+	\subsection{進行方向ベクトルの初期値決定}
 	\label{random}
 	探索が開始されたときに実行される．
 	どの方向に進むのかをランダムに決定する．
-	この時に決定された向きの単位ベクトルを進行方向ベクトルと呼ぶ．
-	
+	以下の章ではサイボーグインセクトが進む方向の単位ベクトルを進行方向ベクトルと呼ぶ．
+		
 	\subsection{進行方向ベクトルを変更するかの判定}
 	\label{carb}
 	サイボーグインセクトは，1step毎に現在の進行方向ベクトルを別の進行方向ベクトルに変更するかの判定を行う．
@@ -131,7 +131,8 @@
 	
 	\subsubsection{現在の方向を保ちつつ，新しく接した面に平行なベクトル}
 	\label{rotation}
-	このベクトルは，今進んでいる方向ベクトルを接した境界線を軸にして回転することで得られる．今進んでいる方向ベクトルの境界線に垂直な成分と，新しく触れた面のベクトルがなす角を$ \phi $としたときに，$\phi$だけ回転することで，次に進む方向ベクトル$ \vec{x} $　が得られる．
+	現在の進行方向ベクトルを新たに接した境界線を軸にして回転することで次の進行方向ベクトルの候補を計算する．
+	現在の進行方向ベクトルの境界線に垂直な成分から，新しく検知した面に平行で境界線に垂直なベクトルに反時計回りでなす角を$ \phi $としたときに，現在の進行方向ベクトル$\vec{v}$を$\phi$だけ回転することで，次の進行方向ベクトルの候補$\vec{l}$が得られる．
 	$\phi$の求め方は図\ref{fig:rotation}のようになる．
 	
 	\begin{figure}
@@ -148,14 +149,17 @@
 		\label{fig:rotation}
 	\end{figure}
 	
-	境界線に平行なベクトルを$\vec{b} $とした際に，以下のようにあらわされる．
+	境界線に平行なベクトルを$\vec{b} $とした際に，次の進行方向ベクトルの候補$\vec{l}$は式\ref{formula:l}によってあらわされる．
 	\begin{equation}
-	\vec{x} = R_{\vec{b}}(\phi)\vec{v}
+	\label{formula:l}
+	\vec{l} = R_{\vec{b}}(\phi)\vec{v}
 	\end{equation}
 	
-	また，回転行列$R_{\vec{b}}(\phi)$は以下のようになる．
+	ここで$R_{\vec{b}}(\phi)$は境界線に平行なベクトル$\vec{b}$を軸に角度$\phi$だけ回転させる回転行列とする．
+	回転行列$R_{\vec{b}}(\phi)$は式\ref{formula:rotation}で計算される．
 	
 	\begin{equation}
+	\label{formula:rotation}
 	R_{\vec{b}}(\phi)=\left( \begin{array}{ccc}
 	b_x^2(1-\cos\phi)+\cos\phi & b_x b_y (1-\cos\phi) - b_z\sin\phi & b_z b_x (1-\cos\phi) + b_y\sin\phi \\
 	b_x b_y (1-\cos\phi)+b_z \sin\phi & b_y^2 (1-\cos\phi) + \cos\phi & b_y b_z (1-\cos\phi) - b_x\sin\phi \\
@@ -164,25 +168,119 @@
 	\end{equation}
 	
 	\subsubsection{ベクトルの決定}
-	\ref{boader}章から\ref{rotation}章で計算したベクトル$\vec{x}_i$から，次に進む方向ベクトルにするものを決定する．
-	次に進む方向ベクトルは，基準ベクトルとの差異による確率に従って決定される．
-	基準ベクトルは，現在の方向ベクトルと重力ベクトルとの和によって計算される．
+	\ref{boader}章から\ref{rotation}章で計算したベクトル$\vec{l}_i$から，次の進行方向ベクトルを決定する．
+	次の進行方向ベクトルは，基準ベクトルとの差異による確率に従って決定される．
+	基準ベクトルは，現在の進行方向ベクトルと重力ベクトルとの和によって計算される．
 	まず，現在の方向ベクトル$ \vec{v} $と重力ベクトル$ \vec{g} $から基準となるベクトル$ \vec{a} $を計算する式は以下の通りである．
 	\begin{equation}
 	\vec{a} = \vec{v} +\frac{49}{60} \vec{g} 
 	\end{equation}
 	ここで，$ \vec{g} $の係数は，0.1秒分の自由落下の計算から求めている．
 	
-	次に，ベクトルを選ぶ計算は以下の式から求められる．
+	次に，各ベクトルを選択する確率は式\ref{formula:prob}によって計算される．
 	\begin{equation}
-	P(\vec{x}_i) = \frac{1}{n-1}(1 - \frac{|\vec{a} - \vec{x}_i |}{\sum_{k=1}^{n}|\vec{a} - \vec{x}_k|})
+	\label{formula:prob}
+	P(\vec{l}_i) = \frac{1}{n-1}(1 - \frac{|\vec{a} - \vec{x}_i |}{\sum_{k=1}^{n}|\vec{a} - \vec{x}_k|})
 	\end{equation}
 	
-	ここで，$ \vec{x}_i $は\ref{boader}章から\ref{rotation}章で計算したベクトルで，$ i = (1,..,n) $である．
+	ここで，$ \vec{l}_i $は\ref{boader}章から\ref{rotation}章で計算した次の進行方向ベクトルの候補で，$ i = (1,..,n) $である．
 	
-	\section{フロッキング}
-	\section{制御モデル}	
+	\section{制御モデル}
+	\label{sec:control}
+	この章では，\ref{sec:algorithm}章で説明したサイボーグインセクトのモデルへの制御を説明する．
+	
+	この制御の目的は，空間全体の探索にかかる時間を短縮することである．
+	また，サイボーグインセクトへの負担や消費電力の軽減のため，サイボーグインセクトに対して常に制御を行うのではなくある周期ごとに断続な制御を与える．
+	
+	制御を加える場合の全体のアルゴリズムは図\ref{fig:control}のフローチャートであらわされる．
+	
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.5\linewidth]{png/control.png}
+		\caption[アルゴリズムのフローチャート]{サイボーグインセクトを制御する場合のアルゴリズムのフローチャート}
+		\label{fig:control}
+	\end{figure}
+	ここでの制御の周期Tはパラメータとする．
+	
+	\subsection{斥力の合計を計算}
+	\label{sec:repulsive}
+	あるサイボーグインセクトに対して，距離の近いサイボーグインセクトと障害物から斥力が働くとして考え，その斥力の合計を計算する\cite{flocking-robot}．
+	
+	\subsubsection{サイボーグインセクトからの斥力}
+	\label{sec:repulsive_insect}
+	複数のサイボーグインセクトが同時に空間探索をする場合，それぞれのサイボーグインセクトの探索領域が重なってしまっていると探索にかかる時間が増加してしまうことが考えられる．
+	よって，サイボーグインセクト同士が距離をとるような制御を行うことでより迅速に空間全体を探索できると考えた．
+		
+	まず，周囲のサイボーグインセクトと通信を行い，通信距離内にサイボーグインセクトがいるかどうかを確認する．
+	自身の通信距離内にサイボーグインセクトがいた場合，次のようにして斥力を求める．
+	座標$(x,y,z)$にいるサイボーグインセクトが，座標$(x_a,y_a,z_a)$にいるサイボーグインセクト$a$から受ける斥力$\vec{f}_a$は式\ref{formula:f_a}で求められる．
+	\begin{equation}
+	\label{formula:f_a}
+	\vec{f}_a = (\frac{x - x_a}{d_a^2},\frac{y- y_a}{d_a^2},\frac{z - z_a}{d_a^2})
+	\end{equation}
+	
+	個体$a$との距離は式\ref{formula:distance}により求められる．また，この時の距離$d_a$は通信可能距離である5mを1とするような正規化を行う．
+	\begin{equation}
+	\label{formula:distance}
+	d_a = \sqrt{(x-x_a)^2+(y-y_a)^2+(z-z_a)^2}
+	\end{equation}
+	
+	また，通信距離内にいるサイボーグインセクトが複数存在する場合は，以下の式で斥力の合計を計算する．ここで，$A$は通信距離内にいるサイボーグインセクトの集合とする．
+	\begin{equation}
+	\vec{F}_A =　\sum_{k \in A}\vec{f}_k
+	\label{formula:repalsive}
+	\end{equation}
+	
+	\subsubsection{障害物からの斥力}
+	\label{sec:repulsive_object}
+	現在のアルゴリズムでは，一度境界線に沿う動きになった後は境界線を沿う動きを続けることが多い．その場合，境界線から離れているような領域の探索ができない可能性があるため，壁から離れさせる制御を行うことを考えた．
+	
+	この制御は，距離$r$以内にある障害物から斥力を計算することで実現する．ここでは，今自分がいる面からは斥力は受けないものとして考える．
+	
+	この場合の斥力を求める式は式\ref{formula:wall}となる．また，この時の距離$d_o$はパラメータ$r$で正規化を行う．
+	
+	\begin{equation}
+	\vec{o} =  (\frac{x - x_o}{d_o^3},\frac{y- y_o}{d_o^3},\frac{z - z_o}{d_o^3})
+	\label{formula:wall}
+	\end{equation}
+	
+	\begin{equation}
+	\label{formula:distance_object}
+	d_o = \sqrt{(x-x_o)^2+(y-y_o)^2+(z-z_o)^2}	
+	\end{equation}
+	
+	また，周囲の障害物からサイボーグインセクトにかかる斥力の合計は以下の式であらわされる．
+	
+	\begin{equation}
+	\vec{F}_o =　\sum_{k \in O}\vec{o}_k
+	\label{formula:repalsive_object}
+	\end{equation}
+	
+	$O$はサイボーグインセクトから距離$r$以内にある障害物の集合である．
+	
+	\subsubsection{斥力の合計}
+	\ref{sec:repulsive_insect}章と\ref{sec:repulsive_object}章で求められる斥力を足すことで，ある個体にかかる斥力の和が計算される．よって，斥力$\vec{F}$は$\alpha$をパラメータとして式\ref{formula:repulsive_sum}であらわされる．
+	\begin{equation}
+	\vec{F} = \alpha\vec{F}_A + (1 - \alpha)\vec{F}_o
+	\label{formula:repulsive_sum}
+	\end{equation}
+	
+	
+	\subsection{進行方向の決定}
+	\label{sec:decide}
+	計算した斥力から次の進行方向ベクトルを決定する．
+	
+	\ref{sec:repulsive}章で計算した斥力が今いる面に対して垂直な成分を持っている場合は，今いる面に射影したベクトルを次の進行方向ベクトルとする．
+	図\ref{fig:repulsive}の赤い矢印が他のサイボーグインセクトや障害物から受ける斥力の合計とした場合，今いる面に平行な黄色の矢印が実際の決定される進行方向ベクトルとなる．
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.35\linewidth]{png/repulsive.png}
+		\caption[斥力の射影]{斥力の合計と決定した進行方向ベクトル}
+		\label{fig:repulsive}
+	\end{figure}
+	
 	\subsection{パラメータ設定}
+	この章では，サイボーグインセクトを制御する場合のパラメータの設定について考える．
 	\section{実験結果}
 	\section{おわりに}
 	\begin{thebibliography}{99}
