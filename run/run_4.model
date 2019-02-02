@@ -3116,7 +3116,7 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 0;
+    Position_x = -4;
     Position_y = 0;
     Size_x = 1434;
     Size_y = 910;

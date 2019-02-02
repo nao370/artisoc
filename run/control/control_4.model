@@ -66,7 +66,7 @@ UNIVERSE {
 //-------------------------------------------------------
 Initial_Value {
     UNIVERSE.NUM_INSECT = 1(4);
-    UNIVERSE.T = 1(100);
+    UNIVERSE.T = 1(1000);
     UNIVERSE.ALPHA = 1(0);
 }
 
@@ -3179,7 +3179,7 @@ Time_Graph {
     FastDraw = Yes;
     Position_x = 0;
     Position_y = 0;
-    Size_x = 1434;
+    Size_x = 1528;
     Size_y = 910;
     Map_Cell_Size = -1;
     Axis_Label = "stepêî", "É{ÉNÉZÉãêî";
@@ -3266,7 +3266,7 @@ Control_Panel {
         Slider_Range_Max = 20;
         Slider_Value_Min = 0.0;
         Slider_Value_Step = 0.05;
-        Slider_Value = "14";
+        Slider_Value = "12";
     }
 }
 
