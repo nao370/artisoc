@@ -49,30 +49,52 @@
 	
 	そこで，本研究ではCINEMaで提案されているようなサイボーグインセクトの群れに対するフロッキング制御手法の提案を行う．サイボーグインセクトのモデルと断続的な制御をシミュレーション上に実装し，制御されていない場合の探索と制御された場合の探索を比較する．ここでは，サイボーグインセクトに対する断続的なフロッキング制御でも探索にかかる時間の短縮ができることを確認する．
 	
-	以降，第章では，
+	以降，第\ref{sec:CyborgInsect}章では，本研究に用いるサイボーグインセクトに関する説明を行い，第\ref{sec:flocking}章でフロッキング動作の説明を行う．第\ref{sec:algorithm}章でサイボーグインセクトが制御をされていない場合の動作について述べ，第\ref{sec:control}でサイボーグインセクトへ与える制御について述べる．第\ref{sec:result}章では実験結果について述べる．第\ref{sec:last}章では本研究のまとめと今後の課題について述べる．
 	\section{サイボーグインセクト}
+	\label{sec:CyborgInsect}
 	この章では，本研究で考えるサイボーグインセクトの概要と，サイボーグインセクトに取り付けられる機材，サイボーグインセクトに関する条件の説明を行う．
 	
 	サイボーグインセクトとは，文献\cite{CyborgInsect}で示されているような，昆虫に機械を埋め込み人間が操作できるようにした昆虫に計器類を乗せて被災者探索を可能にしたものを指す．
 	
+	サイボーグインセクトには，神経刺激による移動制御，センシング，サイボーグインセクトの位置推定、および救助者や周りのサイボーグインセクトとの通信のための機材が乗せられている．
+	
 	サイボーグインセクトに対する制御は，壁で仕切られた迷路の指定された経路を通るなどの実験を通して，サイボーグインセクト自身の動きに加え一定の操作ができることを示している\cite{CINEMa}．
 	
-	また，サイボーグインセクトに取り付けられた機材によって，サイボーグインセクト同士が通信を行い，位置推定ができることも示されている\cite{CINEMa}．
+	センシングのために，様々なセンサをサイボーグインセクトに積載すると文献\cite{CINEMa}で示されている．文献\cite{CINEMa}では，3方向の加速度計，ジャイロスコープ，磁力計，指向性マイクと全指向性マイク，ブザーとスピーカー，赤外線検知器，ガス検知器がサイボーグンセクトへ取り付ける機材として挙げられていた．
+	
+	被災者のセンシングに関して，複数のマイクでの音の強度を比較することで音源方向の特定をしてサイボーグインセクトから見た被災者の方向を特定することができていた．
+	また，サイボーグインセクトに取り付けられたマイクとスピーカーを利用することによって，位置推定を行っていた．
+	
+	今研究では，神経刺激による移動制御は十分に可能として考える．被災者や障害物のセンシングは，半径2m以内ならできると考え，距離精度は10cm単位，角度の精度は10度単位として考える．
+	また，サイボーグインセクト同士の通信可能範囲は5mとする．
+	
+
 	\section{フロッキング}
+	\label{sec:flocking}
 	この章では，フロッキングについて説明する．
 	
 	フロッキングとは，自然界の鳥や魚の群れで見られるような，複数の個体が同じ目標に向かい連動して動くような行動である．
 	この自然界で見られる行動を限定された範囲のセンシング能力とコミュニケーションにより再現したモデルが知られている．
-	文献[]では衝突回避，速度の合致，中心移動の3つの動作によりフロッキングのモデル化を行っている．それぞれの式は以下の通りとなっている．
+	文献\cite{steering}では衝突回避，中心移動,方向調整の3つの動作によりフロッキングのモデル化を行っている．それぞれの動きは以下のようにとなっている．
 	
+	%図があったほうが絶対いい
+	衝突回避の動作により，フロッキングを行っている個体群はそれぞれの距離を一定以上に保つことができる．衝突回避のために，まず，検知できる範囲の中にいる他の個体を探す．その後，近くにいた個体から自分へのベクトルを計算し，正規化を行い，さらに自分と見つけた個体との距離でそのベクトルを割る．これを一定距離内の周りの個体すべてに繰り返すことで衝突回避の動作のためのベクトルが得られる．
+	
+	中心移動の動作によって，フロッキングを行っている個体群は離れることなく群れとしての形を保つことができる．中心移動のために，まず、衝突回避と同様に検知できる範囲の中にいる個体を探す．そして自分を除いた検知できる範囲の中にいる個体群の重心を計算して，その重心へのベクトルを計算する．
+	
+	方向調整の動作によって，フロッキングを行っている個体群は同じような速度，向きで動くことができる．方向調整のために，衝突回避と同様に検知できる範囲の中にいる個体を探す．そして，それらの個体群の速度の平均を求め，自分の速度との差を求める．この速度の差が方向調整のためのベクトルとなる．
+	
+	最後に，上記3つのベクトルからフロッキングを行うためのベクトルを求める．この時に，それぞれを足すだけでもフロッキングとして動く場合も存在するが，基本的には，それぞれを正規化したのちに，重み付け係数を用いてスケーリングすることが有用であるといわれている．
+	
+	さらに，上記のフロッキングの基本的な動作に加えて，障害物ある環境でのフロッキングを考えた研究もなされている\cite{obstacle}.
 	また，フロッキングを用いて被災者探索を行う研究も存在する．
-	例えば，文献[]では群ロボットによる空間探索において，フロッキングを用いて各ロボットの探索領域の重複の軽減を行っている．	
+	例えば，文献\cite{exploration}では群ロボットによる空間探索において，フロッキングを用いて各ロボットの探索領域の重複の軽減を行っている．	
 	\section{サイボーグインセクトのモデル}
 	\label{sec:algorithm}
 	この章では，サイボーグインセクトが制御を受けていない場合の動きのモデルについて説明を行う．
 	\begin{figure}
 		\centering
-		\includegraphics[width=0.5\linewidth]{png/Untitled.png}
+		\includegraphics[width=0.7\linewidth]{png/Untitled.png}
 		\caption[アルゴリズムのフローチャート]{制御されていないサイボーグインセクトのアルゴリズムのフローチャート}
 		\label{fig:algorithm}
 	\end{figure}
@@ -193,17 +215,21 @@
 	基準ベクトルは，現在の進行方向ベクトルと重力ベクトルとの和によって計算される．
 	まず，現在の方向ベクトル$ \vec{v} $と重力ベクトル$ \vec{g} $から基準となるベクトル$ \vec{a} $を計算する式は以下の通りである．
 	\begin{equation}
-	\vec{a} = \vec{v} +\frac{49}{60} \vec{g} 
+	\vec{m} = \vec{v} +\frac{49}{60} \vec{g} 
 	\end{equation}
-	ここで，$ \vec{g} $の係数は，0.1秒分の自由落下の計算から求めている．
+
+	\begin{equation}
+		\vec{a} = \frac{\vec{m}}{|\vec{m}|}
+	\end{equation}
+	ここで，$ \vec{g} $の係数は，0.1秒分の自由落下の計算から求めている．また，単位ベクトルである$\vec{l}_i$と合わせるために$\vec{a}$も単位ベクトルとなるように求めている．
 	
 	次に，各ベクトルを選択する確率は式\ref{formula:prob}によって計算される．
 	\begin{equation}
 	\label{formula:prob}
-	P(\vec{l}_i) = \frac{1}{n-1}(1 - \frac{|\vec{a} - \vec{x}_i |}{\sum_{k=1}^{n}|\vec{a} - \vec{x}_k|})
+	P(\vec{l}_i) = \frac{1}{n-1}(1 - \frac{|\vec{a} - \vec{l}_i |}{\sum_{k=1}^{n}|\vec{a} - \vec{l}_k|})
 	\end{equation}
 	
-	ここで，$ \vec{l}_i $は\ref{boader}章から\ref{rotation}章で計算した次の進行方向ベクトルの候補で，$ i = (1,..,n) $である．
+	ここで，$ \vec{l}_i $は\ref{boader}章から\ref{rotation}章で計算した次の進行方向ベクトルの候補で，$ i = (1, .. ,n) $である．
 	
 	\section{制御モデル}
 	\label{sec:control}
@@ -222,7 +248,7 @@
 	
 	\begin{figure}
 		\centering
-		\includegraphics[width=0.5\linewidth]{png/control.png}
+		\includegraphics[width=0.8\linewidth]{png/control.png}
 		\caption[アルゴリズムのフローチャート]{サイボーグインセクトを制御する場合のアルゴリズムのフローチャート}
 		\label{fig:control}
 	\end{figure}
@@ -292,7 +318,7 @@
 	計算した斥力から次の進行方向ベクトルを決定する．
 	
 	\ref{sec:repulsive}章で計算した斥力が今いる面に対して垂直な成分を持っている場合は，今いる面に射影したベクトルを次の進行方向ベクトルとする．
-	図\ref{fig:repulsive}の赤い矢印が他のサイボーグインセクトや障害物から受ける斥力の合計とした場合，今いる面に平行な黄色の矢印が実際の決定される進行方向ベクトルとなる．
+	図\ref{fig:repulsive}の赤い矢印が他のサイボーグインセクトや障害物から受ける斥力の合計とした場合，今いる面に平行な単位ベクトルである黄色の矢印が実際に決定される進行方向ベクトルとなる．
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.35\linewidth]{png/repulsive.png}
@@ -322,7 +348,9 @@
 	
 	また，以上のパラメータを設定した場合に$T$を変化させながら実験を行い探索率の推移を比較する．
 	\section{実験結果}
+	\label{sec:result}
 	\section{おわりに}
+	\label{sec:last}
 	\begin{thebibliography}{99}
 		%%%%%%%%%%%%%%%%%%%%%
 		% 参考文献リスト
@@ -331,6 +359,9 @@
 		\bibitem{environment}Casper J and Murphy R R. Human-robot interactions during the robot-assisted urban search and rescue response at the world trade center.\textit{Systems,Man, and Cybernetics, PartB:Cybernetics,IEEE Transactions on,33(3)},2003,367-385
 		\bibitem{CyborgInsect}Alper Bozkurt,Robert F.Glimour,Ayesa Sinha,David Stern,and Amit Lal. Insect-Machine Interface Based Neurocybernetics. \textit{IEEE Trans Biomedical Eng.},vol.56,no.6,2009,pp.1727-1733
 		\bibitem{CINEMa}Alper Bozkurt,Edgar Lobaton,and Mihail Sichitiu.A Biobotic Distributed Sensor Network for Under-Rubble Search and Rescue.\textit{Computer},vol.49,no.5,pp.38-46,2016
+		\bibitem{steering}Craig Reynolds. Steering behaiviors for autonomous characters.In \textit{Proceedings of Game Developers Conference},pages 763-782,1999.
+		\bibitem{obstacle}Ali E.Turgut,Hande Celikkanat,Fatih Gokce,and Erol Sahin. Self-organized flocking in mobile robot swarms. \textit{Swarm Intelligence},vol.2,pp97-120,2008
+		\bibitem{exploration}Noury Bouraqadi,and Arnaud Doniec. Flocking-Based Multi-Robot Exploration. \textit{Conttol Architectures of Robots}.2009
 		
 		
 	\end{thebibliography}
