@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(160, 300, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(800, 1500, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -37,6 +37,7 @@ UNIVERSE {
             Dim dis_surface(0, 0) As Integer = (0);
             Dim is_hemi(0, 0) As Boolean = (0);
             Dim is_back(0, 0) As Boolean = (0);
+            Dim sum_repulsive_force(0, 0)[3] As Double = (3*0.0);
             Dim repulsive_vector(0, 0)[3][3] As Double = (9*0.0);
         }
         AgtType barrier(0, 0)[0] {
@@ -48,8 +49,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[160][300][40] As Boolean = (1920000*0);
-        Dim is_void(0, 0)[160][300][40] As Boolean = (1920000*0);
+        Dim fin(0, 0)[800][1500][40] As Boolean = (48000000*0);
+        Dim is_void(0, 0)[800][1500][40] As Boolean = (48000000*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -57,7 +58,7 @@ UNIVERSE {
     Dim num_fill_fin(0, 0) As Integer = (0);
     Dim num_insect(0, 0) As Integer = (0);
     Dim T(0, 0) As Integer = (0);
-    Dim alpha(0, 0) As Integer = (0);
+    Dim alpha(0, 0) As Double = (0.0);
 }
 
 
@@ -65,9 +66,9 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
-    UNIVERSE.NUM_INSECT = 1(4);
+    UNIVERSE.NUM_INSECT = 1(100);
     UNIVERSE.T = 1(100);
-    UNIVERSE.ALPHA = 1(0);
+    UNIVERSE.ALPHA = 1(0.8333333);
 }
 
 
@@ -76,7 +77,6 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
-	universe.num_insect = 4
 	CreateAgtMulti(universe.map.insect,universe.num_insect)
 	ClearConsoleScreen()
 	make_rubble_mix(0.6)
@@ -107,14 +107,16 @@ Univ_Step_Begin{
 
 Univ_Step_End{
 	draw_fin()
-	if (GetCountStep() mod 2000 ) == 0 then
-		write_csv()
-		OpenFileCSV("graph_control_4_r_10.csv",1,3)
+	if (GetCountStep() mod 100 ) == 0 then
+		OpenFileCSV("graph_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",1,3)
 		WriteFileCSV(1,GetCountStep(),false)
 		WriteFileCSV(1,universe.num_fin,true)
 		CloseFileCSV(1)
 	end if
-	if universe.num_fin == 1920000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+	if (GetCountStep() mod 2000 ) == 0 then
+		write_csv()
+	end if
+	if universe.num_fin == 48000000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
 	end if
 }
@@ -128,7 +130,7 @@ sub write_csv(){
 
 	n = GetCountStep() / 2000
 	m = universe.num_insect
-	OpenFileCSV("r10_voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n+1,3)
+	OpenFileCSV("control_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&"_T_"&universe.T&".csv",n+1,3)
 
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
@@ -157,6 +159,11 @@ sub draw_fin(){
 					if is_in_area(i,j,k) then
 						universe.map.fin(i,j,k)= true
 						universe.num_fin = universe.num_fin + 1
+						if universe.map.is_void(i,j,k) then
+							universe.num_fill_fin = universe.num_fill_fin + 1
+						else
+							universe.num_void_fin = universe.num_void_fin +1
+						end if
 					end if
 				end if
 			next i
@@ -172,7 +179,6 @@ function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
 
 	r = 20
 	if not universe.map.fin(x,y,z) then
-		//MakeAgtSet(tmp,universe.map.insect)
 		MakeOneAgtSetAroundPosition(tmp,universe.map,x,y,0,r,universe.map.insect)
 		if CountAgtSet(tmp) > 0 then
 			ret = false
@@ -571,7 +577,7 @@ sub repulsive_insect(){
 	dim d as Double
 	dim i as Integer
 
-	r = 10
+	r = 50
 	MakeOneAgtSetAroundOwn(neighbor,r,universe.map.insect,false)
 	if CountAgtSet(neighbor) > 0 then
 		for Each one in neighbor 
@@ -598,90 +604,60 @@ sub repulsive_barrier(){
 	dim d as Double
 	dim n as Integer
 	dim i as Integer
-	dim j as Integer
-	dim k as Integer
-	dim max(3) as Integer
-	dim min(3) as Integer
 
-	r = 2
+	r = 5
 	n = get_surface()
-	min(0) = Int(my.X)-2
-	min(1) = Int(my.Y)-2
-	min(2) = Int(my.Z)-2
+	MakeOneAgtSetAroundOwn(objectset,r,universe.map.barrier,false)
+	if CountAgtSet(objectset) > 0 then
+			if n == 0 then
+					for each one in objectset
+						if one.X == my.X then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
 
-	max(0) = Int(my.X)+2
-	max(1) = Int(my.Y)+2
-	max(2) = Int(my.Z)+2
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			elseif n == 1 then
+				for each one in objectset
+						if one.Y == my.Y then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
 
-	for i = 0 to 2
-		if min(i) < 0 then
-			min(i) = 0
-		end if
-	next i
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			elseif n == 2 then
+				for each one in objectset
+						if one.Z == my.Z then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
 
-	if max(0) >=  GetWidthSpace(universe.map) then
-		max(0) = GetWidthSpace(universe.map) - 1
-	end if
-	if max(1) >=  GetheightSpace(universe.map) then
-		max(1) = GetheightSpace(universe.map) - 1
-	end if
-	if max(2) >=  40 then
-		max(2) = 39
-	end if
-	
-	if n == 0 then
-		for j = min(2) to max(2) step 1
-			for i = min(1) to max(1) step 1
-				if universe.map.is_void(my.X,i,j) then
-					diff(0) = 0
-					diff(1) = my.Y - i
-					diff(2) = my.Z - j
-					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-
-					if d != 0 then
-						for k = 0 to 2
-							my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-						next k
-					end if
-				end if
-			next i
-		next j
-	elseif n == 1 then
-		for j = min(2) to max(2) step 1
-			for i = min(0) to max(0) step 1
-				if universe.map.is_void(i,my.Y,j) then
-					diff(0) = my.X - i
-					diff(1) = 0
-					diff(2) = my.Z - j
-					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-
-					if d != 0 then
-						for k = 0 to 2
-							my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-						next k
-					end if
-				end if
-			next i
-		next j
-	elseif n == 2 then
-		for j = min(1) to max(1) step 1
-			for i = min(0) to max(0) step 1
-				if universe.map.is_void(i,j,my.Z) then
-					diff(0) = my.X - i
-					diff(1) = my.Y - j
-					diff(2) = 0
-					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-
-					if d != 0 then
-						for k = 0 to 2
-							my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-						next k
-					end if
-				end if
-			next i
-		next j
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			else
+				PrintLn("miss")
+			end if
 	else
-		println("miss")
 	end if
 }
 
@@ -3113,7 +3089,6 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
-	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3177,52 +3152,32 @@ Time_Graph {
     Font_Background_Color = 255, 255, 255;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
-    Graph_Name = "探索したボクセルの数";
-    Title = "探索したボクセルの数";
+    Graph_Name = "test";
+    Title = "test";
     Disable = No;
     Background_Color = 255, 255, 255;
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 0;
-    Position_y = 0;
+    Position_x = 3;
+    Position_y = -1;
     Size_x = 1528;
     Size_y = 910;
     Map_Cell_Size = -1;
-    Axis_Label = "step数", "ボクセル数";
+    Axis_Label = "step", "voxel";
     Draw_By_JFree_Chart = Yes;
     Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
     ScaleAuto = Yes, Yes;
     Output_Group_Name = "";
     Output {
-        Graph_Element_Name = "合計";
-        Line_Color = 0, 0, 255;
-        Line_Width = 3;
+        Graph_Element_Name = "fin";
+        Line_Color = 255, 0, 0;
+        Line_Width = 2;
         Marker_Id = 0;
         Output_Expression = "universe.num_fin";
         Expression_Value_Display = No;
         Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (255, 0, 0);
-    }
-    Output {
-        Graph_Element_Name = "障害物なし";
-        Line_Color = 255, 0, 0;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_void_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 255, 0);
-    }
-    Output {
-        Graph_Element_Name = "障害物あり";
-        Line_Color = 0, 0, 255;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_fill_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 51, 255);
+        Graph_Element_Color = (204, 0, 0);
     }
 }
 
@@ -3235,7 +3190,7 @@ Control_Panel {
     Display_Type = 1;
     Panel_Item {
         Item_Type = Drop_Down_List;
-        Item_Name = "周期T";
+        Item_Name = "T";
         Display_Area = 0, 0, 0, 0;
         Font_Name = "";
         Font_Char_Set = 0;
@@ -3244,7 +3199,20 @@ Control_Panel {
         Font_Color = 0, 0, 0;
         Font_Background_Color = 0, 0, 0;
         Var_Name = "Universe.T";
-        Drop_Down_List_Value = "0","0","10","10","50","50","100","100","200","200","500","500","1000","1000";
+        Drop_Down_List_Value = "10","10","50","50","100","100","200","200","500","500","1000","1000";
+    }
+    Panel_Item {
+        Item_Type = Edit_Box;
+        Item_Name = "alpha";
+        Display_Area = 0, 0, 0, 0;
+        Font_Name = "";
+        Font_Char_Set = 0;
+        Font_Size = 0.0;
+        Font_Style = 0;
+        Font_Color = 0, 0, 0;
+        Font_Background_Color = 0, 0, 0;
+        Var_Name = "Universe.alpha";
+        Text_Data = "0.8333333";
     }
     Panel_Item {
         Item_Type = Edit_Box;
@@ -3257,23 +3225,7 @@ Control_Panel {
         Font_Color = 0, 0, 0;
         Font_Background_Color = 0, 0, 0;
         Var_Name = "Universe.num_insect";
-        Text_Data = "4";
-    }
-    Panel_Item {
-        Item_Type = Slider;
-        Item_Name = "alpha";
-        Display_Area = 0, 0, 0, 0;
-        Font_Name = "";
-        Font_Char_Set = 0;
-        Font_Size = 0.0;
-        Font_Style = 0;
-        Font_Color = 0, 0, 0;
-        Font_Background_Color = 0, 0, 0;
-        Var_Name = "Universe.alpha";
-        Slider_Range_Max = 20;
-        Slider_Value_Min = 0.0;
-        Slider_Value_Step = 0.05;
-        Slider_Value = "12";
+        Text_Data = "100";
     }
 }
 
@@ -3293,18 +3245,18 @@ Others_Data {
     Rule_Colored = Yes;
     Rule_LineNo = Yes;
     Window_Hide_Run = 1;
-    Debug_Position_x = 72;
-    Debug_Position_y = 72;
+    Debug_Position_x = 7;
+    Debug_Position_y = 8;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1313;
-    Console_Position_y = 1;
-    Console_Size_x = 681;
-    Console_Size_y = 905;
-    Componen_Tree_Position_x = 153;
-    Componen_Tree_Position_y = 28;
-    Componen_Tree_Size_x = 839;
-    Componen_Tree_Size_y = 383;
+    Console_Position_x = 0;
+    Console_Position_y = 0;
+    Console_Size_x = 1528;
+    Console_Size_y = 303;
+    Componen_Tree_Position_x = 0;
+    Componen_Tree_Position_y = 303;
+    Componen_Tree_Size_x = 1528;
+    Componen_Tree_Size_y = 303;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -3336,7 +3288,7 @@ Space_Map_Initial_Value {
     Background_Image_File_Path_Name = "";
     Origin_Position = Left_Bottom;
     Space_Variable {
-        Variable = Universe.map.fin,(1920000*0);
+        Variable = Universe.map.fin,(48000000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3344,7 +3296,7 @@ Space_Map_Initial_Value {
         Max_Value_Color = 0, 255, 255;
     }
     Space_Variable {
-        Variable = Universe.map.is_void,(1920000*0);
+        Variable = Universe.map.is_void,(48000000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3362,7 +3314,7 @@ Window_Rectangle {
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
+    Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
 }
 
 
