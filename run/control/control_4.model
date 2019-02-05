@@ -863,7 +863,7 @@ sub back_surface(n as Integer){
 		else
 			//ここに入りたくない
 			println("disapミスってる？？")
-			ExitSimulation()
+			DelAgt(my)
 		end if
 		my.is_back = true
 		prev_forward()
@@ -3186,8 +3186,8 @@ Time_Graph {
     FastDraw = Yes;
     Position_x = 0;
     Position_y = 0;
-    Size_x = 1528;
-    Size_y = 910;
+    Size_x = 1768;
+    Size_y = 909;
     Map_Cell_Size = -1;
     Axis_Label = "step数", "ボクセル数";
     Draw_By_JFree_Chart = Yes;
