@@ -1,4 +1,4 @@
-This is e-pTeX, Version 3.14159265-p3.7-160201-2.6 (sjis) (TeX Live 2016/W32TeX) (preloaded format=platex 2016.4.7)  3 FEB 2019 16:23
+This is e-pTeX, Version 3.14159265-p3.7-160201-2.6 (sjis) (TeX Live 2016/W32TeX) (preloaded format=platex 2016.4.7)  4 FEB 2019 16:54
 entering extended mode
  restricted \write18 enabled.
  Source specials enabled.
@@ -172,86 +172,104 @@ File: png/alighnment.png Graphic file (type bmp)
  <png/alighnment.png> [6] [7]
 File: png/Untitled.png Graphic file (type bmp)
 
-<png/Untitled.png>
-
-LaTeX Warning: Citation `speed' on page 8 undefined on input line 123.
-
+<png/Untitled.png> [8]
 File: png/bend.png Graphic file (type bmp)
-<png/bend.png> [8] [9]
+ <png/bend.png> [9]
 File: png/vector.png Graphic file (type bmp)
  <png/vector.png>
 File: png/vector2.png Graphic file (type bmp)
  <png/vector2.png>
-Overfull \hbox (2.43332pt too wide) in paragraph at lines 166--176
-[][]$[]$ $[]$ 
- []
-
-File: png/sub.png Graphic file (type bmp)
-<png/sub.png>
-File: png/rotation.png Graphic file (type bmp)
- <png/rotation.png>
-Overfull \hbox (2.43332pt too wide) in paragraph at lines 197--209
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 172--182
 [][]$[]$ $[]$ 
  []
 
 [10]
-Overfull \hbox (14.11263pt too wide) detected at line 229
+File: png/sub.png Graphic file (type bmp)
+ <png/sub.png>
+File: png/rotation.png Graphic file (type bmp)
+ <png/rotation.png>
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 203--215
+[][]$[]$ $[]$ 
+ []
+
+
+Overfull \hbox (14.11263pt too wide) detected at line 235
 []\OML/cmm/m/it/10.95 R[]\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 ^^^\OT1/cmr/m/
 n/10.95 ) = []
  []
 
 [11] [12]
 File: png/control.png Graphic file (type bmp)
- <png/control.png>
-
-LaTeX Warning: Citation `flocking-robot' on page 13 undefined on input line 278
-.
-
-[13] [14]
+ <png/control.png> [13] [14]
 File: png/repulsive.png Graphic file (type bmp)
  <png/repulsive.png> [15] [16]
-File: png/graph_voxel.png Graphic file (type bmp)
- <png/graph_voxel.png> [17] [18]
-[19]
+
+Package caption Warning: \label without proper reference on input line 389.
+See the caption package documentation for explanation.
+
+
+LaTeX Warning: Reference `tab:ex' on page 17 undefined on input line 385.
+
+File: png/Figure_49500.png Graphic file (type bmp)
+<png/Figure_49500.png>
+File: png/Figure1_3_51000.png Graphic file (type bmp)
+ <png/Figure1_3_51000.png>
+File: png/Figure1_4_41000.png Graphic file (type bmp)
+ <png/Figure1_4_41000.png>
+File: png/Figure1_height_60000.png Graphic file (type bmp)
+
+<png/Figure1_height_60000.png>
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 403--427
+[][]$[]$ $[]$ 
+ []
+
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 403--427
+[]$[]$ $[]$ 
+ []
+
+[17] [18]
+File: png/graph_voxel-alt.png Graphic file (type bmp)
+ <png/graph_voxel-alt.png> [19] [20]
 
 LaTeX Font Warning: Font shape `JT1/mc/m/it' undefined
-(Font)              using `JT1/mc/m/n' instead on input line 403.
+(Font)              using `JT1/mc/m/n' instead on input line 497.
 
 
 LaTeX Font Warning: Font shape `JY1/mc/m/it' undefined
-(Font)              using `JY1/mc/m/n' instead on input line 403.
+(Font)              using `JY1/mc/m/n' instead on input line 497.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 403--404
+Underfull \hbox (badness 10000) in paragraph at lines 497--498
 [][]\OT1/cmr/m/n/10.95 Wen-Ta Chiu,Jeffrey arnold,Yaw-Tang Shih,Kuang-Hua Hsiun
 g,Hsueh-Yun
  []
 
 
-Underfull \hbox (badness 2368) in paragraph at lines 403--404
+Underfull \hbox (badness 2368) in paragraph at lines 497--498
 \OT1/cmr/m/n/10.95 Chi,Chia-Huei Chiu,Wan-Chen Tsai,and William C.Huang. A Sur-
 vey of In-
  []
 
 
-Underfull \hbox (badness 2512) in paragraph at lines 403--404
+Underfull \hbox (badness 2512) in paragraph at lines 497--498
 \OT1/cmr/m/n/10.95 ter-na-tional Ur-ban Search-and-rescue Teams fol-low-ing the
  Ji Ji Earth-quake.
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 405--406
+Underfull \hbox (badness 10000) in paragraph at lines 499--500
 [][]\OT1/cmr/m/n/10.95 Alper Bozkurt,Robert F.Glimour,Ayesa Sinha,David Stern,a
 nd Amit Lal.
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 405--406
+Underfull \hbox (badness 10000) in paragraph at lines 499--500
 \OT1/cmr/m/n/10.95 Insect-Machine In-ter-face Based Neu-ro-cy-ber-net-ics. \OT1
 /cmr/m/it/10.95 IEEE Trans Biomed-i-cal
  []
 
-[20] (./grad_thesis.aux)
+[21] [22] (./grad_thesis.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
@@ -260,12 +278,12 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 2380 strings out of 493705
- 35745 string characters out of 6152319
+ 2407 strings out of 493705
+ 36253 string characters out of 6152319
  103992 words of memory out of 5000000
- 5929 multiletter control sequences out of 15000+600000
+ 5952 multiletter control sequences out of 15000+600000
  16728 words of font info for 66 fonts, out of 8000000 for 9000
  929 hyphenation exceptions out of 8191
- 42i,9n,40p,522b,528s stack positions out of 5000i,500n,10000p,500000b,80000s
+ 42i,9n,40p,456b,528s stack positions out of 5000i,500n,10000p,500000b,80000s
 
-Output written on grad_thesis.dvi (21 pages, 48800 bytes).
+Output written on grad_thesis.dvi (23 pages, 61396 bytes).

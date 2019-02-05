@@ -67,7 +67,7 @@ UNIVERSE {
 //-------------------------------------------------------
 Initial_Value {
     UNIVERSE.NUM_INSECT = 1(100);
-    UNIVERSE.T = 1(500);
+    UNIVERSE.T = 1(100);
     UNIVERSE.ALPHA = 1(0.6000000000000001);
 }
 
@@ -690,12 +690,9 @@ sub decide_vector(){
 		length = length + my.repulsive_vector(2,i)^2
 	next i 
 	length = Sqr(length)
-
-	if length != 0 then
-		for i = 0 to 2
-			my.forward_vector(i) = my.repulsive_vector(2,i) / length
-		next i 
-	end if
+	for i = 0 to 2
+		my.forward_vector(i) = my.repulsive_vector(2,i) / length
+	next i 
 }
 
 sub clear_val(){
@@ -839,7 +836,7 @@ sub back_surface(n as Integer){
 		else
 			//ここに入りたくない
 			println("disapミスってる？？")
-			ExitSimulation()
+			DelAgt(my)
 		end if
 		my.is_back = true
 		prev_forward()
@@ -3159,8 +3156,8 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 3;
-    Position_y = -1;
+    Position_x = 0;
+    Position_y = 0;
     Size_x = 1528;
     Size_y = 910;
     Map_Cell_Size = -1;
@@ -3255,11 +3252,11 @@ Others_Data {
     Console_Position_x = 0;
     Console_Position_y = 0;
     Console_Size_x = 1528;
-    Console_Size_y = 303;
+    Console_Size_y = 910;
     Componen_Tree_Position_x = 0;
-    Componen_Tree_Position_y = 303;
+    Componen_Tree_Position_y = 0;
     Componen_Tree_Size_x = 1528;
-    Componen_Tree_Size_y = 303;
+    Componen_Tree_Size_y = 910;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;

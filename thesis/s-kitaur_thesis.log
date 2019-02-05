@@ -1,0 +1,289 @@
+This is e-pTeX, Version 3.14159265-p3.7-160201-2.6 (sjis) (TeX Live 2016/W32TeX) (preloaded format=platex 2016.4.7)  4 FEB 2019 16:57
+entering extended mode
+ restricted \write18 enabled.
+ Source specials enabled.
+ %&-line parsing enabled.
+**s-kitaur_thesis.tex
+(./s-kitaur_thesis.tex
+pLaTeX2e <2006/11/10> (based on LaTeX2e <2016/03/31> patch level 0)
+Babel <3.9q> and hyphenation patterns for 81 language(s) loaded.
+(c:/w32tex/share/texmf-dist/tex/platex/base/jarticle.cls
+Document Class: jarticle 2006/06/27 v1.6 Standard pLaTeX class
+\c@@paper=\count81
+(c:/w32tex/share/texmf-dist/tex/platex/base/jsize11.clo
+File: jsize11.clo 2006/06/27 v1.6 Standard pLaTeX file (size option)
+)
+\c@part=\count82
+\c@section=\count83
+\c@subsection=\count84
+\c@subsubsection=\count85
+\c@paragraph=\count86
+\c@subparagraph=\count87
+\c@figure=\count88
+\c@table=\count89
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\symmincho=\mathgroup4
+LaTeX Font Info:    Overwriting symbol font `mincho' in version `bold'
+(Font)                  JY1/mc/m/n --> JY1/gt/m/n on input line 601.
+\toclineskip=\dimen118
+\@lnumwidth=\dimen119
+\bibindent=\dimen120
+\heisei=\count90
+) (./ics-thesis.sty
+Master/Bachelor Thesis Style for Dept. of I.C.S., Osaka Univ.
+\nendo=\count91
+\curmin=\count92
+\hour=\count93
+\onehour=\count94
+\curhour=\count95
+) (c:/w32tex/share/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+(c:/w32tex/share/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\@emptytoks=\toks15
+\symAMSa=\mathgroup5
+\symAMSb=\mathgroup6
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+))
+(c:/w32tex/share/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2014/10/28 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
+
+(c:/w32tex/share/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
+\KV@toks@=\toks16
+)
+(c:/w32tex/share/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2016/01/03 v1.0q Standard LaTeX Graphics (DPC,SPQR)
+
+(c:/w32tex/share/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
+)
+(c:/w32tex/share/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/01/02 v1.10 sample graphics configuration
+)
+Package graphics Info: Driver file: dvipdfmx.def on input line 95.
+
+(c:/w32tex/share/texmf-dist/tex/latex/dvipdfmx-def/dvipdfmx.def
+File: dvipdfmx.def 2016/04/06 v4.08 LaTeX color/graphics driver for dvipdfmx (T
+eX Live/ChoF)
+
+(c:/w32tex/share/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
+)
+(c:/w32tex/share/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
+)))
+\Gin@req@height=\dimen121
+\Gin@req@width=\dimen122
+)
+(c:/w32tex/share/texmf-dist/tex/latex/caption/subcaption.sty
+Package: subcaption 2016/02/20 v1.1-142 Sub-captions (AR)
+
+(c:/w32tex/share/texmf-dist/tex/latex/caption/caption.sty
+Package: caption 2016/02/21 v3.3-144 Customizing captions (AR)
+
+(c:/w32tex/share/texmf-dist/tex/latex/caption/caption3.sty
+Package: caption3 2016/02/04 v1.7-139 caption3 kernel (AR)
+Package caption3 Info: TeX engine: e-TeX on input line 67.
+\captionmargin=\dimen123
+\captionmargin@=\dimen124
+\captionwidth=\dimen125
+\caption@tempdima=\dimen126
+\caption@indent=\dimen127
+\caption@parindent=\dimen128
+\caption@hangindent=\dimen129
+Package caption Info: Unknown document class (or package),
+(caption)             standard defaults will be used.
+)
+
+Package caption Warning: Unsupported document class (or package) detected,
+(caption)                usage of the caption package is not recommended.
+See the caption package documentation for explanation.
+
+Package caption Info: \@makecaption = \long macro:#1#2->\vskip \abovecaptionski
+p \iftdir \sbox \@tempboxa {#1\hskip 1zw#2}\else \sbox \@tempboxa {#1: #2}\fi \
+ifdim \wd \@tempboxa >\hsize \iftdir #1\hskip 1zw#2\relax \par \else #1: #2\rel
+ax \par \fi \else \global \@minipagefalse \hbox to\hsize {\hfil \box \@tempboxa
+ \hfil }\fi \vskip \belowcaptionskip .
+\c@ContinuedFloat=\count96
+)
+\c@subfigure=\count97
+\c@subtable=\count98
+) (./s-kitaur_thesis.aux)
+\openout1 = `s-kitaur_thesis.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for JY1/mc/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+LaTeX Font Info:    Checking defaults for JT1/mc/m/n on input line 13.
+LaTeX Font Info:    ... okay on input line 13.
+Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: End \AtBeginDocument code.
+LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <14.4> not available
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line 14.
+LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <14.4> not available
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line 14.
+ [0
+
+]
+LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <12> not available
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line 15.
+LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <12> not available
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line 15.
+LaTeX Font Info:    Font shape `JT1/mc/bx/n' in size <10.95> not available
+(Font)              Font shape `JT1/gt/m/n' tried instead on input line 19.
+LaTeX Font Info:    Font shape `JY1/mc/bx/n' in size <10.95> not available
+(Font)              Font shape `JY1/gt/m/n' tried instead on input line 19.
+ [1] (./s-kitaur_thesis.toc
+LaTeX Font Info:    Try loading font information for U+msa on input line 5.
+
+(c:/w32tex/share/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Try loading font information for U+msb on input line 5.
+
+(c:/w32tex/share/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+))
+\tf@toc=\write3
+\openout3 = `s-kitaur_thesis.toc'.
+
+ [2] [3] [4] [5]
+File: png/separation.png Graphic file (type bmp)
+
+<png/separation.png>
+File: png/cohesion.png Graphic file (type bmp)
+ <png/cohesion.png>
+File: png/alighnment.png Graphic file (type bmp)
+ <png/alighnment.png> [6] [7]
+File: png/Untitled.png Graphic file (type bmp)
+
+<png/Untitled.png> [8]
+File: png/bend.png Graphic file (type bmp)
+ <png/bend.png> [9]
+File: png/vector.png Graphic file (type bmp)
+ <png/vector.png>
+File: png/vector2.png Graphic file (type bmp)
+ <png/vector2.png>
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 172--182
+[][]$[]$ $[]$ 
+ []
+
+[10]
+File: png/sub.png Graphic file (type bmp)
+ <png/sub.png>
+File: png/rotation.png Graphic file (type bmp)
+ <png/rotation.png>
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 203--215
+[][]$[]$ $[]$ 
+ []
+
+
+Overfull \hbox (14.11263pt too wide) detected at line 235
+[]\OML/cmm/m/it/10.95 R[]\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 ^^^\OT1/cmr/m/
+n/10.95 ) = []
+ []
+
+[11] [12]
+File: png/control.png Graphic file (type bmp)
+ <png/control.png> [13] [14]
+File: png/repulsive.png Graphic file (type bmp)
+ <png/repulsive.png> [15] [16]
+
+Package caption Warning: \label without proper reference on input line 389.
+See the caption package documentation for explanation.
+
+
+LaTeX Warning: Reference `tab:ex' on page 17 undefined on input line 385.
+
+File: png/Figure_49500.png Graphic file (type bmp)
+<png/Figure_49500.png>
+File: png/Figure1_3_51000.png Graphic file (type bmp)
+ <png/Figure1_3_51000.png>
+File: png/Figure1_4_41000.png Graphic file (type bmp)
+ <png/Figure1_4_41000.png>
+File: png/Figure1_height_60000.png Graphic file (type bmp)
+
+<png/Figure1_height_60000.png>
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 403--427
+[][]$[]$ $[]$ 
+ []
+
+
+Overfull \hbox (2.43332pt too wide) in paragraph at lines 403--427
+[]$[]$ $[]$ 
+ []
+
+[17] [18]
+File: png/graph_voxel-alt.png Graphic file (type bmp)
+ <png/graph_voxel-alt.png> [19] [20]
+
+LaTeX Font Warning: Font shape `JT1/mc/m/it' undefined
+(Font)              using `JT1/mc/m/n' instead on input line 497.
+
+
+LaTeX Font Warning: Font shape `JY1/mc/m/it' undefined
+(Font)              using `JY1/mc/m/n' instead on input line 497.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 497--498
+[][]\OT1/cmr/m/n/10.95 Wen-Ta Chiu,Jeffrey arnold,Yaw-Tang Shih,Kuang-Hua Hsiun
+g,Hsueh-Yun
+ []
+
+
+Underfull \hbox (badness 2368) in paragraph at lines 497--498
+\OT1/cmr/m/n/10.95 Chi,Chia-Huei Chiu,Wan-Chen Tsai,and William C.Huang. A Sur-
+vey of In-
+ []
+
+
+Underfull \hbox (badness 2512) in paragraph at lines 497--498
+\OT1/cmr/m/n/10.95 ter-na-tional Ur-ban Search-and-rescue Teams fol-low-ing the
+ Ji Ji Earth-quake.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 499--500
+[][]\OT1/cmr/m/n/10.95 Alper Bozkurt,Robert F.Glimour,Ayesa Sinha,David Stern,a
+nd Amit Lal.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 499--500
+\OT1/cmr/m/n/10.95 Insect-Machine In-ter-face Based Neu-ro-cy-ber-net-ics. \OT1
+/cmr/m/it/10.95 IEEE Trans Biomed-i-cal
+ []
+
+[21] [22] (./s-kitaur_thesis.aux)
+
+LaTeX Font Warning: Some font shapes were not available, defaults substituted.
+
+
+LaTeX Warning: There were undefined references.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 2407 strings out of 493705
+ 36297 string characters out of 6152319
+ 103992 words of memory out of 5000000
+ 5952 multiletter control sequences out of 15000+600000
+ 16728 words of font info for 66 fonts, out of 8000000 for 9000
+ 929 hyphenation exceptions out of 8191
+ 42i,9n,40p,460b,528s stack positions out of 5000i,500n,10000p,500000b,80000s
+
+Output written on s-kitaur_thesis.dvi (23 pages, 62064 bytes).

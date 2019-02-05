@@ -66,7 +66,7 @@ UNIVERSE {
 //-------------------------------------------------------
 Initial_Value {
     UNIVERSE.NUM_INSECT = 1(4);
-    UNIVERSE.T = 1(1000);
+    UNIVERSE.T = 1(100);
     UNIVERSE.ALPHA = 1(0);
 }
 
@@ -109,6 +109,10 @@ Univ_Step_End{
 	draw_fin()
 	if (GetCountStep() mod 2000 ) == 0 then
 		write_csv()
+		OpenFileCSV("graph_control_4_r_10.csv",1,3)
+		WriteFileCSV(1,GetCountStep(),false)
+		WriteFileCSV(1,universe.num_fin,true)
+		CloseFileCSV(1)
 	end if
 	if universe.num_fin == 1920000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
@@ -124,21 +128,21 @@ sub write_csv(){
 
 	n = GetCountStep() / 2000
 	m = universe.num_insect
-	OpenFileCSV("voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
+	OpenFileCSV("r10_voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n+1,3)
 
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
 			for i = 0 to GetWidthSpace(universe.map) -1
-				WriteFileCSV(n,i,false)
-				WriteFileCSV(n,j,false)
-				WriteFileCSV(n,k,false)
-				WriteFileCSV(n,universe.map.fin(i,j,k),false)
-				WriteFileCSV(n,universe.map.is_void(i,j,k),true)
+				WriteFileCSV(n+1,i,false)
+				WriteFileCSV(n+1,j,false)
+				WriteFileCSV(n+1,k,false)
+				WriteFileCSV(n+1,universe.map.fin(i,j,k),false)
+				WriteFileCSV(n+1,universe.map.is_void(i,j,k),true)
 			next i
 		next j
 	next k
 
-	CloseFileCSV(n)
+	CloseFileCSV(n+1)
 }
 
 sub draw_fin(){
@@ -153,11 +157,6 @@ sub draw_fin(){
 					if is_in_area(i,j,k) then
 						universe.map.fin(i,j,k)= true
 						universe.num_fin = universe.num_fin + 1
-						if universe.map.is_void(i,j,k) then
-							universe.num_fill_fin = universe.num_fill_fin + 1
-						else
-							universe.num_void_fin = universe.num_void_fin +1
-						end if
 					end if
 				end if
 			next i
@@ -572,7 +571,7 @@ sub repulsive_insect(){
 	dim d as Double
 	dim i as Integer
 
-	r = 50
+	r = 10
 	MakeOneAgtSetAroundOwn(neighbor,r,universe.map.insect,false)
 	if CountAgtSet(neighbor) > 0 then
 		for Each one in neighbor 
@@ -580,10 +579,12 @@ sub repulsive_insect(){
 			diff(1) = my.Y - one.Y
 			diff(2) = my.Z - one.Z
 			d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-	
-			for i = 0 to 2
-				my.repulsive_vector(0,i) = my.repulsive_vector(0,i) + diff(i) / d ^ 2
-			next i
+
+			if d != 0 then
+				for i = 0 to 2
+					my.repulsive_vector(0,i) = my.repulsive_vector(0,i) + diff(i) / d ^ 2
+				next i
+			end if
 		next one
 	end if
 }
@@ -636,10 +637,12 @@ sub repulsive_barrier(){
 					diff(1) = my.Y - i
 					diff(2) = my.Z - j
 					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-						
-					for k = 0 to 2
-						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-					next k
+
+					if d != 0 then
+						for k = 0 to 2
+							my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
+						next k
+					end if
 				end if
 			next i
 		next j
@@ -651,10 +654,12 @@ sub repulsive_barrier(){
 					diff(1) = 0
 					diff(2) = my.Z - j
 					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-						
-					for k = 0 to 2
-						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-					next k
+
+					if d != 0 then
+						for k = 0 to 2
+							my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
+						next k
+					end if
 				end if
 			next i
 		next j
@@ -666,10 +671,12 @@ sub repulsive_barrier(){
 					diff(1) = my.Y - j
 					diff(2) = 0
 					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-						
-					for k = 0 to 2
-						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-					next k
+
+					if d != 0 then
+						for k = 0 to 2
+							my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
+						next k
+					end if
 				end if
 			next i
 		next j
@@ -3266,7 +3273,7 @@ Control_Panel {
         Slider_Range_Max = 20;
         Slider_Value_Min = 0.0;
         Slider_Value_Step = 0.05;
-        Slider_Value = "12";
+        Slider_Value = "0";
     }
 }
 

@@ -3,14 +3,14 @@
 \contentsline {section}{\numberline {3}フロッキング}{6}
 \contentsline {section}{\numberline {4}サイボーグインセクトのモデル}{8}
 \contentsline {subsection}{\numberline {4.1}進行方向ベクトルの初期値決定}{8}
-\contentsline {subsection}{\numberline {4.2}進行方向ベクトルを変更するかの判定}{8}
+\contentsline {subsection}{\numberline {4.2}進行方向ベクトルを変更するかの判定}{9}
 \contentsline {subsection}{\numberline {4.3}回転角の決定}{9}
 \contentsline {subsection}{\numberline {4.4}1step分前進}{9}
 \contentsline {subsection}{\numberline {4.5}面と面が構成する境界線に接したかの判定}{9}
-\contentsline {subsection}{\numberline {4.6}次の進行方向ベクトルの決定}{9}
+\contentsline {subsection}{\numberline {4.6}次の進行方向ベクトルの決定}{10}
 \contentsline {subsubsection}{\numberline {4.6.1}境界線に平行なベクトル}{10}
 \contentsline {subsubsection}{\numberline {4.6.2}境界線に平行なベクトルの逆ベクトル}{10}
-\contentsline {subsubsection}{\numberline {4.6.3}現在の方向を保ちつつ，新しく接した面に平行なベクトル}{10}
+\contentsline {subsubsection}{\numberline {4.6.3}現在の方向を保ちつつ，新しく接した面に平行なベクトル}{11}
 \contentsline {subsubsection}{\numberline {4.6.4}ベクトルの決定}{11}
 \contentsline {section}{\numberline {5}制御モデル}{13}
 \contentsline {subsection}{\numberline {5.1}斥力の合計を計算}{14}
@@ -20,5 +20,7 @@
 \contentsline {subsection}{\numberline {5.2}進行方向の決定}{15}
 \contentsline {subsection}{\numberline {5.3}パラメータ設定}{15}
 \contentsline {section}{\numberline {6}実験結果}{17}
-\contentsline {section}{\numberline {7}おわりに}{19}
-\contentsline {section}{参考文献}{20}
+\contentsline {subsection}{\numberline {6.1}1匹のサイボーグインセクトが行う空間探索}{17}
+\contentsline {subsection}{\numberline {6.2}複数のサイボーグインセクトが行う空間探索}{19}
+\contentsline {section}{\numberline {7}おわりに}{20}
+\contentsline {section}{参考文献}{21}
