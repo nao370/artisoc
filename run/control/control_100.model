@@ -690,9 +690,11 @@ sub decide_vector(){
 		length = length + my.repulsive_vector(2,i)^2
 	next i 
 	length = Sqr(length)
-	for i = 0 to 2
-		my.forward_vector(i) = my.repulsive_vector(2,i) / length
-	next i 
+	if length != 0 then
+		for i = 0 to 2
+			my.forward_vector(i) = my.repulsive_vector(2,i) / length
+		next i 
+	end if
 }
 
 sub clear_val(){
