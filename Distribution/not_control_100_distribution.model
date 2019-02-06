@@ -1,0 +1,3341 @@
+//====================================================================/
+//　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　/
+// artisoc                                                            /
+//                                                                    /
+//====================================================================/
+
+Version = 4.0;
+
+
+
+//-------------------------------------------------------
+// Component Tree
+//-------------------------------------------------------
+UNIVERSE {
+    Space map(0,0),Square_2D(800, 1500, !Loop, North, 1, Map_3D){
+        AgtType insect(0, 0)[0] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) <2>  As Double = (0.0);
+            Dim Y(0, 0) <2>  As Double = (0.0);
+            Dim Z(0, 0) <2>  As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+            Dim next_vector(0, 0)[3][3] As Double = (9*0.0);
+            Dim forward_vector(0, 0) <1> [3] As Double = (3*0.0);
+            Dim base_vector(0, 0)[3] As Double = (3*0.0);
+            Dim angle_surface(0, 0) As Double = (0.0);
+            Dim b_type(0, 0) As Integer = (0);
+            Dim matrix(0, 0)[3][3] As Double = (9*0.0);
+            Dim normal_vector(0, 0) <1> [3] As Double = (3*0.0);
+            Dim do_type(0, 0) <1>  As Integer = (0);
+            Dim ap_or_dis(0, 0) As Integer = (0);
+            Dim a_flag(0, 0) As Boolean = (0);
+            Dim position_type(0, 0) As Integer = (0);
+            Dim touch(0, 0) <1> [3] As Integer = (3*0);
+            Dim n_normal(0, 0)[3] As Integer = (3*0);
+            Dim dis_surface(0, 0) As Integer = (0);
+            Dim is_hemi(0, 0) As Boolean = (0);
+            Dim is_back(0, 0) As Boolean = (0);
+            Dim sum_repulsive_force(0, 0)[3] As Double = (3*0.0);
+            Dim repulsive_vector(0, 0)[3][3] As Double = (9*0.0);
+        }
+        AgtType barrier(0, 0)[0] {
+            Dim ID(0, 0) As Integer = (0);
+            Dim X(0, 0) As Double = (0.0);
+            Dim Y(0, 0) As Double = (0.0);
+            Dim Z(0, 0) As Double = (0.0);
+            Dim Layer(0, 0) As Integer = (0);
+            Dim Direction(0, 0) As Double = (0.0);
+            Dim Angle(0, 0) As Double = (0.0);
+        }
+        Dim fin(0, 0)[800][1500][40] As Boolean = (48000000*0);
+        Dim is_void(0, 0)[800][1500][40] As Boolean = (48000000*0);
+    }
+    Dim CameraPointer(0, 0) As Agt = (0);
+    Dim num_fin(0, 0) <6000>  As Integer = (0);
+    Dim num_void_fin(0, 0) As Integer = (0);
+    Dim num_fill_fin(0, 0) As Integer = (0);
+    Dim num_insect(0, 0) As Integer = (0);
+    Dim T(0, 0) As Integer = (0);
+    Dim alpha(0, 0) As Double = (0.0);
+}
+
+
+//-------------------------------------------------------
+// Agent Variable Initial Data
+//-------------------------------------------------------
+Initial_Value {
+    UNIVERSE.NUM_INSECT = 1(100);
+    UNIVERSE.T = 1(100);
+    UNIVERSE.ALPHA = 1(0.6000000000000001);
+}
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE
+Univ_Init{
+	CreateAgtMulti(universe.map.insect,universe.num_insect)
+	ClearConsoleScreen()
+	make_rubble_mix(0.6)
+	make_void()
+	println("")
+	println("start")
+}
+
+sub make_void(){
+dim i as Integer
+dim j as Integer
+dim k as Integer
+
+for k= 0 to 39
+for j = 0 to GetHeightSpace(universe.map) -1
+for i = 0 to GetWidthSpace(universe.map) -1
+	if i == 0 or j == GetHeightSpace(universe.map)-1 or j == 0 or i == GetWidthSpace(universe.map) - 1 or k == 39 then
+		universe.map.is_void(i,j,k) = true
+	end if
+next i
+next j
+next k
+}
+
+Univ_Step_Begin{
+
+}
+
+Univ_Step_End{
+dim tmp as AgtSet
+dim one as Agt
+
+	draw_fin()
+	if (GetCountStep() mod 100 ) == 0 then
+		OpenFileCSV("graph_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",1,3)
+		WriteFileCSV(1,GetCountStep(),false)
+		WriteFileCSV(1,universe.num_fin,true)
+		CloseFileCSV(1)
+
+		OpenFileCSV("distribution_"&GetCountStep()&"_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",2,3)
+		MakeAgtSet(tmp,universe.map.insect)
+		for each one in tmp
+			WriteFileCSV(2,one.X,false)
+			WriteFileCSV(2,one.Y,false)
+			WriteFileCSV(2,one.Z,true)
+		next one
+		CloseFileCSV(2)
+	end if
+	if (GetCountStep() mod 2000 ) == 0 then
+		write_csv()
+	end if
+	if universe.num_fin == 48000000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+		ExitSimulation()
+	end if
+}
+
+sub write_csv(){
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim n as Integer
+	dim m as Integer
+
+	n = GetCountStep() / 2000
+	m = universe.num_insect
+	OpenFileCSV("control_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&"_T_"&universe.T&".csv",n+2,3)
+
+	for k= 0 to 39
+		for j = 0 to GetHeightSpace(universe.map) -1
+			for i = 0 to GetWidthSpace(universe.map) -1
+				WriteFileCSV(n+2,i,false)
+				WriteFileCSV(n+2,j,false)
+				WriteFileCSV(n+2,k,false)
+				WriteFileCSV(n+2,universe.map.fin(i,j,k),false)
+				WriteFileCSV(n+2,universe.map.is_void(i,j,k),true)
+			next i
+		next j
+	next k
+
+	CloseFileCSV(n+2)
+}
+
+sub draw_fin(){
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+
+	for k= 0 to 39
+		for j = 0 to GetHeightSpace(universe.map) -1
+			for i = 0 to GetWidthSpace(universe.map) -1
+				if not universe.map.fin(i,j,k) then
+					if is_in_area(i,j,k) then
+						universe.map.fin(i,j,k)= true
+						universe.num_fin = universe.num_fin + 1
+						if universe.map.is_void(i,j,k) then
+							universe.num_fill_fin = universe.num_fill_fin + 1
+						else
+							universe.num_void_fin = universe.num_void_fin +1
+						end if
+					end if
+				end if
+			next i
+		next j
+	next k
+}
+
+function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
+	dim ret as Boolean
+	dim tmp as AgtSet
+	dim one as Agt
+	dim r as Double
+
+	r = 20
+	if not universe.map.fin(x,y,z) then
+		MakeOneAgtSetAroundPosition(tmp,universe.map,x,y,0,r,universe.map.insect)
+		if CountAgtSet(tmp) > 0 then
+			ret = false
+			for each one in tmp
+				if ((one.X - x)^2 + (one.y - y)^2 + (one.z - z)^2) < r^2 then
+					ret = true
+				end if
+			next i
+		else
+			ret = false
+		end if
+	end if
+
+	return ret
+}
+
+Univ_Finish{
+	println("num_fin_sum : "&universe.num_fin)
+}
+
+sub make_rubble_mix(rate as Double){
+	dim tmp_rate as Double
+	dim tmp_number as Integer
+	dim max as Integer
+	dim height as Integer
+	dim width as Integer
+	dim x as integer
+	dim y as integer
+	dim z as integer
+	dim r as Double
+	dim pattern as Integer
+
+	tmp_rate = 0
+	height = GetHeightSpace(universe.map)
+	width = GetWidthSpace(universe.map)
+	max = height * width * 40
+	tmp_number = height * 40 * 2 + width * 40 * 2 - 40 * 4
+	println("tmp_number is"&tmp_number)
+
+	Do While tmp_rate < rate
+		x = Int(Rnd() * (width-2)) + 2
+		y = Int(Rnd() * (height-2)) + 2
+		z = Int(Rnd() * (40))
+		pattern = Int(Rnd() * 3)
+		r = Rnd() * 100
+		if r < 33 then
+			tmp_number = tmp_number + make_rubble_board(pattern,x,y,z)
+		elseif r < 66 then
+			tmp_number = tmp_number + make_rubble_box(x,y,z)
+		else
+			tmp_number = tmp_number + make_rubble_Pillar(pattern,x,y,z)
+		end if		
+		tmp_rate = tmp_number / max
+		PrintLn("rate is "&tmp_rate)
+	Loop
+			println("tmp_number is"&tmp_number)
+}
+
+function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as integer)as Integer{
+	dim t as Integer
+	dim a as Integer
+	dim b as Integer
+	dim c as Integer
+	dim one as Agt
+	dim set as AgtSet
+	dim temp as AgtSet
+	dim ret as Integer
+	dim flag as Boolean
+	dim kill as AgtSet
+	dim i as integer
+	dim j as integer
+
+	flag = false
+	ret = 64
+	if not universe.map.is_void(x,y,z) then
+		if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //水平に置く
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
+				c = t / 8
+				b = t Mod 8
+				if not universe.map.is_void(x+b,y+c,z) then
+					universe.map.is_void(x+b,y+c,z) = true
+				else
+					ret = ret - 1
+				end if
+			next t
+		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // 縦長に置く
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
+				a = t / 8
+				b = t Mod 8
+				if not universe.map.is_void(x,y+b,z+a) then
+					universe.map.is_void(x,y+b,z+a) = true
+				else
+					ret = ret - 1
+				end if
+			next t
+		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // 横長に置く
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
+				a = t / 8
+				c = t Mod 8
+				if not universe.map.is_void(x+c,y,z+a) then
+					universe.map.is_void(x+c,y,z+a) = true
+				else
+					ret = ret - 1
+				end if
+			next one
+		else
+			ret = 0
+		end if
+	else
+		ret = 0
+	end if
+	 
+	return ret
+}
+
+function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
+	dim t as Integer
+	dim a as Integer
+	dim b as Integer
+	dim c as Integer
+	dim one as Agt
+	dim set as AgtSet
+	dim temp as AgtSet
+	dim ret as integer
+	dim flag as Boolean
+	dim kill as AgtSet
+	dim i as integer
+	dim j as integer
+
+	ret = 64
+	flag = false
+	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 40 - 4 then
+		if not universe.map.is_void(x,y,z) then
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
+				a = t  / 16 
+				b = t Mod (16)
+				c = b / 4
+				b = b Mod 4
+ 				if not universe.map.is_void(x+b,y+c,z+a) then
+		  		universe.map.is_void(x+b,y+c,z+a) = true
+		  	else
+					ret = ret - 1		  		
+		  	end if		  	
+			next t
+		else
+			ret = 0
+		end if
+	else
+		ret = 0
+	end if
+		
+	 
+	return ret
+}
+
+function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as integer)as Integer{
+	dim set as AgtSet
+	dim a as Integer
+	dim b as Integer
+	dim one as agt
+	dim temp as AgtSet
+	dim t as Integer
+	dim c as Integer
+	dim ret as Integer
+	dim flag as Boolean
+		dim kill as AgtSet
+			dim i as integer
+	dim j as integer
+
+	ret = 64
+	flag = false
+	if not universe.map.is_void(x,y,z) then
+		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
+		//横長の柱を作る
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
+	  		a = t  / 32 
+	  		b = t Mod (32)
+	  		c = b / 16
+	  		b = b Mod 16
+				if not universe.map.is_void(x+b,y+c,z+a) then
+		  		universe.map.is_void(x+b,y+c,z+a) = true
+		  	else
+					ret = ret - 1		  		
+		  	end if
+	  	next one
+		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
+		//縦長の柱を作る
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+	 		for t = 0 to 63
+	 			a = t  / 32 
+	 			b = t Mod (32)
+	 			c = b / 2
+	 			b = b Mod 2
+				if not universe.map.is_void(x+b,y+c,z+a) then
+		 			universe.map.is_void(x+b,y+c,z+a) = true
+				else
+					ret = ret - 1		  	 		 		
+		 		end if
+	 		next t
+	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //立ってる柱を作る
+	  	Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+	 		for t = 0 to 63
+	 			a = t  / 4 
+	 			b = t Mod (4)
+	 			c = b / 2
+	 			b = b Mod 2
+				if not universe.map.is_void(x+b,y+c,z+a) then
+		 			universe.map.is_void(x+b,y+c,z+a) = true
+		 		else
+					ret = ret - 1		  	 		 		
+		 		end if
+	 		next one
+	  else
+	  	ret = 0
+		end if
+	else
+		ret = 0
+	end if
+	 
+	return ret
+}
+#end_rule UNIVERSE
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.INSECT
+Agt_Init{
+my.Direction = rnd() * 360
+my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
+my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
+my.do_type = 1
+my.ap_or_dis = 1
+my.position_type = 0
+my.normal_vector(2) = 1
+my.touch(2) = 1
+my.dis_surface = -1
+my.X = 1 + rnd()
+my.Y = 1 + rnd()
+my.Z = 0
+}
+
+Agt_Step{
+dim i as Integer
+
+	if is_control() then
+		calculate_repulsive()
+		decide_vector()
+	else
+		if different_surface() then
+			determining_vector()
+			update_normal_vector()
+		else
+			if is_bend() then
+				determining_bend()
+			end if
+		end if
+	end if
+	forward_step()
+	clear_val()
+}
+
+function is_control() as Boolean{
+	dim ret as Boolean
+
+/*	if (GetCountStep() mod universe.T) == 0 then
+		ret = true
+	else
+		ret = false
+	end if*/
+
+	ret = false
+
+	return ret
+}
+
+sub calculate_repulsive(){
+	repulsive_insect()
+	repulsive_barrier()
+	sum_repulsive()
+}
+sub sum_repulsive(){
+//repulsiveの合計を出す
+	dim i as Integer
+	dim alpha as Double
+
+	alpha = universe.alpha
+
+	for i = 0 to 2
+		my.repulsive_vector(2,i) = alpha * my.repulsive_vector(0,i) + (1 - alpha) * my.repulsive_vector(1,i)
+	next i
+}
+
+sub repulsive_insect(){
+//サイボーグインセクトからの斥力の和を計算
+	dim neighbor as AgtSet
+	dim r as Double
+	dim diff(3) as Double
+	dim d as Double
+	dim i as Integer
+
+	r = 50
+	MakeOneAgtSetAroundOwn(neighbor,r,universe.map.insect,false)
+	if CountAgtSet(neighbor) > 0 then
+		for Each one in neighbor 
+			diff(0) = my.X - one.X
+			diff(1) = my.Y - one.Y
+			diff(2) = my.Z - one.Z
+			d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+
+			if d != 0 then
+				for i = 0 to 2
+					my.repulsive_vector(0,i) = my.repulsive_vector(0,i) + diff(i) / d ^ 2
+				next i
+			end if
+		next one
+	end if
+}
+
+sub repulsive_barrier(){
+//障害物からの斥力の和を計算
+	dim objectset as AgtSet
+	dim r as Double
+	dim normal as Integer
+	dim diff(3) as Double
+	dim d as Double
+	dim n as Integer
+	dim i as Integer
+
+	r = 2
+	n = get_surface()
+	MakeOneAgtSetAroundOwn(objectset,r,universe.map.barrier,false)
+	if CountAgtSet(objectset) > 0 then
+			if n == 0 then
+					for each one in objectset
+						if one.X == my.X then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			elseif n == 1 then
+				for each one in objectset
+						if one.Y == my.Y then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			elseif n == 2 then
+				for each one in objectset
+						if one.Z == my.Z then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			else
+				PrintLn("miss")
+			end if
+	else
+	end if
+}
+
+function get_surface()as Integer{
+	dim ret as Integer
+	dim i as Integer
+
+	ret = -1
+	for i = 0 to 2
+		if my.normal_vector(i) != 0 then
+			ret = i
+			break
+		end if
+	next i
+
+	return ret
+}
+
+sub decide_vector(){
+//斥力から今の垂直な成分を削除
+	dim n as Integer
+	dim i as Integer
+	dim length as Double
+
+	n = get_surface()
+	length = 0
+	my.repulsive_vector(2,n) = 0 
+
+	for i = 0 to 2
+		length = length + my.repulsive_vector(2,i)^2
+	next i 
+	length = Sqr(length)
+	if length != 0 then
+		for i = 0 to 2
+			my.forward_vector(i) = my.repulsive_vector(2,i) / length
+		next i 
+	end if
+}
+
+sub clear_val(){
+//毎ステップ初期化必要な変数を初期化する関数
+	my.dis_surface = -1
+	my.is_back = false
+}
+
+
+sub update_normal_vector(){
+//あり得ないnormal_Vectorを消す
+//これ必要？ちゃんと更新できるならいらなくない？
+	dim type as Integer
+
+	type = my.do_type
+
+	if type == 0 then
+		my.normal_vector(0) = 0
+	elseif type == 1 then
+		my.normal_vector(0) = 0
+		my.normal_vector(1) = 0
+	elseif type == 2 then
+		my.normal_vector(0) = 0
+		my.normal_vector(2) = 0
+	elseif type == 3 then
+		my.normal_vector(1) = 0
+	elseif type == 4 then
+		my.normal_vector(1) = 0
+		my.normal_vector(2) = 0
+	else
+		my.normal_vector(2) = 0
+	end if
+}
+
+sub delete_touch_vector(){
+//あり得ないtouchを消す
+	dim type as Integer
+
+	type = my.do_type
+	
+	if type == 0 then
+		my.touch(0) = 0
+	elseif type == 1 then
+		my.touch(0) = 0
+		my.touch(1) = 0
+	elseif type == 2 then
+		my.touch(0) = 0
+		my.touch(2) = 0
+	elseif type == 3 then
+		my.touch(1) = 0
+	elseif type == 4 then
+		my.touch(1) = 0
+		my.touch(2) = 0
+	else
+		my.touch(2) = 0
+	end if
+}
+
+sub update_normal(){
+//normalの正負を合わせるため
+	dim i as Integer
+
+	for i = 0 to 2
+		if my.normal_vector(i) != 0 then
+			my.normal_vector(i) = my.touch(i)
+		end if
+	next i
+}
+
+sub forward_step() {
+
+	if is_differernt() then
+		step_surface()
+	else
+		step_direction()
+	end if
+	delete_touch_vector()
+	update_normal()
+
+	if not is_step() then
+		back_step()
+	end if
+}
+
+function is_differernt()as Boolean{
+	dim i as Integer
+	dim n as Integer
+	dim f as Double
+	dim ret as Boolean
+
+	n = my.dis_surface
+	if n == -1 then
+		ret = false
+	else
+		f = my.forward_vector(n)//GetHistory(my.forward_vector(n),1)
+		
+		if f != 0 and my.ap_or_dis == -1 then
+			ret = true
+		else
+			ret = false
+		end if
+	end if
+	
+	return ret
+}
+
+sub back_surface(n as Integer){
+	dim pre as Integer
+	dim i as Integer
+	dim f(3) as Double
+	dim a(3) as Double
+
+	a(0) = close_num(my.X) - my.normal_vector(0)
+	a(1) = close_num(my.Y) - my.normal_vector(1)
+	a(2) = close_num(my.Z) - my.normal_vector(2)
+
+	for i =0 to 2
+		f(i) = GetHistory(my.forward_vector(i),1)
+		if f(i) != 0 then
+			f(i) = f(i) / Abs(f(i))
+		end if
+		if a(i) < 0 then
+			return
+		end if
+	next i
+
+	if not universe.map.is_void(a(0),a(1),a(2)) then
+		pre = GetHistory(my.touch(n),1)
+		if n == 0 and universe.map.is_void(a(0)+ pre + f(0),a(1),a(2)) then
+			my.X = my.X + pre + f(0)
+			my.Y = my.Y 
+			my.Z = my.Z
+		elseif n == 1 and universe.map.is_void(a(0),a(1)+pre+f(1),a(2)) then
+			my.X = my.X 
+			my.Y = my.Y + pre + f(1)
+			my.Z = my.Z 
+		elseif universe.map.is_void(a(0),a(1),a(2)+ pre + f(2)) then
+			my.X = my.X 
+			my.Y = my.Y 
+			my.Z = my.Z + pre + f(2)
+		else
+			//ここに入りたくない
+			println("disapミスってる？？")
+			DelAgt(my)
+		end if
+		my.is_back = true
+		prev_forward()
+	end if
+}
+
+sub prev_forward(){
+//面を移る前の状態に戻す
+	dim i as Integer 
+	
+	for i = 0 to 2
+		my.forward_vector(i) = GetHistory(my.forward_vector(i),1)
+		my.touch(i) = GetHistory(my.touch(i),1)
+	next i
+	my.do_type = GetHistory(my.do_type,1)
+}
+
+sub step_direction(){
+	my.X = my.X + my.forward_vector(0) * 0.6
+	my.Y = my.Y + my.forward_vector(1) * 0.6
+	my.Z = my.Z + my.forward_vector(2) * 0.6
+
+	if my.X < 0 then
+		my.X = 0
+	end if
+	if my.y < 0 then
+		my.y = 0
+	end if
+	if my.z < 0 then
+		my.z = 0
+	end if
+
+}
+
+function is_step() as Boolean{
+	dim ret as Boolean
+
+	if is_filled() then
+		ret = false
+	else
+		if is_float() then
+			ret = false
+		else
+			if not is_jump() then
+				if is_pause() then
+					ret = false
+				else
+					ret = true
+				end if
+			else
+				ret = false
+			end if
+		end if
+	end if
+
+	return ret
+}
+
+function is_pause() as Boolean{
+//触ってる面が途切れたらtrueを返す
+	dim type as Integer
+	dim ret as Boolean
+	dim nx as Integer
+	dim ny as Integer
+	dim nz as Integer
+	dim f(3) as Double
+	dim i as Integer
+	dim minus(3) as Integer
+
+	for i = 0 to 2
+		if my.forward_vector(i) != 0 then
+			f(i) = My.forward_vector(i)
+			f(i) = f(i) / Abs(f(i))
+		else
+			f(i) = 0
+		end if
+		if f(i) < 0 then
+			minus(i) = 1
+		else
+			minus(i) = 0
+		end if
+	next i
+	
+	nx = Int(my.X)// + minus(0)
+	ny = Int(my.Y)// + minus(1)
+	nz = Int(my.Z)// + minus(2)
+
+	if nx != my.X then
+		nx = minus(0)
+	end if
+	if ny != my.y then
+		ny = minus(1)
+	end if
+	if nz != my.z then
+		nz = minus(2)
+	end if
+	
+	
+	type = my.do_type
+
+	if my.is_back then
+		ret = false
+		return ret 
+	end if
+
+	if type == 0 then
+		if my.normal_vector(1) == 0 then
+			if my.touch(1) != 0 then
+				if ny == 0 and my.touch(1) > 0 then
+					ret = false
+				else
+					if nx == 0 then
+						ret = false
+					elseif universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx+f(0),ny - my.touch(1),nz) then
+						if my.X == nx then
+							ret = false
+						else
+							ret = true
+						end if
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if
+		else
+			if my.touch(2) != 0 then
+				if nz == 0 and my.touch(2) > 0 then
+					ret = false
+				else
+					if nx == 0 then
+						ret = false
+					elseif universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx+f(0),ny,nz - my.touch(2)) then
+						if my.X == nx then
+							ret = false
+						else
+							ret = true
+						end if
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if
+		end if
+	elseif type == 1 then
+		ret = false
+	elseif type == 2 then
+		ret = false
+	elseif type == 3 then
+		if my.normal_vector(0) == 0 then
+			if my.touch(0) != 0 then
+				if nx == 0 and my.touch(0) > 0 then
+					ret = false
+				else
+					if ny == 0 then
+						ret = false
+					elseif universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny+f(1),nz) then
+						if my.Y == ny then
+							ret = false
+						else
+							ret = true
+						end if
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if
+		else
+			if my.touch(2) != 0 then
+				if nz == 0 and my.touch(2) > 0 then
+					ret = false
+				else
+					if ny == 0 then
+						ret = false
+					elseif universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.touch(2)) then
+						if my.Y == ny  then
+							ret = false
+						else
+							ret = true
+						end if
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if
+		end if
+	elseif type == 4 then
+		ret = false
+	else
+		if my.normal_vector(0) == 0 then
+			if my.touch(0) != 0 then
+				if nx == 0 and my.touch(0) > 0 then
+					ret = false
+				else
+					if nz == 0 then
+						ret = false
+					elseif universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny,nz+f(2)) then
+						if my.Z == nz then
+							ret = false
+						else
+							ret = true
+							//println("5")
+						end if
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if
+		else
+			if my.touch(1) != 0 then
+				if ny == 0 and my.touch(1) > 0 then
+					ret = false
+				else
+					if nz == 0 then
+						ret = false
+					elseif universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx,ny - my.touch(1),nz+f(2)) then
+						if my.Z == nz then
+							ret = false
+						else
+							ret = true
+							//println("6")
+						end if
+					else
+						ret = false
+					end if
+				end if
+			else
+				ret = false
+			end if
+		end if
+	end if
+
+	return ret
+}
+
+function is_jump() as Boolean{
+//さっきまでの面を飛び出したかどうか
+	dim type as Integer
+	dim ret as Boolean
+	dim nx as Integer
+	dim ny as Integer
+	dim nz as Integer
+
+	nx = Int(my.X)
+	ny = Int(my.Y)
+	nz = Int(my.Z)
+	
+	type = my.do_type
+
+	if type == 0 then
+		if my.normal_vector(1) == 0 then
+			if nz == 0 and my.normal_vector(2) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
+					ret = false
+				else
+					if my.X == nx then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			end if
+		else
+			if ny == 0 and my.normal_vector(1) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx,ny - my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny - my.normal_vector(1),nz) then
+					ret = false
+				else
+					if my.x == nx then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			end if
+		end if
+	elseif type == 1 then
+		if nz == 0 and my.normal_vector(2) > 0 then
+			ret = false
+		else
+			if ny == my.Y then
+				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
+					ret = false
+				else
+					if my.x == nx then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			elseif nx == my.X then
+				if universe.map.is_void(nx,ny ,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
+					ret = false
+				else
+					if my.y == ny then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			else
+				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny+1,nz - my.normal_vector(2))  then
+					ret = false
+				else
+					ret = true
+				end if
+			end if
+		end if
+	elseif type == 2 then
+		if ny == 0 and my.normal_vector(1) > 0 then
+			ret = false
+		else
+			if nz == my.z then
+				if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny- my.normal_vector(1),nz) then
+					ret = false
+				else
+					if my.x == nx then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			elseif nx == my.X then
+				if universe.map.is_void(nx,ny- my.normal_vector(1) ,nz) and universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) then
+					ret = false
+				else
+					if my.Z == nz then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			else
+				if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny- my.normal_vector(1),nz) and universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) and universe.map.is_void(nx+1,ny- my.normal_vector(1),nz+1)  then
+					ret = false
+				else
+					ret = true
+				end if
+			end if
+		end if
+	elseif type == 3 then
+		if my.normal_vector(0) == 0 then
+			if nz == 0 and my.normal_vector(2) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
+					ret = false
+				else
+					if my.y == ny then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			end if
+		else
+			if nx == 0 and my.normal_vector(0) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny+1,nz) then
+					ret = false
+				else
+					if my.y == ny then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			end if
+		end if
+	elseif type == 4 then
+		if nx == 0 and my.normal_vector(0) > 0 then
+			ret = false
+		else
+			if nz == my.z then
+				if universe.map.is_void(nx- my.normal_vector(0),ny,nz) and universe.map.is_void(nx- my.normal_vector(0),ny+1,nz) then
+					ret = false
+				else
+					if my.y == ny then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			elseif ny == my.y then
+				if universe.map.is_void(nx- my.normal_vector(0),ny ,nz) and universe.map.is_void(nx- my.normal_vector(0),ny,nz+1) then
+					ret = false
+				else
+					if my.Z == nz then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			else
+				if universe.map.is_void(nx- my.normal_vector(0),ny,nz) and universe.map.is_void(nx- my.normal_vector(0),ny+1,nz) and universe.map.is_void(nx- my.normal_vector(0),ny,nz+1) and universe.map.is_void(nx- my.normal_vector(0),ny+1,nz+1)  then
+					ret = false
+				else
+					ret = true
+				end if
+			end if
+		end if
+	else
+		if my.normal_vector(0) == 0 then
+			if ny == 0 and my.normal_vector(1) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx,ny - my.normal_vector(1),nz) and universe.map.is_void(nx,ny - my.normal_vector(1),nz+1) then
+					ret = false
+				else
+					if my.Z == nz then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			end if
+		else
+			if nx == 0 and my.normal_vector(0) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
+					ret = false
+				else
+					if my.Z == nz then
+							ret = false
+						else
+							ret = true
+						end if
+				end if
+			end if
+		end if
+	end if
+
+	return ret
+}
+
+function close_num(x as Double) as Integer{
+	dim n as Integer
+	dim ret as Integer
+
+	n = Int(x)
+
+	if x - n >= 0.5 then
+		ret = n + 1
+	else
+		ret = n
+	end if
+
+	return ret
+}
+
+function type_gap(x as Double,a as Integer) as Integer{
+	dim ret as Integer
+
+	if x - a > 0 then
+		ret = 1
+	elseif x - a < 0 then
+		ret = -1
+	else
+		ret = 0
+	end if
+
+	return ret
+}
+
+function is_filled() as Boolean{
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim a(3) as Integer
+	dim x(3) as Double
+	dim g(3) as Integer
+	dim ret as Boolean
+
+	x(0) = my.X
+	x(1) = my.Y
+	x(2) = my.Z
+
+		//println("近いマス")
+	for i = 0 to 2
+		a(i) = close_num(x(i))
+		//println("a("&i&")"&"is"&a(i))
+	next i
+
+	ret = false
+	for i = 0 to 2
+		if a(i) == 0 then
+			g(i) = 0
+		else
+			g(i) = 1
+		end if
+	next i
+	
+	for k = 0 to (1 + g(2))
+	 for j = 0 to (1 + g(1))
+	 	for i = 0 to (1 + g(0))
+	 		if a(0)-g(0)+i > GetWidthSpace(universe.map)-1 or a(1)-g(1)+j > GetHeightSpace(universe.map)-1 then
+	 			
+	 		elseif universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+	 			if abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
+	 				//println("どのマスに埋まったか")
+	 				//println("x :"&a(0)-g(0)+i)
+	 				//println("y :"&a(1)-g(1)+j)
+	 				//println("z :"&a(2)-g(2)+k)
+	 				ret = true
+	 				return ret
+	 			end if
+	 		end if
+	 	next i
+	 next j
+	next k
+
+	return ret
+}
+
+function is_float() as Boolean{
+	dim i as Integer
+	dim j as Integer
+	dim k as Integer
+	dim a(3) as Integer
+	dim x(3) as Double
+	dim g(3) as Integer
+	dim ret as Boolean
+
+	x(0) = my.X
+	x(1) = my.Y
+	x(2) = my.Z
+
+	for i = 0 to 2
+		a(i) = close_num(x(i))
+	next i
+
+	ret = false
+	for i = 0 to 2
+		if a(i) == 0 then
+			g(i) = 0
+		else
+			g(i) = 1
+		end if
+	next i
+
+	if x(0) == 0 or x(1) == 0 or x(2) == 0 then
+		ret = false
+		return ret
+	end if
+	
+	for k = 0 to (1 + g(2))
+	 for j = 0 to (1 + g(1))
+	 	for i = 0 to (1 + g(0))
+	 		if universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+	 			if abs(a(0) - g(0) + i  - my.X) > 1 and abs(a(1) - g(1) + j  - my.y) > 1 and abs(a(2) - g(2) + k  - my.z) > 1 then
+	 				ret = true
+	 				return ret
+	 			end if
+	 		end if
+	 	next i
+	 next j
+	next k
+
+	return ret
+}
+
+sub back_step(){
+	dim n(3) as Integer
+	dim diff_x as Double
+	dim diff_y as Double
+	dim diff_z as Double
+	dim pre(3) as Double
+	dim u(3) as Double
+	dim k(3) as Double
+	dim pre_n(3) as Double
+	dim i as Integer
+	dim ak(3) as Double 
+
+	//println("今いる場所")
+	//println("x ;" & my.X)
+	//println("y ;" & my.y)
+	//println("z ;" & my.z)
+			
+	pre(0) = GetHistory(my.X,1)
+	pre(1) = GetHistory(my.y,1)
+	pre(2) = GetHistory(my.z,1)
+
+	//println("さっきいた場所")
+	//println("x ;" & pre(0))
+	//println("y ;" & pre(1))
+	//println("z ;" & pre(2))
+
+	k(0) = 0
+	k(1) = 0
+	k(2) = 0
+
+	u(0) = my.forward_vector(0)//my.X - pre_x
+	u(1) = my.forward_vector(1)//my.y - pre_y
+	u(2) = my.forward_vector(2)//my.z - pre_z
+
+	n(0) = Int(my.X)
+	n(1) = Int(my.Y)
+	n(2) = Int(my.Z)
+
+	pre_n(0) = Int(pre(0))
+	pre_n(1) = Int(pre(1))
+	pre_n(2) = Int(pre(2))
+
+	for i = 0 to 2
+		if n(i) == pre_n(i) or u(i) == 0 then
+			k(i) = 0
+		else
+			if n(i) > pre_n(i) then
+				k(i) = (n(i) - pre(i)) / u(i)
+			else
+				k(i) = (pre_n(i) - pre(i)) / u(i)
+			end if
+		end if
+		ak(i) = Abs(k(i))
+		if k(i) < 0 then
+			k(i) = 0
+		end if
+	next i
+
+	if ak(0) <= ak(1) and ak(1) <= ak(2) then
+		my.X = pre(0) + k(2) * u(0)
+		my.y = pre(1) + k(2) * u(1)
+		my.z = pre(2) + k(2) * u(2)
+		back_0()
+		
+		if not is_step() then
+			my.X = pre(0) + k(1) * u(0)
+			my.y = pre(1) + k(1) * u(1)
+			my.z = pre(2) + k(1) * u(2)
+			back_0()
+
+			if not is_step() then
+				my.X = pre(0) + k(0) * u(0)
+				my.y = pre(1) + k(0) * u(1)
+				my.z = pre(2) + k(0) * u(2)
+				back_0()
+			end if
+		end if
+	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
+		my.X = pre(0) + k(1) * u(0)
+		my.y = pre(1) + k(1) * u(1)
+		my.z = pre(2) + k(1) * u(2)
+		back_0()
+
+		if not is_step() then
+			my.X = pre(0) + k(2) * u(0)
+			my.y = pre(1) + k(2) * u(1)
+			my.z = pre(2) + k(2) * u(2)
+			back_0()
+
+			if not is_step() then
+				my.X = pre(0) + k(0) * u(0)
+				my.y = pre(1) + k(0) * u(1)
+				my.z = pre(2) + k(0) * u(2)
+				back_0()
+			end if
+		end if
+	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
+		my.X = pre(0) + k(2) * u(0)
+		my.y = pre(1) + k(2) * u(1)
+		my.z = pre(2) + k(2) * u(2)
+		back_0()
+
+		if not is_step() then
+			my.X = pre(0) + k(0) * u(0)
+			my.y = pre(1) + k(0) * u(1)
+			my.z = pre(2) + k(0) * u(2)
+			back_0()
+
+			if not is_step() then
+				my.X = pre(0) + k(1) * u(0)
+				my.y = pre(1) + k(1) * u(1)
+				my.z = pre(2) + k(1) * u(2)
+				back_0()
+			end if
+		end if
+	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
+		my.X = pre(0) + k(0) * u(0)
+		my.y = pre(1) + k(0) * u(1)
+		my.z = pre(2) + k(0) * u(2)
+		back_0()
+
+		if not is_step() then
+			my.X = pre(0) + k(2) * u(0)
+			my.y = pre(1) + k(2) * u(1)
+			my.z = pre(2) + k(2) * u(2)
+			back_0()
+
+			if not is_step() then
+				my.X = pre(0) + k(1) * u(0)
+				my.y = pre(1) + k(1) * u(1)
+				my.z = pre(2) + k(1) * u(2)
+				back_0()
+			end if
+		end if
+	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
+		my.X = pre(0) + k(1) * u(0)
+		my.y = pre(1) + k(1) * u(1)
+		my.z = pre(2) + k(1) * u(2)
+		back_0()
+
+		if not is_step() then
+			my.X = pre(0) + k(0) * u(0)
+			my.y = pre(1) + k(0) * u(1)
+			my.z = pre(2) + k(0) * u(2)
+			back_0()
+
+			if not is_step() then
+				my.X = pre(0) + k(2) * u(0)
+				my.y = pre(1) + k(2) * u(1)
+				my.z = pre(2) + k(2) * u(2)
+				back_0()
+			end if
+		end if
+	else			
+		my.X = pre(0) + k(0) * u(0)
+		my.y = pre(1) + k(0) * u(1)
+		my.z = pre(2) + k(0) * u(2)
+		back_0()
+
+		if not is_step() then
+			my.X = pre(0) + k(1) * u(0)
+			my.y = pre(1) + k(1) * u(1)
+			my.z = pre(2) + k(1) * u(2)
+			back_0()
+
+			if not is_step() then
+				my.X = pre(0) + k(2) * u(0)
+				my.y = pre(1) + k(2) * u(1)
+				my.z = pre(2) + k(2) * u(2)
+				back_0()
+			end if
+		end if
+	end if
+}
+
+sub back_0(){
+	if my.X < 0 then
+		my.X = 0
+	end if
+	if my.Y < 0 then
+		my.Y = 0
+	end if
+	if my.Z < 0 then
+		my.Z = 0
+	end if
+}
+
+
+sub determining_bend(){
+	dim degree as double
+	dim sum as Integer
+	dim prob(3) as Double
+	dim r as Double
+	dim rad as Double
+	dim i as Integer
+	dim x as Double
+	dim y as Double
+	dim z as Double
+
+	
+	degree = NormInv(Rnd(),0,30)
+	rad = DegreeToRad(degree)
+	x = my.forward_vector(0)
+	y = my.forward_vector(1)
+	z = my.forward_vector(2)
+
+
+
+	sum = Abs(my.touch(0)) + Abs(my.touch(1)) + Abs(my.touch(2))
+	r = Rnd()
+	for i = 0 to 2	
+		prob(i) = Abs(my.touch(i)) / sum
+	next i
+	//printLn("X is "&my.forward_vector(0))
+	//printLn("Y is "&my.forward_vector(1))
+	//printLn("Z is "&my.forward_vector(2))
+
+
+	if r < prob(0) and my.normal_vector(0) != 0 then
+		my.forward_vector(1) = Cos(rad) * y - Sin(rad) * z
+		my.forward_vector(2) = Sin(rad) * y + cos(rad) * z 		 
+		my.do_type = 4
+		my.normal_vector(0) = my.touch(0)
+	elseif r < prob(0) + prob(1) and my.normal_vector(1) != 0 then
+		my.forward_vector(0) = Cos(rad) * x + Sin(rad) * z 
+		my.forward_vector(2) = (-1) * Sin(rad) * x + cos(rad) * z
+		my.do_type = 2	
+		my.normal_vector(1) = my.touch(1)	 
+	elseif my.normal_vector(2) != 0 then
+		my.forward_vector(0) = Cos(rad) * x - Sin(rad) * y 
+		my.forward_vector(1) = Sin(rad) * x + cos(rad) * y 		 
+		my.do_type = 1
+		my.normal_vector(2) = my.touch(2)
+	else
+		//println("あり得ない方向に曲がった")
+	end if
+
+	//printLn("X is "&my.forward_vector(0))
+	//printLn("Y is "&my.forward_vector(1))
+	//printLn("Z is "&my.forward_vector(2))
+
+}
+
+
+sub determining_vector(){
+	
+	calculate_vector()
+	select_vector()
+	
+}
+
+sub calculate_vector(){
+//my.next_vectorに3種類計算する．2種類しかないときは空いてるところに(0,0,0)を入れる
+	dim b_type as Integer
+	dim angle as Double
+
+	store_vector(my.b_type,my.angle_surface)
+	
+}
+
+sub store_vector(type as Integer,angle as Double){
+//ベクトルをそれぞれ計算して格納する．この時に行けないベクトルも削除する
+	dim R(3,3) as Double
+	dim x(3) as Double
+	dim u(3) as Integer
+	dim length as Double
+	dim k as Integer
+	dim n as Integer
+	dim i as Integer
+	dim pre_t(3) as Integer
+
+	for i = 0 to 2	
+		pre_t(i) = GetHistory(my.touch(i),1)
+		if my.normal_vector(i) != 0 then
+			n = i
+		end if
+	next i
+	type = my.b_type
+	angle = my.angle_surface
+
+
+	my.next_vector(2,0) = 0
+	my.next_vector(2,1) = 0
+	my.next_vector(2,2) = 0
+	//printLn("dis : "&my.dis_surface)
+	if type > 2 then
+	//±の障害物見てベクトルの方向を決める
+		if type == 3 then
+			my.next_vector(0,0) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,1) = pre_t(1)
+			else
+				if my.dis_surface == 1 then
+					my.next_vector(0,1) = - my.touch(1)
+				else
+					my.next_vector(0,1) = my.touch(1)
+				end if
+			end if
+			my.next_vector(0,2) = 0	
+
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,0) = pre_t(0)
+			else
+				if my.dis_surface == 0 then
+					my.next_vector(1,0) = - my.touch(0)
+				else
+					my.next_vector(1,0) =  my.touch(0)
+				end if
+			end if
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
+
+			if my.ap_or_dis == 1 or n == my.dis_surface then
+				if my.normal_vector(0) != 0 then
+					my.n_normal(0) = 0
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 2
+					my.n_normal(1) = 1
+				end if
+			else
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 0
+					my.n_normal(1) = 1//2
+				else
+					my.n_normal(0) = 0
+					my.n_normal(1) = 1
+				end if
+			end if
+		elseif type == 4 then
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,2) = pre_t(2)
+			else
+				if my.dis_surface == 2 then
+					my.next_vector(0,2) = - my.touch(2)
+				else
+					my.next_vector(0,2) =  my.touch(2)
+				end if
+			end if
+			
+
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,0) = pre_t(0)
+			else
+				if my.dis_surface == 0 then
+					my.next_vector(1,0) = - my.touch(0)
+				else
+					my.next_vector(1,0) =  my.touch(0)
+				end if
+			end if
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
+
+			if my.ap_or_dis == 1 or n == my.dis_surface then
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 1
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 0
+					my.n_normal(1) = 1
+				end if
+			else
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 0
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 0//1
+					my.n_normal(1) = 2
+				end if
+			end if
+		elseif type == 5 then
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,2) = pre_t(2)
+			else
+				if my.dis_surface == 2 then
+					my.next_vector(0,2) = - my.touch(2)
+				else
+					my.next_vector(0,2) = my.touch(2)
+				end if
+			end if
+			
+
+			my.next_vector(1,0) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(1,1) = pre_t(1)
+			else
+				if my.dis_surface == 1 then
+					my.next_vector(1,1) = - my.touch(1)
+				else
+					my.next_vector(1,1) =  my.touch(1)
+				end if
+			end if
+			my.next_vector(1,2) = 0
+
+			if my.ap_or_dis == 1 or n == my.dis_surface then
+				if my.normal_vector(1) == 0 then
+					my.n_normal(0) = 0
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 1
+					my.n_normal(1) = 0
+				end if
+			else
+				if my.normal_vector(1) == 0 then
+					my.n_normal(0) = 1
+					my.n_normal(1) = 2
+				else
+					my.n_normal(0) = 1
+					my.n_normal(1) = 2
+				end if
+			end if
+		else
+			//println("type miss")
+		end if
+	else
+		if type == 0 then
+			my.next_vector(0,0) = 1
+			my.next_vector(0,1) = 0
+			my.next_vector(0,2) = 0
+
+			my.next_vector(1,0) = -1
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = 0
+			
+			u(0) = 1
+			u(1) = 0
+			u(2) = 0
+
+			if not my.is_hemi then
+				my.next_vector(2,0) = my.forward_vector(0)
+				my.next_vector(2,1) = Abs(my.forward_vector(2)) * pre_t(1) * my.ap_or_dis
+				my.next_vector(2,2) = Abs(my.forward_vector(1)) * pre_t(2) * my.ap_or_dis
+			end if
+
+			if my.normal_vector(1) == 0 then
+				my.n_normal(0) = 2
+				my.n_normal(1) = 2
+				my.n_normal(2) = 1
+			else
+				my.n_normal(0) = 1
+				my.n_normal(1) = 1
+				my.n_normal(2) = 2
+			end if
+		elseif type == 1 then
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 1
+			my.next_vector(0,2) = 0
+
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = -1
+			my.next_vector(1,2) = 0
+			
+			u(0) = 0
+			u(1) = 1
+			u(2) = 0
+
+			if not my.is_hemi then
+				my.next_vector(2,0) = Abs(my.forward_vector(2)) * pre_t(0) * my.ap_or_dis
+				my.next_vector(2,1) = my.forward_vector(1)
+				my.next_vector(2,2) = Abs(my.forward_vector(0)) * pre_t(2) * my.ap_or_dis
+			end if
+
+			if my.normal_vector(0) == 0 then
+				my.n_normal(0) = 2
+				my.n_normal(1) = 2
+				my.n_normal(2) = 0
+			else
+				my.n_normal(0) = 0
+				my.n_normal(1) = 0
+				my.n_normal(2) = 2
+			end if
+		elseif type == 2 then
+			my.next_vector(0,0) = 0
+			my.next_vector(0,1) = 0
+			my.next_vector(0,2) = 1
+
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = 0
+			my.next_vector(1,2) = -1
+			
+			u(0) = 0
+			u(1) = 0
+			u(2) = 1
+
+			if not my.is_hemi then
+				my.next_vector(2,0) = Abs(my.forward_vector(1)) * pre_t(0) * my.ap_or_dis
+				my.next_vector(2,1) = Abs(my.forward_vector(0)) * pre_t(1) * my.ap_or_dis
+				my.next_vector(2,2) = my.forward_vector(2)
+			end if
+
+			if my.normal_vector(1) == 0 then
+				my.n_normal(0) = 0
+				my.n_normal(1) = 0
+				my.n_normal(2) = 1
+			else
+				my.n_normal(0) = 1
+				my.n_normal(1) = 1
+				my.n_normal(2) = 0
+			end if
+		else
+			PrintLn("type miss")
+		end if
+	end if
+
+	print_vector()
+}
+
+sub calculate_matrix(){
+	dim theta as Double
+	dim n(3) as Double
+
+	theta = DegreeToRad(my.angle_surface)
+	if my.b_type == 0 then
+		n(0) = 1
+		n(1) = 0
+		n(2) = 0
+	elseif my.b_type == 1 then
+		n(0) = 0
+		n(1) = 1
+		n(2) = 0	
+	else
+		n(0) = 0
+		n(1) = 0
+		n(2) = 1	
+	end if
+
+	my.matrix(0,0) = Cos(theta) + (n(0)^2) * (1 - Cos(theta))
+	my.matrix(0,1) = n(0) * n(1) * (1 - Cos(theta)) - (n(2)) * (sin(theta))
+	my.matrix(0,2) = n(2) * n(0) * (1 - Cos(theta)) + (n(1)) * (sin(theta))
+	my.matrix(1,0) = n(0) * n(1) * (1 - Cos(theta)) + (n(2)) * (sin(theta))
+	my.matrix(1,1) = Cos(theta) + (n(1)^2) * (1 - Cos(theta))
+	my.matrix(1,2) = n(1) * n(2) * (1 - Cos(theta)) - (n(0)) * (sin(theta))
+	my.matrix(2,0) = n(2) * n(0) * (1 - Cos(theta)) - (n(1)) * (sin(theta))
+	my.matrix(2,1) = n(1) * n(2) * (1 - Cos(theta)) + (n(0)) * (sin(theta))
+	my.matrix(2,2) = Cos(theta) + (n(2)^2) * (1 - Cos(theta))
+}
+
+
+sub select_vector(){
+//my.next_vectorから1つ確率で選んでmy.forward_vectorに入れる
+	dim i as Integer
+	dim prob(3) as Double
+	dim r as Double
+	dim sum_diff as Double
+	
+	make_base_vector()
+	sum_diff = calclator_sum_diff()
+	for i = 0 to 2
+		prob(i) = calculate_probabilistic(my.next_vector(i,0),my.next_vector(i,1),my.next_vector(i,2),sum_diff)
+	next i
+	r = Rnd()
+	
+	if r < prob(0) then
+		set_normal_vector(my.n_normal(0))
+		my.forward_vector(0) = my.next_vector(0,0)
+		my.forward_vector(1) = my.next_vector(0,1)
+		my.forward_vector(2) = my.next_vector(0,2)		
+	elseif r < prob(0) + prob(1) then
+	  set_normal_vector(my.n_normal(1))
+		my.forward_vector(0) = my.next_vector(1,0)
+		my.forward_vector(1) = my.next_vector(1,1)
+		my.forward_vector(2) = my.next_vector(1,2)	
+	else
+		set_normal_vector(my.n_normal(2))		
+		my.forward_vector(0) = my.next_vector(2,0)
+		my.forward_vector(1) = my.next_vector(2,1)
+		my.forward_vector(2) = my.next_vector(2,2)
+	end if
+
+	//println("my.forward_vector is")
+	//println("x : "&my.forward_vector(0)&"     y : "&my.forward_vector(1)&"       z : "&my.forward_vector(2))
+
+	my.do_type = select_do_type()
+}
+
+sub print_vector(){
+	dim i as Integer
+
+	for i = 0 to 2
+		//println("")
+		//printLn(i& "th next_vector")
+		//printLn("next_vector(0)"&my.next_vector(i,0))
+		//printLn("next_vector(1)"&my.next_vector(i,1))
+		//printLn("next_vector(2)"&my.next_vector(i,2))
+		//printLn("next_normal is"&my.n_normal(i))
+	next i
+}
+
+sub set_normal_vector(n as Integer){
+	dim i as Integer
+	dim a as Double
+	dim f as Double
+
+	f = set_foward(n)
+	//println("forward is"&f)
+	for i = 0 to 2
+	//方向を鑑みて1or-1をいれる
+	//println("i is"&i)
+	//println("ap_or_dis is"&my.ap_or_dis)
+	a = f * my.ap_or_dis * (-1)
+	if a != 0 then
+		a = a / Abs(a)
+	end if
+	if i == n then
+		if my.normal_vector(i) == 0 then
+			my.normal_vector(i) = a
+		end if
+		//println(i&"th next normal vector"&my.normal_vector(i))
+	else
+		my.normal_vector(i) = 0
+	end if
+	next i
+}
+
+function set_foward (n as Integer)as Double{
+//当たった軸とは違うoベクトルでもないforwardvectorを返す
+	dim i as Integer
+	dim ret as Double
+	dim f as Double
+	dim type as Integer
+
+	type = my.b_type
+
+	if type == 0 then
+		for i = 0 to 1
+			if my.forward_vector(i+1) != 0 then
+				ret = my.forward_vector(i+1)
+			end if
+		next i
+	elseif type == 1 then
+		for i = 0 to 2
+			if i!= 1 and my.forward_vector(i) != 0 then
+				ret = my.forward_vector(i)
+			end if
+		next i
+	elseif type == 2 then
+		for i = 0 to 1
+			if my.forward_vector(i) != 0 then
+				ret = my.forward_vector(i)
+			end if
+		next i
+	elseif type == 3 then
+		ret = my.forward_vector(2)
+	elseif type == 4 then
+		ret = my.forward_vector(1)
+	else
+		ret = my.forward_vector(0)
+	end if
+	
+	return ret
+}
+
+function select_do_type() as Integer{
+	dim ret as Integer
+
+	if my.forward_vector(0) == 0 then
+		if my.forward_vector(1) == 0 then
+			ret = 5
+		else
+			if my.forward_vector(2) == 0 then
+				ret = 3
+			else
+				ret = 4
+			end if
+		end if
+	else
+		if my.forward_vector(1) == 0 then
+			if my.forward_vector(2) == 0 then
+				ret = 0
+			else
+				ret = 2
+			end if
+		else
+			ret = 1
+		end if
+	end if
+
+	return ret
+}
+
+function calclator_sum_diff()as Double{
+	dim diff as Double
+	dim i as Integer
+	dim tmp as Double
+
+	diff = 0
+	for i = 0 to 2
+		tmp = Sqr( ( my.base_vector(0) - my.next_vector(i,0) )^2 + ( my.base_vector(1) - my.next_vector(i,1) )^2 + ( my.base_vector(2) - my.next_vector(i,2) )^2 )
+		if not (my.next_vector(i,0) == 0 and my.next_vector(i,1) == 0 and my.next_vector(i,2) == 0) then
+			diff = diff + tmp
+		end if
+	next i
+
+	return diff
+}
+
+sub make_base_vector(){
+	dim g(3) as Double
+	dim a(3) as Double
+	dim length as Double
+	dim i as Integer
+
+	g(0) = 0
+	g(1) = 0
+	g(2) = -1
+
+	for i = 0 to 2
+		a(i) = my.forward_vector(i) + g(i) * (49 / 60)
+	next i
+
+	length = Sqr( a(0)^2 + a(1) ^2 + a(2) ^ 2 )
+
+	for i = 0 to 2
+		my.base_vector(i) = a(i) / length
+	next i
+	
+}
+
+function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff as Double) as Double{
+	dim diff as Double
+	dim ret as Double
+	dim n as Integer
+
+	if my.next_vector(2,0) == 0 and my.next_vector(2,1) == 0 and my.next_vector(2,2) == 0 then
+		n = 2
+	else
+		n = 3
+	end if
+
+	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
+	ret = ( 1 - diff / sum_diff ) / ( n -1 )
+	
+	return ret
+}
+
+function is_bend() as Boolean{
+	dim ret as Boolean
+
+	if Rnd() < 0.01 then
+		ret = true
+	else
+		ret = false
+	end if
+	
+	return ret
+}
+
+function different_surface() as Boolean{
+	dim ret  as Boolean
+	dim a as Integer
+	dim b as Integer
+
+	ret = false
+	if is_appear_surface() then
+			my.ap_or_dis = 1
+			//println("appear")
+			ret = true
+	else
+		if is_disappear_surface() then
+			my.ap_or_dis = -1
+			ret = true
+			//println("disappear")
+		end if
+	end if
+	
+	return ret
+}
+
+function direction_type() as Integer{
+//x平行0,xyで動く1,xzで動く2，y平行3，yzで動く4，z平行5の0~5をタイプで返す
+	dim ret as Integer
+	dim x as Double
+	dim y as Double
+	dim z as Double
+
+	x = my.forward_vector(0)
+	y = my.forward_vector(1)
+	z = my.forward_vector(2)
+	
+	if x==0 then
+		if y == 0 then
+			ret = 5
+		elseif z == 0 then
+			ret = 3
+		else
+			ret = 4
+		end if
+	elseif y == 0 then
+		if z == 0 then
+			ret = 0
+		else
+			ret = 2
+		end if	
+	elseif z == 0 then
+		ret = 1
+	else
+		PrintLn("miss")
+	end if
+
+	return ret
+}
+
+function is_appear_surface() as Boolean{
+	dim ret as Boolean
+	dim axis as Integer
+	dim pos as Integer
+	dim nx as Integer
+	dim ny as Integer
+	dim nz as Integer
+
+	axis = direction_type()
+	pos = my.position_type
+	ny = Int(my.Y)
+	nz = Int(my.Z)
+	nx = Int(my.X)
+
+	my.a_flag = false
+	if axis == 0 then
+		if nx == my.X then
+			if my.forward_vector(0) > 0 then
+				if universe.map.is_void(my.X+1,my.Y,my.Z) then
+					ret = true
+					my.angle_surface = -1
+					my.b_type = 5
+					my.touch(0) = -1
+				else
+					ret = false
+				end if
+			else
+				if nx == 0 then
+					ret = true
+					my.angle_surface = -1
+					my.b_type = 5
+					my.touch(0) = 1
+					my.a_flag = true
+				else
+					if universe.map.is_void(my.X-1,my.Y,my.Z) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type = 5
+						my.touch(0) = 1
+					else
+						ret = false
+					end if
+				end if			
+			end if
+		else
+			ret = false
+		end if
+	elseif axis == 1 then
+		if nx == my.X then
+			if my.forward_vector(0) > 0 then
+				if universe.map.is_void(nx+1,ny,nz) and universe.map.is_void(nx+1,ny+1,nz) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type = 1
+					my.touch(0) = -1
+				elseif universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx+1,ny+1,nz) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type = 1
+					my.touch(0) = -1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			else
+				if universe.map.is_void(nx-1,ny,nz) and universe.map.is_void(nx-1,ny+1,nz) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type = 1
+					my.touch(0) = 1
+				elseif universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx-1,ny+1,nz) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type = 1
+					my.touch(0) = 1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			end if
+		elseif ny == my.Y then
+			if my.forward_vector(1) > 0 then
+				if universe.map.is_void(nx,ny+1,nz) and universe.map.is_void(nx+1,ny+1,nz) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type = 0
+					my.touch(1) = -1
+				elseif universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx+1,ny+1,nz) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type = 0
+					my.touch(1) = -1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			else
+				if universe.map.is_void(nx,ny-1,nz) and universe.map.is_void(nx+1,ny-1,nz) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type = 0
+					my.touch(1) = 1
+				elseif universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx+1,ny-1,nz) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type = 0
+					my.touch(1) = 1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			end if
+		else
+			ret = false
+		end if
+	elseif axis == 2 then	
+		if nx == my.X then
+			if my.forward_vector(0) > 0 then
+				if universe.map.is_void(nx+1,ny,nz) and universe.map.is_void(nx+1,ny,nz+1) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type =2
+					my.touch(0) = -1
+				elseif universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx+1,ny,nz+1) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type =2
+					my.touch(0) = -1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			else
+				if universe.map.is_void(nx-1,ny,nz) and universe.map.is_void(nx-1,ny,nz+1) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type = 2
+					my.touch(0) = 1
+				elseif universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx-1,ny,nz+1) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type = 2
+					my.touch(0) = 1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			end if
+		elseif nz == my.Z then
+			if my.forward_vector(2) > 0 then
+				if universe.map.is_void(nx,ny,nz+1) and universe.map.is_void(nx+1,ny,nz+1) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type = 0
+					my.touch(2) = -1
+				elseif universe.map.is_void(nx,ny,nz+1) or universe.map.is_void(nx+1,ny,nz+1) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type = 0
+					my.touch(2) = -1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			else
+				if nz == 0 then
+					ret = true
+					my.angle_surface = 90
+					my.b_type = 0
+					my.touch(2) = 1
+				/*elseif universe.map.is_void(nx,ny,nz-1) and universe.map.is_void(nx+1,ny,nz-1) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type = 0
+					my.touch(2) = 1*/
+				elseif universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx+1,ny,nz-1) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type = 0
+					my.touch(2) = 1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			end if
+		else
+			ret = false
+		end if	
+	elseif axis == 3 then
+		if ny == my.Y then
+			if my.forward_vector(1) > 0 then
+				if universe.map.is_void(my.X,my.Y+1,my.Z) then
+					ret = true
+					my.angle_surface = -1
+					my.b_type =4
+					my.touch(1) = -1
+				else
+					ret = false
+				end if
+			else
+				if ny == 0 then
+					ret = true
+					my.angle_surface = -1
+					my.b_type =4
+					my.touch(1) = -1
+					my.a_flag = true
+				else
+					if universe.map.is_void(my.X,my.Y-1,my.Z) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type =4
+						my.touch(1) = 1
+					else
+						ret = false
+					end if
+				end if			
+			end if
+		else
+			ret = false
+		end if	
+	elseif axis == 4 then
+		if ny == my.y then
+			if my.forward_vector(1) > 0 then
+				if universe.map.is_void(nx,ny+1,nz) and universe.map.is_void(nx,ny+1,nz+1) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type =2
+					my.touch(1) = -1
+				elseif universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny+1,nz+1) then
+					ret = true
+					my.angle_surface = 90
+					my.b_type =2
+					my.touch(1) = -1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			else
+				if universe.map.is_void(nx,ny-1,nz) and universe.map.is_void(nx,ny-1,nz+1) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type =2
+					my.touch(1) = 1
+				elseif universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny-1,nz+1) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type =2
+					my.touch(1) = 1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			end if
+		elseif nz == my.Z then
+			if my.forward_vector(2) > 0 then
+				if universe.map.is_void(nx,ny,nz+1) and universe.map.is_void(nx,ny+1,nz+1) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type =1
+					my.touch(2) = -1
+				elseif universe.map.is_void(nx,ny,nz+1) or universe.map.is_void(nx,ny+1,nz+1) then
+					ret = true
+					my.angle_surface = 270
+					my.b_type =1
+					my.touch(2) = -1
+					my.is_hemi = true
+				else
+					ret = false
+				end if
+			else
+				if nz == 0 then
+					ret = true
+					my.angle_surface = 90
+					my.b_type =1
+					my.touch(2) = 1
+				else
+					if universe.map.is_void(nx,ny,nz-1) and universe.map.is_void(nx,ny+1,nz-1) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =1
+						my.touch(2) = 1
+					elseif universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx,ny+1,nz-1) then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =1
+						my.touch(2) = 1
+						my.is_hemi = true
+					else
+						ret = false
+					end if
+				end if
+			end if
+		else
+			ret = false
+		end if		
+	else
+		if nz == my.Z then
+			if my.forward_vector(2) > 0 then
+				if universe.map.is_void(my.X,my.Y,my.Z+1) then
+					ret = true
+					my.angle_surface = -1
+					my.b_type =3
+					my.touch(2) = -1
+				else
+					ret = false
+				end if
+			else
+				if nz == 0 then
+					ret = true
+					my.angle_surface = -1
+					my.b_type =3
+					my.touch(2) = 1
+					my.a_flag = true
+				else
+					if universe.map.is_void(my.X,my.Y,my.Z-1) then
+						ret = true
+						my.angle_surface = -1
+						my.b_type =3
+						my.touch(2) = 1
+					else
+						ret = false
+					end if
+				end if			
+			end if
+		else
+			ret = false
+		end if		
+	end if	
+
+	return ret
+}
+
+function single(num as Double) as Integer{
+	if num > 0 then
+		return 1
+	elseif num < 0 then
+		return -1
+	else
+		return 0
+	end if
+}
+
+function is_disappear_surface() as Boolean{
+	dim ret as Boolean
+	dim axis as Integer
+	dim nx as Integer
+	dim ny as Integer
+	dim nz as Integer
+	dim f(3) as Double
+	dim i as Integer
+
+	axis = direction_type()
+	ny = Int(my.Y)
+	nz = Int(my.Z)
+	nx = Int(my.X)
+
+	for i = 0 to 2
+		if my.forward_vector(i) != 0 then
+			f(i) = My.forward_vector(i) / Abs(My.forward_vector(i))
+		else
+			f(i) = 0
+		end if
+		//println("f("&i&") is"&f(i))
+	next i
+
+	if axis == 0 then
+		if nx == my.X then
+			if my.normal_vector(1) == 0 then
+				if nz == 0 and my.normal_vector(2) > 0 then
+					if ny == 0 and my.touch(1) > 0 then
+						ret = false
+					elseif not universe.map.is_void(nx+f(0),ny - my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz ) then
+						ret = true
+						my.b_type = 5
+						my.dis_surface = 1
+						my.touch(0) = -f(0)
+						//println("0")
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx+f(0),ny,nz - my.normal_vector(2)) then
+						if ny == 0 and my.touch(1) > 0 then
+							ret = false
+						elseif not universe.map.is_void(nx+ f(0) ,ny - my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz ) then
+							ret = true
+							my.b_type = 5
+							my.dis_surface = 1
+							my.touch(0) = -f(0)
+							//println("1")
+						else
+							ret = false
+						end if
+					else
+						ret = true
+						my.b_type = 5
+						my.dis_surface = 2
+						my.touch(0) = -f(0)
+						//println("2")
+					end if
+				end if
+			else
+				if ny == 0 and my.normal_vector(1) > 0 then
+					ret = false
+				else
+					if universe.map.is_void(nx+f(0),ny - my.normal_vector(1),nz) then
+						if nz == 0 and my.touch(2) > 0 then
+							ret = false
+						elseif not universe.map.is_void(nx+f(0),ny,nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
+							ret = true
+							my.b_type = 5
+							my.dis_surface = 2
+							my.touch(0) = -f(0)
+							//println("3")
+						else
+							ret = false
+						end if
+					else
+						ret = true
+						my.b_type = 5
+						my.dis_surface = 1
+						my.touch(0) = -f(0)
+						//println("4")
+					end if
+				end if
+			end if
+		else
+			ret = false
+		end if
+	elseif axis == 1 then
+		if nx == my.X then
+			if nz == 0 and my.normal_vector(2) > 0 then
+				ret = false
+			else
+				if ny == my.Y then
+					if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+f(0),ny,nz - my.normal_vector(2)) then
+						ret = true
+						my.b_type = 1
+						my.dis_surface = 2
+						my.touch(0) = -f(0)
+						//println("5")
+					elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
+						ret = true
+						my.b_type = 0
+						my.dis_surface = 2
+						my.touch(1) = -f(1)
+						//println("6")
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+f(0),ny,nz - my.normal_vector(2)) then
+						ret = true
+						my.b_type = 1
+						my.dis_surface = 2
+						my.touch(0) = -f(0)
+						//println("7")
+					else
+						ret = false
+					end if
+				end if
+			end if
+		elseif ny == my.Y then
+			if nz == 0 and my.normal_vector(2) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
+					ret = true
+					my.b_type = 0
+					my.dis_surface = 2
+					my.touch(1) = -f(1)
+					//println("8")
+				else
+					ret = false
+				end if
+			end if
+		else
+			ret = false
+		end if
+	elseif axis == 2 then
+		if nx == my.X then
+			if ny == 0 and my.normal_vector(1) > 0 then
+				ret = false
+			else
+				if nz == my.Z then
+					if universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx+f(0),ny - my.normal_vector(1),nz) then
+						ret = true
+						my.b_type = 2
+						my.dis_surface = 1
+						my.touch(0) = -f(0)
+						//println("9")
+					elseif universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx,ny - my.normal_vector(1),nz+f(2)) then
+						ret = true
+						my.b_type = 0
+						my.dis_surface = 1
+						my.touch(2) = -f(2)
+						//println("10")
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx+f(0),ny- my.normal_vector(1),nz) then
+						ret = true
+						my.b_type = 2
+						my.dis_surface = 1
+						my.touch(0) = -f(0)
+						//println("11")
+					else
+						ret = false
+					end if
+				end if
+			end if
+		elseif nz == my.z then
+			if ny == 0 and my.normal_vector(1) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx,ny- my.normal_vector(1),nz+f(2)) then
+					ret = true
+					my.b_type = 0
+					my.dis_surface = 1
+					my.touch(2) = -f(2)
+					//println("12")
+				else
+					ret = false
+				end if
+			end if
+		else
+			ret = false
+		end if	
+	elseif axis == 3 then
+		if ny == my.y then
+			if my.normal_vector(0) == 0 then
+				if nz == 0 and my.normal_vector(2) > 0 then
+					if nx == 0 and my.touch(0) > 0 then
+						ret = false
+					elseif not universe.map.is_void(nx - my.touch(0),ny+f(1),nz) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
+						ret = true
+						my.b_type = 4
+						my.dis_surface = 0
+						my.touch(1) = -f(1)
+						//println("13")
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
+						if nx == 0 and my.touch(0) > 0 then
+							ret = false
+						elseif not universe.map.is_void(nx - my.touch(0) ,ny+ f(1),nz) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
+							ret = true
+							my.b_type = 4
+							my.dis_surface = 0
+							my.touch(1) = -f(1)
+							//println("14")
+						else
+							ret = false
+						end if
+					else
+						ret = true
+						my.b_type = 4
+						my.dis_surface = 2
+						my.touch(1) = -f(1)
+						//println("15")
+					end if
+				end if
+			else
+				if nx == 0 and my.normal_vector(0) > 0 then
+					ret = false
+				else
+					if universe.map.is_void(nx - my.normal_vector(0),ny+f(1),nz) then
+						if nz == 0 and my.touch(2) > 0 then
+							ret = false
+						elseif not universe.map.is_void(nx,ny+f(1),nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
+							ret = true
+							my.b_type = 4
+							my.dis_surface = 2
+							my.touch(1) = -f(1)
+							//println("16")
+						else
+							ret = false
+						end if
+					else
+						ret = true
+						my.b_type = 4
+						my.dis_surface = 0
+						my.touch(1) = -f(1)
+						//println("17")
+					end if
+				end if
+			end if
+		else
+			ret = false
+		end if
+	elseif axis == 4 then
+		if ny == my.y then
+			if nx == 0 and my.normal_vector(0) > 0 then
+				ret = false
+			else
+				if nz == my.Z then
+					if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny +f(1),nz) then
+						ret = true
+						my.b_type = 2
+						my.dis_surface = 0
+						my.touch(1) = -f(1)
+						//println("18")
+					elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
+						ret = true
+						my.b_type = 1
+						my.dis_surface = 0
+						my.touch(2) = -f(2)
+						//println("19")
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny+f(1),nz) then
+						ret = true
+						my.b_type = 2
+						my.dis_surface = 0
+						my.touch(1) = -f(1)
+						//println("20")
+					else
+						ret = false
+					end if
+				end if
+			end if
+		elseif nz == my.z then
+			if nx == 0 and my.normal_vector(0) > 0 then
+				ret = false
+			else
+				if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
+					ret = true
+					my.b_type = 1
+					my.dis_surface = 0
+					my.touch(2) = -f(2)
+					//println("21")
+				else
+					ret = false
+				end if
+			end if
+		else
+			ret = false
+		end if		
+	else
+		if nz == my.z then
+			if my.normal_vector(0) == 0 then
+				if ny == 0 and my.normal_vector(1) > 0 then
+					if nx == 0 and my.touch(0) > 0 then
+						ret = false
+					elseif not universe.map.is_void(nx - my.touch(0),ny,nz+f(2)) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
+						ret = true
+						my.b_type = 3
+						my.dis_surface = 0
+						my.touch(2) = -f(2)
+						//println("22")
+					else
+						ret = false
+					end if
+				else
+					if universe.map.is_void(nx,ny - my.normal_vector(1),nz+f(2)) then
+						if nx == 0 and my.touch(0) > 0 then
+							ret = false
+						elseif not universe.map.is_void(nx - my.touch(0) ,ny,nz+ f(2)) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
+							ret = true
+							my.b_type = 3
+							my.dis_surface = 0
+							my.touch(2) = -f(2)
+							//println("23")
+						else
+							ret = false
+						end if
+					else
+						ret = true
+						my.b_type = 3
+						my.dis_surface = 1
+						my.touch(2) = -f(2)
+						//println("24")
+					end if
+				end if
+			else
+				if nx == 0 and my.normal_vector(0) > 0 then
+					ret = false
+				else
+					if universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
+						if ny == 0 and my.touch(1) > 0 then
+							ret = false
+						elseif not universe.map.is_void(nx,ny- my.touch(1),nz+f(2)) and universe.map.is_void(nx,ny - my.touch(1) ,nz) then
+							ret = true
+							my.b_type = 3
+							my.dis_surface = 1
+							my.touch(2) = -f(2)
+							//println("25")
+						else
+							ret = false
+						end if
+					else
+						ret = true
+						my.b_type = 3
+						my.dis_surface = 0
+						my.touch(2) = -f(2)
+						//println("26")
+					end if
+				end if
+			end if
+		else
+			ret = false
+		end if
+	end if		
+	
+	return ret
+	}
+
+	sub update_touch() {
+	dim pre(3) as Double
+	dim x(3) as Double
+	dim y(3) as Double
+	dim n_v(3) as Double
+	dim normal(3) as Double
+	dim theta as Double
+	dim i as Integer
+
+
+	for i = 0 to 2
+		pre(i) = GetHistory(my.forward_vector(i),1)
+		n_v(i) = my.forward_vector(i)
+		x(i) = my.touch(i)
+	next i
+//ここ何やってるかわからん
+	normal(0) = pre(1) * n_v(2) - pre(2) * n_v(1)
+	normal(1) = pre(2) * n_v(0) - pre(0) * n_v(2)
+	normal(2) = pre(0) * n_v(1) - pre(1) * n_v(0)
+
+	if normal(0) != 0 then
+/*		if normal(0) == -1 then
+			theta = calculate_theta(0,-1)
+		else
+			theta = calculate_theta(0,1)
+		end if*/
+		y(0) = x(0)
+		y(1) = -x(1)
+		y(2) = -x(2)
+	elseif normal(1) != 0 then
+	/*	if normal(1) == -1 then
+			theta = calculate_theta(1,-1)
+		else
+			theta = calculate_theta(1,1)
+		end if*/
+		y(0) = -x(0)
+		y(1) = x(1)
+		y(2) = -x(2)
+	else
+/*		if normal(2) == -1 then
+			theta = calculate_theta(2,-1)
+		else
+			theta = calculate_theta(2,1)
+		end if*/
+		y(0) = -x(0)
+		y(1) = -x(1)
+		y(2) = x(2)
+	end if
+
+	//println("")
+	for i = 0 to 2		
+		//println("y"&i&"is "&y(i))
+		my.touch(i) = y(i)
+	next i
+} 
+
+
+sub step_surface(){
+	dim pre(3) as	Integer
+	dim f(3) as Double
+	dim n as Integer
+	dim i as Integer
+	dim b as Integer
+
+	n = my.dis_surface
+	b = my.b_type
+	for i =0 to 2
+		pre(i) = GetHistory(my.touch(i),1)
+		f(i) = GetHistory(my.forward_vector(i),1)
+		if f(i) != 0 then
+			f(i) = f(i) / Abs(f(i))
+		end if
+		//println(i&" pre :"&pre(i) )
+		//println("touch"&my.touch(i))
+	next i
+
+	if b < 3 then
+		if b == 0 then
+			f(0) = 0
+		elseif b == 1 then
+			f(1) = 0
+		elseif b == 2 then
+			f(2) = 0
+		end if
+	end if
+
+	//printLn("myX is "&my.X)
+	//printLn("myY is "&my.Y)
+	//printLn("myZ is "&my.Z)
+
+	if n == 0 then
+		my.X = my.X - pre(0)
+		my.Y = my.Y + f(1)
+		my.Z = my.Z + f(2)
+		back_surface(0)
+	elseif n == 1 then
+		my.X = my.X + f(0)
+		my.Y = my.Y - pre(1)
+		my.Z = my.Z + f(2)
+		back_surface(1)
+	else
+		my.X = my.X + f(0)
+		my.Y = my.Y + f(1)
+		my.Z = my.Z - pre(2)
+		back_surface(2)
+	end if
+	if not my.is_back then
+		update_touch()
+	end if
+	
+	//printLn("myX is "&my.X)
+	//printLn("myY is "&my.Y)
+	//printLn("myZ is "&my.Z)
+	
+	my.dis_surface = -1	
+}
+
+function calculate_theta(n as Integer,sign as Integer) as Double{
+	dim i as Integer
+	dim nor(3) as Double
+	dim pnor(3) as Double
+	dim no as Double
+	dim p as Double
+	dim theta as Double
+	
+	for i = 0 to 2
+		if i != n then
+			nor(i) = my.forward_vector(i)
+			pnor(i) = GetHistory(my.forward_vector(i),1)
+		else
+			nor(i) = 0
+			pnor(i) = 0
+		end if
+		if nor(i) != 0 then
+			no = nor(i)
+		end if
+		if pnor(i) != 0 then
+			p = pnor(i)
+		end if
+	next i
+
+	if no * p > 0 then
+		if sign > 0 then
+			theta = DegreeToRad(270)
+		else
+			theta = DegreeToRad(90)
+		end if
+	else
+		if sign < 0 then
+			theta = DegreeToRad(270)
+		else
+			theta = DegreeToRad(90)
+		end if
+	end if
+
+	return theta
+#end_rule UNIVERSE.MAP.INSECT
+
+
+
+
+//-------------------------------------------------------
+// Agent Rule
+//-------------------------------------------------------
+#begin_rule UNIVERSE.MAP.BARRIER
+Agt_Init{
+
+}
+
+Agt_Step{
+
+}
+#end_rule UNIVERSE.MAP.BARRIER
+
+
+
+
+//-------------------------------------------------------
+// Simulation Definition Division
+//-------------------------------------------------------
+Single_Simulation {
+    Step_Max = 0;
+    Time_Max = 0;
+    End_Condition = "";
+    Exec_Wait = 0;
+    Exec_Wait_Max = 1000;
+    Random_Generator = Java_Standard;
+    Exec_Order = Random;
+    Exec_Order_Random_First_Step_Only = No;
+    Random_Seed = 0;
+    Redraw_Timing = Step;
+    Redraw_Interval = 1;
+    Garbage_Interval = 0;
+}
+
+
+//-------------------------------------------------------
+// Simulation Loop Definition Division
+//-------------------------------------------------------
+Repeat_Simulation {
+    Value_Change = None;
+    Initial_Value_Change_None {
+        Repeat_Max = 10;
+    }
+}
+
+
+//-------------------------------------------------------
+// Time Graph Output Definition Division
+//-------------------------------------------------------
+Time_Graph {
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Graph_Name = "test";
+    Title = "test";
+    Disable = No;
+    Background_Color = 255, 255, 255;
+    Remarks = Yes;
+    Legend_Pos = Top;
+    FastDraw = Yes;
+    Position_x = 0;
+    Position_y = 0;
+    Size_x = 1528;
+    Size_y = 910;
+    Map_Cell_Size = -1;
+    Axis_Label = "step", "voxel";
+    Draw_By_JFree_Chart = Yes;
+    Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
+    ScaleAuto = Yes, Yes;
+    Output_Group_Name = "";
+    Output {
+        Graph_Element_Name = "fin";
+        Line_Color = 255, 0, 0;
+        Line_Width = 2;
+        Marker_Id = 0;
+        Output_Expression = "universe.num_fin";
+        Expression_Value_Display = No;
+        Effective_Fraction_Figures = 0;
+        Graph_Element_Color = (204, 0, 0);
+    }
+}
+
+
+//-------------------------------------------------------
+// Control Panel Definition Division
+//-------------------------------------------------------
+Control_Panel {
+    Display_Area = 0, 0, 414, 113;
+    Display_Type = 1;
+    Panel_Item {
+        Item_Type = Drop_Down_List;
+        Item_Name = "T";
+        Display_Area = 0, 0, 0, 0;
+        Font_Name = "";
+        Font_Char_Set = 0;
+        Font_Size = 0.0;
+        Font_Style = 0;
+        Font_Color = 0, 0, 0;
+        Font_Background_Color = 0, 0, 0;
+        Var_Name = "Universe.T";
+        Drop_Down_List_Value = "10","10","50","50","100","100","200","200","500","500","1000","1000";
+    }
+    Panel_Item {
+        Item_Type = Slider;
+        Item_Name = "alpha";
+        Display_Area = 0, 0, 0, 0;
+        Font_Name = "";
+        Font_Char_Set = 0;
+        Font_Size = 0.0;
+        Font_Style = 0;
+        Font_Color = 0, 0, 0;
+        Font_Background_Color = 0, 0, 0;
+        Var_Name = "Universe.alpha";
+        Slider_Range_Max = 20;
+        Slider_Value_Min = 0.0;
+        Slider_Value_Step = 0.05;
+        Slider_Value = "12";
+    }
+    Panel_Item {
+        Item_Type = Edit_Box;
+        Item_Name = "num_insect";
+        Display_Area = 0, 0, 0, 0;
+        Font_Name = "";
+        Font_Char_Set = 0;
+        Font_Size = 0.0;
+        Font_Style = 0;
+        Font_Color = 0, 0, 0;
+        Font_Background_Color = 0, 0, 0;
+        Var_Name = "Universe.num_insect";
+        Text_Data = "100";
+    }
+}
+
+
+//-------------------------------------------------------
+// Space Initial Value Definition Divsion
+//-------------------------------------------------------
+Space_Initial {
+}
+
+
+//-------------------------------------------------------
+// Other Miscellaneous Data Definition Division
+//-------------------------------------------------------
+Others_Data {
+    Indent = 4;
+    Rule_Colored = Yes;
+    Rule_LineNo = Yes;
+    Window_Hide_Run = 1;
+    Debug_Position_x = 7;
+    Debug_Position_y = 8;
+    Debug_Size_x = 400;
+    Debug_Size_y = 200;
+    Console_Position_x = 0;
+    Console_Position_y = 0;
+    Console_Size_x = 1528;
+    Console_Size_y = 910;
+    Componen_Tree_Position_x = 0;
+    Componen_Tree_Position_y = 0;
+    Componen_Tree_Size_x = 1528;
+    Componen_Tree_Size_y = 910;
+    Console_Background_Color = 16777215;
+    Console_Foreground_Color = 255;
+    Console_DisplayLines_Max = 500;
+    plug_in_module_name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 0;
+    Font_Size = 14.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 0, 0, 0;
+}
+
+
+//-------------------------------------------------------
+// Network Information Definition Division
+//-------------------------------------------------------
+Network_Info {
+    Global_Space_Area = 0, 0, 100, 100;
+    Local_Space_Info {
+    }
+}
+
+
+//-------------------------------------------------------
+// Space Map Initial Value Definition Division
+//-------------------------------------------------------
+Space_Map_Initial_Value {
+    Space_Path_Name = Universe.map;
+    Background_Image_File_Path_Name = "";
+    Origin_Position = Left_Bottom;
+    Space_Variable {
+        Variable = Universe.map.fin,(48000000*0);
+        Marker_Id = 1;
+        Min_Value = "";
+        Max_Value = "";
+        Min_Value_Color = 255, 0, 0;
+        Max_Value_Color = 0, 255, 255;
+    }
+    Space_Variable {
+        Variable = Universe.map.is_void,(48000000*0);
+        Marker_Id = 1;
+        Min_Value = "";
+        Max_Value = "";
+        Min_Value_Color = 255, 0, 0;
+        Max_Value_Color = 0, 255, 255;
+    }
+}
+
+
+//-------------------------------------------------------
+// Window Location Definition Division
+//-------------------------------------------------------
+Window_Rectangle {
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Artisoc_Help_Window, 10, 10, 1162, 587;
+    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
+}
+
+
+//-------------------------------------------------------
+// Help Favorite Division
+//-------------------------------------------------------
+Help_Favorite {
+}
