@@ -68,7 +68,7 @@ UNIVERSE {
 Initial_Value {
     UNIVERSE.NUM_INSECT = 1(100);
     UNIVERSE.T = 1(100);
-    UNIVERSE.ALPHA = 1(0.8333333);
+    UNIVERSE.ALPHA = 1(0.8);
 }
 
 
@@ -108,7 +108,7 @@ Univ_Step_Begin{
 Univ_Step_End{
 	draw_fin()
 	if (GetCountStep() mod 100 ) == 0 then
-		OpenFileCSV("graph_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",1,3)
+		OpenFileCSV("alpha_0.8_graph_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",1,3)
 		WriteFileCSV(1,GetCountStep(),false)
 		WriteFileCSV(1,universe.num_fin,true)
 		CloseFileCSV(1)
@@ -130,7 +130,7 @@ sub write_csv(){
 
 	n = GetCountStep() / 2000
 	m = universe.num_insect
-	OpenFileCSV("control_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&"_T_"&universe.T&".csv",n+1,3)
+	OpenFileCSV("alpha_0.8_control_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&"_T_"&universe.T&".csv",n+1,3)
 
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
@@ -839,7 +839,7 @@ sub back_surface(n as Integer){
 		else
 			//ここに入りたくない
 			println("disapミスってる？？")
-			ExitSimulation()
+			DelAgt(my)
 		end if
 		my.is_back = true
 		prev_forward()
@@ -3186,7 +3186,7 @@ Time_Graph {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 420, 130;
+    Display_Area = 0, 0, 414, 104;
     Display_Type = 1;
     Panel_Item {
         Item_Type = Drop_Down_List;
@@ -3212,7 +3212,7 @@ Control_Panel {
         Font_Color = 0, 0, 0;
         Font_Background_Color = 0, 0, 0;
         Var_Name = "Universe.alpha";
-        Text_Data = "0.8333333";
+        Text_Data = "0.8";
     }
     Panel_Item {
         Item_Type = Edit_Box;
@@ -3310,7 +3310,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, -8, -8, 1696, 1026;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
