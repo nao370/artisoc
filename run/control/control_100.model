@@ -3300,7 +3300,7 @@ Time_Graph {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 414, 113;
+    Display_Area = 0, 0, 283, 113;
     Display_Type = 1;
     Panel_Item {
         Item_Type = Slider;
@@ -3330,6 +3330,19 @@ Control_Panel {
         Font_Background_Color = 0, 0, 0;
         Var_Name = "Universe.num_insect";
         Text_Data = "100";
+    }
+    Panel_Item {
+        Item_Type = Edit_Box;
+        Item_Name = "T";
+        Display_Area = 0, 0, 0, 0;
+        Font_Name = "";
+        Font_Char_Set = 0;
+        Font_Size = 0.0;
+        Font_Style = 0;
+        Font_Color = 0, 0, 0;
+        Font_Background_Color = 0, 0, 0;
+        Var_Name = "Universe.T";
+        Text_Data = "1";
     }
 }
 
