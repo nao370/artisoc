@@ -3273,7 +3273,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 198, 66;
+    Display_Area = 0, 0, 136, 49;
     Display_Type = 0;
 }
 
@@ -3358,7 +3358,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -11, -11, 1942, 1042;
+    Window_Name = Main_Window, 0, 0, 800, 700;
     Window_Name = Output_Setting_Window, 746, 346, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
