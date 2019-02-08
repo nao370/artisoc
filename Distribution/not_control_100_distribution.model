@@ -109,12 +109,12 @@ Univ_Step_End{
 dim tmp as AgtSet
 dim one as Agt
 
-	draw_fin()
+//	draw_fin()
 	if (GetCountStep() mod 100 ) == 0 then
-		OpenFileCSV("graph_not_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",1,3)
+/*		OpenFileCSV("graph_not_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",1,3)
 		WriteFileCSV(1,GetCountStep(),false)
 		WriteFileCSV(1,universe.num_fin,true)
-		CloseFileCSV(1)
+		CloseFileCSV(1)*/
 
 		OpenFileCSV("distribution_"&GetCountStep()&"_not_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",2,3)
 		MakeAgtSet(tmp,universe.map.insect)
@@ -125,12 +125,12 @@ dim one as Agt
 		next one
 		CloseFileCSV(2)
 	end if
-	if (GetCountStep() mod 2000 ) == 0 then
+/*	if (GetCountStep() mod 2000 ) == 0 then
 		write_csv()
 	end if
 	if universe.num_fin == 48000000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
 		ExitSimulation()
-	end if
+	end if*/
 }
 
 sub write_csv(){
@@ -163,20 +163,20 @@ sub draw_fin(){
 	dim i as Integer
 	dim j as Integer
 	dim k as Integer
+	dim insects as AgtSet
+	dim r as Double
 
+	MakeAgtSet(insects,universe.map.insect)
+	r = 20
 	for k= 0 to 39
 		for j = 0 to GetHeightSpace(universe.map) -1
 			for i = 0 to GetWidthSpace(universe.map) -1
 				if not universe.map.fin(i,j,k) then
-					if is_in_area(i,j,k) then
-						universe.map.fin(i,j,k)= true
-						universe.num_fin = universe.num_fin + 1
-						if universe.map.is_void(i,j,k) then
-							universe.num_fill_fin = universe.num_fill_fin + 1
-						else
-							universe.num_void_fin = universe.num_void_fin +1
+					for each one in insects
+						if ((one.X - i)^2 + (one.y - j)^2 + (one.z - k)^2) < r^2 then
+							universe.map.fin(i,j,k) = true
 						end if
-					end if
+					next one
 				end if
 			next i
 		next j
@@ -3174,8 +3174,8 @@ Time_Graph {
     FastDraw = Yes;
     Position_x = 0;
     Position_y = 0;
-    Size_x = 1528;
-    Size_y = 910;
+    Size_x = 1768;
+    Size_y = 940;
     Map_Cell_Size = -1;
     Axis_Label = "step", "voxel";
     Draw_By_JFree_Chart = Yes;
@@ -3265,8 +3265,8 @@ Others_Data {
     Debug_Position_y = 8;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = -20;
-    Console_Position_y = 117;
+    Console_Position_x = 50;
+    Console_Position_y = 7;
     Console_Size_x = 1528;
     Console_Size_y = 910;
     Componen_Tree_Position_x = 0;
@@ -3326,7 +3326,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -8, -8, 1936, 1056;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 1162, 587;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;

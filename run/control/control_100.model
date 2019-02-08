@@ -3160,8 +3160,8 @@ Time_Graph {
     FastDraw = Yes;
     Position_x = 0;
     Position_y = 0;
-    Size_x = 1528;
-    Size_y = 910;
+    Size_x = 1768;
+    Size_y = 940;
     Map_Cell_Size = -1;
     Axis_Label = "step", "voxel";
     Draw_By_JFree_Chart = Yes;
@@ -3253,12 +3253,12 @@ Others_Data {
     Debug_Size_y = 200;
     Console_Position_x = 0;
     Console_Position_y = 0;
-    Console_Size_x = 1528;
-    Console_Size_y = 910;
+    Console_Size_x = 1768;
+    Console_Size_y = 940;
     Componen_Tree_Position_x = 0;
     Componen_Tree_Position_y = 0;
-    Componen_Tree_Size_x = 1528;
-    Componen_Tree_Size_y = 910;
+    Componen_Tree_Size_x = 1768;
+    Componen_Tree_Size_y = 940;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -3312,7 +3312,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
+    Window_Name = Main_Window, -8, -8, 1936, 1056;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
