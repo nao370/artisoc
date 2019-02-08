@@ -628,7 +628,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	end if
 	 
 	return ret
-}
+	}
 #end_rule UNIVERSE
 
 
@@ -679,6 +679,23 @@ Agt_Step{
 	forward_step()
 	clear_val()
 	print_all()
+}
+
+function check_void(x as Double,y as Double,z as Double) as Integer{
+	dim ret as Integer
+	dim max(3) as Integer
+
+	max(0) = GetWidthSpace(universe.map) - 1
+	max(1) = GetHeightSpace(universe.map) - 1
+	max(2) = 39
+
+	if x < 0 or y < 0 or z < 0 or max(0) < x or max(1) < y or max(2) < z then
+		return -1
+	elseif universe.map.is_void(x,y,z) == true then
+		return 1
+	else
+		return 0
+	end if
 }
 
 sub print_all(){
@@ -764,6 +781,8 @@ sub store_edge_vector(){
 			my.forward_vector(i) = f(i) / sum
 		next i
 	end if
+
+	my.do_type = select_do_type()
 }
 
 function is_control() as Boolean{
@@ -1055,22 +1074,25 @@ sub back_surface(n as Integer){
 		end if
 	next i
 
-	if not universe.map.is_void(a(0),a(1),a(2)) then
+	if check_void(a(0),a(1),a(2)) == 0 then
 		pre = GetHistory(my.touch(n),1)
-		if n == 0 and universe.map.is_void(a(0)+ pre + f(0),a(1),a(2)) then
+		if n == 0 and check_void(a(0)+ pre + f(0),a(1),a(2)) == 1 then
 			my.X = my.X + pre + f(0)
 			my.Y = my.Y 
 			my.Z = my.Z
-		elseif n == 1 and universe.map.is_void(a(0),a(1)+pre+f(1),a(2)) then
+		elseif n == 1 and check_void(a(0),a(1)+pre+f(1),a(2)) == 1 then
 			my.X = my.X 
 			my.Y = my.Y + pre + f(1)
 			my.Z = my.Z 
-		elseif universe.map.is_void(a(0),a(1),a(2)+ pre + f(2)) then
+		elseif check_void(a(0),a(1),a(2)+ pre + f(2)) == 1 then
 			my.X = my.X 
 			my.Y = my.Y 
 			my.Z = my.Z + pre + f(2)
 		else
 			//ここに入りたくない
+			for i = 0 to 2
+				println("a("&i&")"&a(i))
+			next i
 			println("disapミスってる？？")
 			PauseSimulation()
 			//DelAgt(my)
@@ -1191,7 +1213,7 @@ function is_pause() as Boolean{
 				else
 					if nx == 0 then
 						ret = false
-					elseif universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx+f(0),ny - my.touch(1),nz) then
+					elseif check_void(nx,ny - my.touch(1),nz) == 1 and check_void(nx+f(0),ny - my.touch(1),nz) == 0 then
 						if my.X == nx then
 							ret = false
 						else
@@ -1211,7 +1233,7 @@ function is_pause() as Boolean{
 				else
 					if nx == 0 then
 						ret = false
-					elseif universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx+f(0),ny,nz - my.touch(2)) then
+					elseif check_void(nx,ny,nz - my.touch(2)) == 1 and check_void(nx+f(0),ny,nz - my.touch(2)) == 0 then
 						if my.X == nx then
 							ret = false
 						else
@@ -1237,7 +1259,7 @@ function is_pause() as Boolean{
 				else
 					if ny == 0 then
 						ret = false
-					elseif universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny+f(1),nz) then
+					elseif check_void(nx - my.touch(0),ny,nz) == 1 and check_void(nx - my.touch(0),ny+f(1),nz) == 0 then
 						if my.Y == ny then
 							ret = false
 						else
@@ -1257,7 +1279,7 @@ function is_pause() as Boolean{
 				else
 					if ny == 0 then
 						ret = false
-					elseif universe.map.is_void(nx,ny,nz - my.touch(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.touch(2)) then
+					elseif check_void(nx,ny,nz - my.touch(2)) == 1 and check_void(nx,ny+f(1),nz - my.touch(2)) == 0 then
 						if my.Y == ny  then
 							ret = false
 						else
@@ -1281,7 +1303,7 @@ function is_pause() as Boolean{
 				else
 					if nz == 0 then
 						ret = false
-					elseif universe.map.is_void(nx - my.touch(0),ny,nz) and not universe.map.is_void(nx - my.touch(0),ny,nz+f(2)) then
+					elseif check_void(nx - my.touch(0),ny,nz) == 1 and check_void(nx - my.touch(0),ny,nz+f(2)) == 0 then
 						if my.Z == nz then
 							ret = false
 						else
@@ -1302,7 +1324,7 @@ function is_pause() as Boolean{
 				else
 					if nz == 0 then
 						ret = false
-					elseif universe.map.is_void(nx,ny - my.touch(1),nz) and not universe.map.is_void(nx,ny - my.touch(1),nz+f(2)) then
+					elseif check_void(nx,ny - my.touch(1),nz) == 1 and check_void(nx,ny - my.touch(1),nz+f(2)) == 0 then
 						if my.Z == nz then
 							ret = false
 						else
@@ -1341,7 +1363,7 @@ function is_jump() as Boolean{
 			if nz == 0 and my.normal_vector(2) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
+				if check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx+1,ny,nz - my.normal_vector(2)) == 1 then
 					ret = false
 				else
 					if my.X == nx then
@@ -1355,7 +1377,7 @@ function is_jump() as Boolean{
 			if ny == 0 and my.normal_vector(1) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx,ny - my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny - my.normal_vector(1),nz) then
+				if check_void(nx,ny - my.normal_vector(1),nz) == 1 and check_void(nx+1,ny - my.normal_vector(1),nz) == 1 then
 					ret = false
 				else
 					if my.x == nx then
@@ -1371,7 +1393,7 @@ function is_jump() as Boolean{
 			ret = false
 		else
 			if ny == my.Y then
-				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) then
+				if check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx+1,ny,nz - my.normal_vector(2)) == 1 then
 					ret = false
 				else
 					if my.x == nx then
@@ -1381,7 +1403,7 @@ function is_jump() as Boolean{
 						end if
 				end if
 			elseif nx == my.X then
-				if universe.map.is_void(nx,ny ,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
+				if check_void(nx,ny ,nz - my.normal_vector(2)) == 1 and check_void(nx,ny+1,nz - my.normal_vector(2)) == 1 then
 					ret = false
 				else
 					if my.y == ny then
@@ -1391,7 +1413,7 @@ function is_jump() as Boolean{
 						end if
 				end if
 			else
-				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) and universe.map.is_void(nx+1,ny+1,nz - my.normal_vector(2))  then
+				if check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx+1,ny,nz - my.normal_vector(2)) == 1 and check_void(nx,ny+1,nz - my.normal_vector(2)) == 1 and check_void(nx+1,ny+1,nz - my.normal_vector(2)) == 1  then
 					ret = false
 				else
 					ret = true
@@ -1403,7 +1425,7 @@ function is_jump() as Boolean{
 			ret = false
 		else
 			if nz == my.z then
-				if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny- my.normal_vector(1),nz) then
+				if check_void(nx,ny- my.normal_vector(1),nz) == 1 and check_void(nx+1,ny- my.normal_vector(1),nz) == 1 then
 					ret = false
 				else
 					if my.x == nx then
@@ -1413,7 +1435,7 @@ function is_jump() as Boolean{
 						end if
 				end if
 			elseif nx == my.X then
-				if universe.map.is_void(nx,ny- my.normal_vector(1) ,nz) and universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) then
+				if check_void(nx,ny- my.normal_vector(1) ,nz) == 1 and check_void(nx,ny- my.normal_vector(1),nz+1) == 1 then
 					ret = false
 				else
 					if my.Z == nz then
@@ -1423,7 +1445,7 @@ function is_jump() as Boolean{
 						end if
 				end if
 			else
-				if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and universe.map.is_void(nx+1,ny- my.normal_vector(1),nz) and universe.map.is_void(nx,ny- my.normal_vector(1),nz+1) and universe.map.is_void(nx+1,ny- my.normal_vector(1),nz+1)  then
+				if check_void(nx,ny- my.normal_vector(1),nz) == 1 and check_void(nx+1,ny- my.normal_vector(1),nz) == 1 and check_void(nx,ny- my.normal_vector(1),nz+1) == 1 and check_void(nx+1,ny- my.normal_vector(1),nz+1) == 1  then
 					ret = false
 				else
 					ret = true
@@ -1435,7 +1457,7 @@ function is_jump() as Boolean{
 			if nz == 0 and my.normal_vector(2) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and universe.map.is_void(nx,ny+1,nz - my.normal_vector(2)) then
+				if check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx,ny+1,nz - my.normal_vector(2)) == 1 then
 					ret = false
 				else
 					if my.y == ny then
@@ -1449,7 +1471,7 @@ function is_jump() as Boolean{
 			if nx == 0 and my.normal_vector(0) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny+1,nz) then
+				if check_void(nx - my.normal_vector(0),ny,nz) == 1 and check_void(nx - my.normal_vector(0),ny+1,nz) == 1 then
 					ret = false
 				else
 					if my.y == ny then
@@ -1465,7 +1487,7 @@ function is_jump() as Boolean{
 			ret = false
 		else
 			if nz == my.z then
-				if universe.map.is_void(nx- my.normal_vector(0),ny,nz) and universe.map.is_void(nx- my.normal_vector(0),ny+1,nz) then
+				if check_void(nx- my.normal_vector(0),ny,nz)==1 and check_void(nx- my.normal_vector(0),ny+1,nz) == 1 then
 					ret = false
 				else
 					if my.y == ny then
@@ -1475,7 +1497,7 @@ function is_jump() as Boolean{
 						end if
 				end if
 			elseif ny == my.y then
-				if universe.map.is_void(nx- my.normal_vector(0),ny ,nz) and universe.map.is_void(nx- my.normal_vector(0),ny,nz+1) then
+				if check_void(nx- my.normal_vector(0),ny ,nz) == 1 and check_void(nx- my.normal_vector(0),ny,nz+1) == 1 then
 					ret = false
 				else
 					if my.Z == nz then
@@ -1485,7 +1507,7 @@ function is_jump() as Boolean{
 						end if
 				end if
 			else
-				if universe.map.is_void(nx- my.normal_vector(0),ny,nz) and universe.map.is_void(nx- my.normal_vector(0),ny+1,nz) and universe.map.is_void(nx- my.normal_vector(0),ny,nz+1) and universe.map.is_void(nx- my.normal_vector(0),ny+1,nz+1)  then
+				if check_void(nx- my.normal_vector(0),ny,nz) == 1 and check_void(nx- my.normal_vector(0),ny+1,nz) == 1 and check_void(nx- my.normal_vector(0),ny,nz+1) == 1 and check_void(nx- my.normal_vector(0),ny+1,nz+1) == 1  then
 					ret = false
 				else
 					ret = true
@@ -1497,7 +1519,7 @@ function is_jump() as Boolean{
 			if ny == 0 and my.normal_vector(1) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx,ny - my.normal_vector(1),nz) and universe.map.is_void(nx,ny - my.normal_vector(1),nz+1) then
+				if check_void(nx,ny - my.normal_vector(1),nz) == 1 and check_void(nx,ny - my.normal_vector(1),nz+1) == 1 then
 					ret = false
 				else
 					if my.Z == nz then
@@ -1511,7 +1533,7 @@ function is_jump() as Boolean{
 			if nx == 0 and my.normal_vector(0) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and universe.map.is_void(nx - my.normal_vector(0),ny,nz+1) then
+				if check_void(nx - my.normal_vector(0),ny,nz) == 1 and check_void(nx - my.normal_vector(0),ny,nz+1) == 1 then
 					ret = false
 				else
 					if my.Z == nz then
@@ -1587,9 +1609,7 @@ function is_filled() as Boolean{
 	for k = 0 to (1 + g(2))
 	 for j = 0 to (1 + g(1))
 	 	for i = 0 to (1 + g(0))
-	 		if a(0)-g(0)+i > GetWidthSpace(universe.map)-1 or a(1)-g(1)+j > GetHeightSpace(universe.map)-1 then
-	 			
-	 		elseif universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+			if check_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) == 1 then
 	 			if abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
 	 				//println("どのマスに埋まったか")
 	 				//println("x :"&a(0)-g(0)+i)
@@ -1640,7 +1660,7 @@ function is_float() as Boolean{
 	for k = 0 to (1 + g(2))
 	 for j = 0 to (1 + g(1))
 	 	for i = 0 to (1 + g(0))
-	 		if universe.map.is_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) then
+	 		if check_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) == 1 then
 	 			if abs(a(0) - g(0) + i  - my.X) > 1 and abs(a(1) - g(1) + j  - my.y) > 1 and abs(a(2) - g(2) + k  - my.z) > 1 then
 	 				ret = true
 	 				return ret
@@ -1669,6 +1689,7 @@ sub back_step(){
 	//println("x ;" & my.X)
 	//println("y ;" & my.y)
 	//println("z ;" & my.z)
+	print_all()
 			
 	pre(0) = GetHistory(my.X,1)
 	pre(1) = GetHistory(my.y,1)
@@ -1728,6 +1749,7 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
@@ -1747,6 +1769,7 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
@@ -1766,6 +1789,7 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
@@ -1785,6 +1809,7 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
@@ -1804,6 +1829,7 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	else			
@@ -1823,6 +1849,7 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	end if
@@ -2493,7 +2520,7 @@ function is_appear_surface() as Boolean{
 	if axis == 0 then
 		if nx == my.X then
 			if my.forward_vector(0) > 0 then
-				if universe.map.is_void(my.X+1,my.Y,my.Z) then
+				if check_void(my.X+1,my.Y,my.Z) == 1 then
 					ret = true
 					my.angle_surface = -1
 					my.b_type = 5
@@ -2509,7 +2536,7 @@ function is_appear_surface() as Boolean{
 					my.touch(0) = 1
 					my.a_flag = true
 				else
-					if universe.map.is_void(my.X-1,my.Y,my.Z) then
+					if check_void(my.X-1,my.Y,my.Z) == 1 then
 						ret = true
 						my.angle_surface = -1
 						my.b_type = 5
@@ -2525,12 +2552,12 @@ function is_appear_surface() as Boolean{
 	elseif axis == 1 then
 		if nx == my.X then
 			if my.forward_vector(0) > 0 then
-				if universe.map.is_void(nx+1,ny,nz) and universe.map.is_void(nx+1,ny+1,nz) then
+				if check_void(nx+1,ny,nz) == 1 and check_void(nx+1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 1
 					my.touch(0) = -1
-				elseif universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx+1,ny+1,nz) then
+				elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 1
@@ -2540,12 +2567,12 @@ function is_appear_surface() as Boolean{
 					ret = false
 				end if
 			else
-				if universe.map.is_void(nx-1,ny,nz) and universe.map.is_void(nx-1,ny+1,nz) then
+				if check_void(nx-1,ny,nz) == 1 and check_void(nx-1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 1
 					my.touch(0) = 1
-				elseif universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx-1,ny+1,nz) then
+				elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 1
@@ -2557,12 +2584,12 @@ function is_appear_surface() as Boolean{
 			end if
 		elseif ny == my.Y then
 			if my.forward_vector(1) > 0 then
-				if universe.map.is_void(nx,ny+1,nz) and universe.map.is_void(nx+1,ny+1,nz) then
+				if check_void(nx,ny+1,nz) == 1 and check_void(nx+1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 0
 					my.touch(1) = -1
-				elseif universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx+1,ny+1,nz) then
+				elseif check_void(nx,ny+1,nz) == 1 or check_void(nx+1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 0
@@ -2572,12 +2599,12 @@ function is_appear_surface() as Boolean{
 					ret = false
 				end if
 			else
-				if universe.map.is_void(nx,ny-1,nz) and universe.map.is_void(nx+1,ny-1,nz) then
+				if check_void(nx,ny-1,nz) == 1 and check_void(nx+1,ny-1,nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 0
 					my.touch(1) = 1
-				elseif universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx+1,ny-1,nz) then
+				elseif check_void(nx,ny-1,nz) == 1 or check_void(nx+1,ny-1,nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 0
@@ -2593,12 +2620,12 @@ function is_appear_surface() as Boolean{
 	elseif axis == 2 then	
 		if nx == my.X then
 			if my.forward_vector(0) > 0 then
-				if universe.map.is_void(nx+1,ny,nz) and universe.map.is_void(nx+1,ny,nz+1) then
+				if check_void(nx+1,ny,nz) == 1 and check_void(nx+1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(0) = -1
-				elseif universe.map.is_void(nx+1,ny,nz) or universe.map.is_void(nx+1,ny,nz+1) then
+				elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =2
@@ -2608,12 +2635,12 @@ function is_appear_surface() as Boolean{
 					ret = false
 				end if
 			else
-				if universe.map.is_void(nx-1,ny,nz) and universe.map.is_void(nx-1,ny,nz+1) then
+				if check_void(nx-1,ny,nz) == 1 and check_void(nx-1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 2
 					my.touch(0) = 1
-				elseif universe.map.is_void(nx-1,ny,nz) or universe.map.is_void(nx-1,ny,nz+1) then
+				elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 2
@@ -2625,12 +2652,12 @@ function is_appear_surface() as Boolean{
 			end if
 		elseif nz == my.Z then
 			if my.forward_vector(2) > 0 then
-				if universe.map.is_void(nx,ny,nz+1) and universe.map.is_void(nx+1,ny,nz+1) then
+				if check_void(nx,ny,nz+1) == 1 and check_void(nx+1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 0
 					my.touch(2) = -1
-				elseif universe.map.is_void(nx,ny,nz+1) or universe.map.is_void(nx+1,ny,nz+1) then
+				elseif check_void(nx,ny,nz+1) == 1 or check_void(nx+1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 0
@@ -2645,12 +2672,7 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type = 0
 					my.touch(2) = 1
-				/*elseif universe.map.is_void(nx,ny,nz-1) and universe.map.is_void(nx+1,ny,nz-1) then
-					ret = true
-					my.angle_surface = 90
-					my.b_type = 0
-					my.touch(2) = 1*/
-				elseif universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx+1,ny,nz-1) then
+				elseif check_void(nx,ny,nz-1) == 1 or check_void(nx+1,ny,nz-1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 0
@@ -2666,7 +2688,7 @@ function is_appear_surface() as Boolean{
 	elseif axis == 3 then
 		if ny == my.Y then
 			if my.forward_vector(1) > 0 then
-				if universe.map.is_void(my.X,my.Y+1,my.Z) then
+				if check_void(my.X,my.Y+1,my.Z) == 1 then
 					ret = true
 					my.angle_surface = -1
 					my.b_type =4
@@ -2682,7 +2704,7 @@ function is_appear_surface() as Boolean{
 					my.touch(1) = -1
 					my.a_flag = true
 				else
-					if universe.map.is_void(my.X,my.Y-1,my.Z) then
+					if check_void(my.X,my.Y-1,my.Z) then
 						ret = true
 						my.angle_surface = -1
 						my.b_type =4
@@ -2698,12 +2720,12 @@ function is_appear_surface() as Boolean{
 	elseif axis == 4 then
 		if ny == my.y then
 			if my.forward_vector(1) > 0 then
-				if universe.map.is_void(nx,ny+1,nz) and universe.map.is_void(nx,ny+1,nz+1) then
+				if check_void(nx,ny+1,nz) == 1 and check_void(nx,ny+1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(1) = -1
-				elseif universe.map.is_void(nx,ny+1,nz) or universe.map.is_void(nx,ny+1,nz+1) then
+				elseif check_void(nx,ny+1,nz) == 1 or check_void(nx,ny+1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =2
@@ -2713,12 +2735,12 @@ function is_appear_surface() as Boolean{
 					ret = false
 				end if
 			else
-				if universe.map.is_void(nx,ny-1,nz) and universe.map.is_void(nx,ny-1,nz+1) then
+				if check_void(nx,ny-1,nz) == 1 and check_void(nx,ny-1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type =2
 					my.touch(1) = 1
-				elseif universe.map.is_void(nx,ny-1,nz) or universe.map.is_void(nx,ny-1,nz+1) then
+				elseif check_void(nx,ny-1,nz) == 1 or check_void(nx,ny-1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type =2
@@ -2730,12 +2752,12 @@ function is_appear_surface() as Boolean{
 			end if
 		elseif nz == my.Z then
 			if my.forward_vector(2) > 0 then
-				if universe.map.is_void(nx,ny,nz+1) and universe.map.is_void(nx,ny+1,nz+1) then
+				if check_void(nx,ny,nz+1) == 1 and check_void(nx,ny+1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type =1
 					my.touch(2) = -1
-				elseif universe.map.is_void(nx,ny,nz+1) or universe.map.is_void(nx,ny+1,nz+1) then
+				elseif check_void(nx,ny,nz+1) == 1 or check_void(nx,ny+1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type =1
@@ -2751,12 +2773,12 @@ function is_appear_surface() as Boolean{
 					my.b_type =1
 					my.touch(2) = 1
 				else
-					if universe.map.is_void(nx,ny,nz-1) and universe.map.is_void(nx,ny+1,nz-1) then
+					if check_void(nx,ny,nz-1) == 1 and check_void(nx,ny+1,nz-1) == 1 then
 						ret = true
 						my.angle_surface = 90
 						my.b_type =1
 						my.touch(2) = 1
-					elseif universe.map.is_void(nx,ny,nz-1) or universe.map.is_void(nx,ny+1,nz-1) then
+					elseif check_void(nx,ny,nz-1) == 1 or check_void(nx,ny+1,nz-1) == 1 then
 						ret = true
 						my.angle_surface = 90
 						my.b_type =1
@@ -2773,7 +2795,7 @@ function is_appear_surface() as Boolean{
 	else
 		if nz == my.Z then
 			if my.forward_vector(2) > 0 then
-				if universe.map.is_void(my.X,my.Y,my.Z+1) then
+				if check_void(my.X,my.Y,my.Z+1) == 1 then
 					ret = true
 					my.angle_surface = -1
 					my.b_type =3
@@ -2789,7 +2811,7 @@ function is_appear_surface() as Boolean{
 					my.touch(2) = 1
 					my.a_flag = true
 				else
-					if universe.map.is_void(my.X,my.Y,my.Z-1) then
+					if check_void(my.X,my.Y,my.Z-1) == 1 then
 						ret = true
 						my.angle_surface = -1
 						my.b_type =3
@@ -2848,7 +2870,7 @@ function is_disappear_surface() as Boolean{
 				if nz == 0 and my.normal_vector(2) > 0 then
 					if ny == 0 and my.touch(1) > 0 then
 						ret = false
-					elseif not universe.map.is_void(nx+f(0),ny - my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz ) then
+					elseif check_void(nx+f(0),ny - my.touch(1),nz) == 0 and check_void(nx,ny - my.touch(1),nz ) == 1 then
 						ret = true
 						my.b_type = 5
 						my.dis_surface = 1
@@ -2858,10 +2880,10 @@ function is_disappear_surface() as Boolean{
 						ret = false
 					end if
 				else
-					if universe.map.is_void(nx+f(0),ny,nz - my.normal_vector(2)) then
+					if check_void(nx+f(0),ny,nz - my.normal_vector(2)) ==1 then
 						if ny == 0 and my.touch(1) > 0 then
 							ret = false
-						elseif not universe.map.is_void(nx+ f(0) ,ny - my.touch(1),nz) and universe.map.is_void(nx,ny - my.touch(1),nz ) then
+						elseif check_void(nx+ f(0) ,ny - my.touch(1),nz) == 0 and check_void(nx,ny - my.touch(1),nz ) == 1 then
 							ret = true
 							my.b_type = 5
 							my.dis_surface = 1
@@ -2882,10 +2904,10 @@ function is_disappear_surface() as Boolean{
 				if ny == 0 and my.normal_vector(1) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx+f(0),ny - my.normal_vector(1),nz) then
+					if check_void(nx+f(0),ny - my.normal_vector(1),nz) == 1 then
 						if nz == 0 and my.touch(2) > 0 then
 							ret = false
-						elseif not universe.map.is_void(nx+f(0),ny,nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
+						elseif check_void(nx+f(0),ny,nz- my.touch(2)) == 0 and check_void(nx,ny,nz - my.touch(2) ) == 1 then
 							ret = true
 							my.b_type = 5
 							my.dis_surface = 2
@@ -2912,13 +2934,13 @@ function is_disappear_surface() as Boolean{
 				ret = false
 			else
 				if ny == my.Y then
-					if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+f(0),ny,nz - my.normal_vector(2)) then
+					if check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx+f(0),ny,nz - my.normal_vector(2)) == 0 then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 2
 						my.touch(0) = -f(0)
 						//println("5")
-					elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
+					elseif check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx,ny+f(1),nz - my.normal_vector(2)) == 0 then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 2
@@ -2928,13 +2950,13 @@ function is_disappear_surface() as Boolean{
 						ret = false
 					end if
 				else
-					if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+f(0),ny,nz - my.normal_vector(2)) then
+					if check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx+f(0),ny,nz - my.normal_vector(2)) == 0 then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 2
 						my.touch(0) = -f(0)
 						//println("7")
-					elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+f(0),ny+1,nz - my.normal_vector(2)) then
+					elseif check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx+f(0),ny+1,nz - my.normal_vector(2)) == 0 then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 2
@@ -2949,13 +2971,13 @@ function is_disappear_surface() as Boolean{
 			if nz == 0 and my.normal_vector(2) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
+				if check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx,ny+f(1),nz - my.normal_vector(2)) == 0 then
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 2
 					my.touch(1) = -f(1)
 					//println("8")
-				elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+1,ny+f(1),nz - my.normal_vector(2)) then
+				elseif check_void(nx,ny,nz - my.normal_vector(2)) == 1 and check_void(nx+1,ny+f(1),nz - my.normal_vector(2)) == 0 then
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 2
@@ -2974,13 +2996,13 @@ function is_disappear_surface() as Boolean{
 				ret = false
 			else
 				if nz == my.Z then
-					if universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx+f(0),ny - my.normal_vector(1),nz) then
+					if check_void(nx,ny - my.normal_vector(1),nz) == 1 and check_void(nx+f(0),ny - my.normal_vector(1),nz) == 0 then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
 						//println("9")
-					elseif universe.map.is_void(nx,ny - my.normal_vector(1),nz) and not universe.map.is_void(nx,ny - my.normal_vector(1),nz+f(2)) then
+					elseif check_void(nx,ny - my.normal_vector(1),nz) == 1 and check_void(nx,ny - my.normal_vector(1),nz+f(2)) == 0 then
 						ret = true
 						my.b_type = 0
 						my.dis_surface = 1
@@ -2990,13 +3012,13 @@ function is_disappear_surface() as Boolean{
 						ret = false
 					end if
 				else
-					if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx+f(0),ny- my.normal_vector(1),nz) then
+					if check_void(nx,ny- my.normal_vector(1),nz) == 1 and check_void(nx+f(0),ny- my.normal_vector(1),nz) == 0 then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
 						//println("11")
-					elseif universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx+f(0),ny- my.normal_vector(1),nz+1) then
+					elseif check_void(nx,ny- my.normal_vector(1),nz) == 1 and check_void(nx+f(0),ny- my.normal_vector(1),nz+1) == 0 then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 1
@@ -3011,13 +3033,13 @@ function is_disappear_surface() as Boolean{
 			if ny == 0 and my.normal_vector(1) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx,ny- my.normal_vector(1),nz+f(2)) then
+				if check_void(nx,ny- my.normal_vector(1),nz) == 1 and check_void(nx,ny- my.normal_vector(1),nz+f(2)) == 0 then
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 1
 					my.touch(2) = -f(2)
 					//println("12")
-				elseif universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx+1,ny- my.normal_vector(1),nz+f(2)) then
+				elseif check_void(nx,ny- my.normal_vector(1),nz) == 1 and check_void(nx+1,ny- my.normal_vector(1),nz+f(2)) == 0 then
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 1
@@ -3036,7 +3058,7 @@ function is_disappear_surface() as Boolean{
 				if nz == 0 and my.normal_vector(2) > 0 then
 					if nx == 0 and my.touch(0) > 0 then
 						ret = false
-					elseif not universe.map.is_void(nx - my.touch(0),ny+f(1),nz) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
+					elseif check_void(nx - my.touch(0),ny+f(1),nz) == 0 and check_void(nx - my.touch(0),ny,nz ) == 1 then
 						ret = true
 						my.b_type = 4
 						my.dis_surface = 0
@@ -3046,10 +3068,10 @@ function is_disappear_surface() as Boolean{
 						ret = false
 					end if
 				else
-					if universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
+					if check_void(nx,ny+f(1),nz - my.normal_vector(2)) == 1 then
 						if nx == 0 and my.touch(0) > 0 then
 							ret = false
-						elseif not universe.map.is_void(nx - my.touch(0) ,ny+ f(1),nz) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
+						elseif check_void(nx - my.touch(0) ,ny+ f(1),nz) == 0 and check_void(nx - my.touch(0),ny,nz ) == 1 then
 							ret = true
 							my.b_type = 4
 							my.dis_surface = 0
@@ -3070,10 +3092,10 @@ function is_disappear_surface() as Boolean{
 				if nx == 0 and my.normal_vector(0) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx - my.normal_vector(0),ny+f(1),nz) then
+					if check_void(nx - my.normal_vector(0),ny+f(1),nz) == 1 then
 						if nz == 0 and my.touch(2) > 0 then
 							ret = false
-						elseif not universe.map.is_void(nx,ny+f(1),nz- my.touch(2)) and universe.map.is_void(nx,ny,nz - my.touch(2) ) then
+						elseif check_void(nx,ny+f(1),nz- my.touch(2)) == 0 and check_void(nx,ny,nz - my.touch(2) ) == 1 then
 							ret = true
 							my.b_type = 4
 							my.dis_surface = 2
@@ -3100,13 +3122,13 @@ function is_disappear_surface() as Boolean{
 				ret = false
 			else
 				if nz == my.Z then
-					if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny +f(1),nz) then
+					if check_void(nx - my.normal_vector(0),ny,nz) == 1 and check_void(nx - my.normal_vector(0),ny +f(1),nz) == 0 then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
 						//println("18")
-					elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
+					elseif check_void(nx - my.normal_vector(0),ny,nz) == 1 and check_void(nx - my.normal_vector(0),ny,nz+f(2)) == 0 then
 						ret = true
 						my.b_type = 1
 						my.dis_surface = 0
@@ -3116,13 +3138,13 @@ function is_disappear_surface() as Boolean{
 						ret = false
 					end if
 				else
-					if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny+f(1),nz) then
+					if check_void(nx - my.normal_vector(0),ny,nz) == 1 and check_void(nx - my.normal_vector(0),ny+f(1),nz) == 0 then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
 						//println("20")
-					elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny+f(1),nz+1) then
+					elseif check_void(nx - my.normal_vector(0),ny,nz) == 1 and check_void(nx - my.normal_vector(0),ny+f(1),nz+1) == 0 then
 						ret = true
 						my.b_type = 2
 						my.dis_surface = 0
@@ -3137,13 +3159,13 @@ function is_disappear_surface() as Boolean{
 			if nx == 0 and my.normal_vector(0) > 0 then
 				ret = false
 			else
-				if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
+				if check_void(nx - my.normal_vector(0),ny,nz) == 1 and check_void(nx - my.normal_vector(0),ny,nz+f(2)) == 0 then
 					ret = true
 					my.b_type = 1
 					my.dis_surface = 0
 					my.touch(2) = -f(2)
 					//println("21")
-				elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny+1,nz+f(2)) then
+				elseif check_void(nx - my.normal_vector(0),ny,nz) == 1 and check_void(nx - my.normal_vector(0),ny+1,nz+f(2)) == 0 then
 					ret = true
 					my.b_type = 1
 					my.dis_surface = 0
@@ -3162,7 +3184,7 @@ function is_disappear_surface() as Boolean{
 				if ny == 0 and my.normal_vector(1) > 0 then
 					if nx == 0 and my.touch(0) > 0 then
 						ret = false
-					elseif not universe.map.is_void(nx - my.touch(0),ny,nz+f(2)) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
+					elseif check_void(nx - my.touch(0),ny,nz+f(2)) == 0 and check_void(nx - my.touch(0),ny,nz ) == 1 then
 						ret = true
 						my.b_type = 3
 						my.dis_surface = 0
@@ -3172,10 +3194,10 @@ function is_disappear_surface() as Boolean{
 						ret = false
 					end if
 				else
-					if universe.map.is_void(nx,ny - my.normal_vector(1),nz+f(2)) then
+					if check_void(nx,ny - my.normal_vector(1),nz+f(2)) == 1 then
 						if nx == 0 and my.touch(0) > 0 then
 							ret = false
-						elseif not universe.map.is_void(nx - my.touch(0) ,ny,nz+ f(2)) and universe.map.is_void(nx - my.touch(0),ny,nz ) then
+						elseif check_void(nx - my.touch(0) ,ny,nz+ f(2)) == 0 and check_void(nx - my.touch(0),ny,nz ) == 1 then
 							ret = true
 							my.b_type = 3
 							my.dis_surface = 0
@@ -3196,10 +3218,10 @@ function is_disappear_surface() as Boolean{
 				if nx == 0 and my.normal_vector(0) > 0 then
 					ret = false
 				else
-					if universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
+					if check_void(nx - my.normal_vector(0),ny,nz+f(2)) == 1 then
 						if ny == 0 and my.touch(1) > 0 then
 							ret = false
-						elseif not universe.map.is_void(nx,ny- my.touch(1),nz+f(2)) and universe.map.is_void(nx,ny - my.touch(1) ,nz) then
+						elseif check_void(nx,ny- my.touch(1),nz+f(2)) == 0 and check_void(nx,ny - my.touch(1) ,nz) == 1 then
 							ret = true
 							my.b_type = 3
 							my.dis_surface = 1
@@ -3291,6 +3313,10 @@ sub step_surface(){
 
 	n = my.dis_surface
 	b = my.b_type
+
+	println("n :"&n)
+	println("b :"&b)
+	
 	for i =0 to 2
 		pre(i) = GetHistory(my.touch(i),1)
 		f(i) = GetHistory(my.forward_vector(i),1)
@@ -3520,10 +3546,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 71;
+    Position_x = 33;
     Position_y = 16;
-    Size_x = 671;
-    Size_y = 747;
+    Size_x = 709;
+    Size_y = 924;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3615,9 +3641,9 @@ Others_Data {
     Console_Position_y = 6;
     Console_Size_x = 451;
     Console_Size_y = 905;
-    Componen_Tree_Position_x = 153;
+    Componen_Tree_Position_x = 124;
     Componen_Tree_Position_y = 28;
-    Componen_Tree_Size_x = 839;
+    Componen_Tree_Size_x = 868;
     Componen_Tree_Size_y = 383;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
