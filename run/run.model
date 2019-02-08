@@ -12,7 +12,7 @@ Version = 4.0;
 // Component Tree
 //-------------------------------------------------------
 UNIVERSE {
-    Space map(0,0),Square_2D(80, 150, !Loop, North, 1, Map_3D){
+    Space map(0,0),Square_2D(20, 40, !Loop, North, 1, Map_3D){
         AgtType insect(0, 0)[1] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
@@ -37,6 +37,9 @@ UNIVERSE {
             Dim dis_surface(0, 0) As Integer = (0);
             Dim is_hemi(0, 0) As Boolean = (0);
             Dim is_back(0, 0) As Boolean = (0);
+            Dim edge(0, 0)[3] As Double = (3*0.0);
+            Dim edge_vector(0, 0)[3] As Double = (3*0.0);
+            Dim repulsive_vector(0, 0)[3][3] As Double = (9*0.0);
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -47,8 +50,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[80][150][40] As Boolean = (480000*0);
-        Dim is_void(0, 0)[80][150][40] As Boolean = (480000*0);
+        Dim fin(0, 0)[20][40][40] As Boolean = (32000*0);
+        Dim is_void(0, 0)[20][40][40] As Boolean = (32000*0);
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -62,7 +65,6 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
-    UNIVERSE.MAP.FIN = 1(480000*0);
     UNIVERSE.MAP.INSECT.X = 1(1.0);
     UNIVERSE.MAP.INSECT.Y = 1(1.0);
     UNIVERSE.MAP.INSECT.Z = 1(0.0);
@@ -85,7 +87,7 @@ Initial_Value {
 Univ_Init{
 	universe.num_insect = 1
 	ClearConsoleScreen()
-	make_rubble_mix(0.6)
+	make_rubble_mix(0.3)
 	make_void()
 	println("")
 	println("start")
@@ -222,12 +224,14 @@ sub make_rubble_mix(rate as Double){
 //	println("tmp_number is"&tmp_number)
 
 	Do While tmp_rate < rate
-		x = Int(Rnd() * (width-2)) + 2
-		y = Int(Rnd() * (height-2)) + 2
+		x = Int(Rnd() * (width))
+		y = Int(Rnd() * (height))
 		z = Int(Rnd() * (40))
 		pattern = Int(Rnd() * 3)
 		r = Rnd() * 100
-		if r < 33 then
+		if x < 3 and y < 3 then
+			
+		elseif r < 33 then
 			tmp_number = tmp_number + make_rubble_board(pattern,x,y,z)
 		elseif r < 66 then
 			tmp_number = tmp_number + make_rubble_box(x,y,z)
@@ -635,7 +639,7 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.INSECT
 Agt_Init{
-my.Direction = 60.1
+my.Direction = rnd() * 360
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 my.do_type = 1
@@ -644,31 +648,289 @@ my.position_type = 0
 my.normal_vector(2) = 1
 my.touch(2) = 1
 my.dis_surface = -1
+my.X = 1 + rnd()
+my.Y = 1 + rnd()
+my.Z = 0
 }
 
 Agt_Step{
-dim i as Integer
 
-	if different_surface() then
-		determining_vector()
-		update_normal_vector()
+	println("")
+	println("step start")
+	print_all()
+	if is_edge() then
+		avoid_edge()
+	end if
+	if is_control() then
+		calculate_repulsive()
+		decide_vector()
 	else
-		if is_bend() then
-			determining_bend()
+		if different_surface() then
+			println("determining vector")
+			determining_vector()
+			update_normal_vector()
+		else
+			if is_bend() then
+				println("bend")
+				determining_bend()
+			end if
 		end if
 	end if
 	forward_step()
 	clear_val()
-	if my.normal_vector(0) == 0 and my.normal_vector(1) == 0 and my.normal_vector(2) == 0 then
-		PauseSimulation()
+	print_all()
+}
+
+sub print_all(){
+	println("X :"&my.X&" Y :"&my.Y& " Z :"&my.Z)
+	println("fX :"&my.forward_vector(0)&" fY :"&my.forward_vector(1)& " fZ :"&my.forward_vector(2))
+	println("nX :"&my.normal_vector(0)&" nY :"&my.normal_vector(1)& " nZ :"&my.normal_vector(2))
+	println("do_type :"&my.do_type)
+}
+
+function is_edge()as Boolean{
+	dim position(2) as Double
+	dim max(2) as Integer
+	dim i as Integer
+	dim r as Double
+	dim ret as Boolean
+	
+	r = 2
+
+	position(0) = my.X
+	position(1) = my.Y
+	max(0) = GetWidthSpace(universe.map)
+	max(1) = GetHeightSpace(universe.map)
+
+	println("max0 :"&max(0))
+	println("max(1) :"&max(1))
+	print_all()
+
+	ret = false
+	for i = 0 to 1
+		if position(i) < r then
+			my.edge(i) = position(i)
+			ret = true
+		elseif position(i) > max(i) - 1 - r then
+			my.edge(i) = position(i) - max(i)
+			ret = true
+		end if 
+	next i
+
+	return ret
+}
+
+sub avoid_edge(){
+	println("avoid edge")
+	cal_edge_vector()
+	store_edge_vector()
+}
+
+sub cal_edge_vector(){
+	dim k(3) as Double
+	dim f(3) as Double
+	dim r as Integer
+	dim i as Integer
+
+	r = 2
+	for i = 0 to 2
+		if my.edge(i) != 0 then
+			k(i) = (r / my.edge(i))^2
+		else
+			k(i) = 0
+		end if
+		my.edge_vector(i) = my.edge(i) * k(i)
+	next i
+}
+
+sub store_edge_vector(){
+	dim i as Integer
+	dim alpha as Double
+	dim f(3) as Double
+	dim sum as Double
+
+	alpha = 0.5
+	for i = 0 to 2
+		if my.normal_vector(i) == 0 then
+			f(i) = my.forward_vector(i) + alpha * my.edge_vector(i)
+		else
+			f(i) = 0
+		end if
+	next i
+	sum = Sqr(f(0)^2 + f(1)^2 + f(2)^2)
+
+	if sum != 0 then
+		for i = 0 to 2
+			my.forward_vector(i) = f(i) / sum
+		next i
 	end if
-			
+}
+
+function is_control() as Boolean{
+	dim ret as Boolean
+
+	if (GetCountStep() mod 100/*universe.T*/) == 0 then
+		ret = true
+	else
+		ret = false
+	end if
+
+	return ret
+}
+
+sub calculate_repulsive(){
+	repulsive_insect()
+	repulsive_barrier()
+	sum_repulsive()
+}
+sub sum_repulsive(){
+//repulsiveの合計を出す
+	dim i as Integer
+	dim alpha as Double
+
+	alpha = 0.6//universe.alpha
+
+	for i = 0 to 2
+		my.repulsive_vector(2,i) = alpha * my.repulsive_vector(0,i) + (1 - alpha) * my.repulsive_vector(1,i)
+	next i
+}
+
+sub repulsive_insect(){
+//サイボーグインセクトからの斥力の和を計算
+	dim neighbor as AgtSet
+	dim r as Double
+	dim diff(3) as Double
+	dim d as Double
+	dim i as Integer
+
+	r = 50
+	MakeOneAgtSetAroundOwn(neighbor,r,universe.map.insect,false)
+	if CountAgtSet(neighbor) > 0 then
+		for Each one in neighbor 
+			diff(0) = my.X - one.X
+			diff(1) = my.Y - one.Y
+			diff(2) = my.Z - one.Z
+			d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+
+			if d != 0 then
+				for i = 0 to 2
+					my.repulsive_vector(0,i) = my.repulsive_vector(0,i) + diff(i) / d ^ 2
+				next i
+			end if
+		next one
+	end if
+}
+
+sub repulsive_barrier(){
+//障害物からの斥力の和を計算
+	dim objectset as AgtSet
+	dim r as Double
+	dim normal as Integer
+	dim diff(3) as Double
+	dim d as Double
+	dim n as Integer
+	dim i as Integer
+
+	r = 2
+	n = get_surface()
+	MakeOneAgtSetAroundOwn(objectset,r,universe.map.barrier,false)
+	if CountAgtSet(objectset) > 0 then
+			if n == 0 then
+					for each one in objectset
+						if one.X == my.X then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			elseif n == 1 then
+				for each one in objectset
+						if one.Y == my.Y then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			elseif n == 2 then
+				for each one in objectset
+						if one.Z == my.Z then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
+
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			else
+				PrintLn("miss")
+				PauseSimulation()
+				//terminateagt(my)
+			end if
+	else
+	end if
+}
+
+function get_surface()as Integer{
+	dim ret as Integer
+	dim i as Integer
+
+	ret = 0
+	for i = 0 to 2
+		if my.normal_vector(i) != 0 then
+			ret = i
+			break
+		end if
+	next i
+
+	return ret
+}
+
+sub decide_vector(){
+//斥力から今の垂直な成分を削除
+	dim n as Integer
+	dim i as Integer
+	dim length as Double
+
+	n = get_surface()
+	length = 0
+	my.repulsive_vector(2,n) = 0 
+
+	for i = 0 to 2
+		length = length + my.repulsive_vector(2,i)^2
+	next i 
+	length = Sqr(length)
+	if length != 0 then
+		for i = 0 to 2
+			my.forward_vector(i) = my.repulsive_vector(2,i) / length
+		next i 
+	end if
 }
 
 sub clear_val(){
 //毎ステップ初期化必要な変数を初期化する関数
 	my.dis_surface = -1
 	my.is_back = false
+	My.is_hemi = false
+	my.a_flag = false
 }
 
 
@@ -735,7 +997,11 @@ sub update_normal(){
 sub forward_step() {
 
 	if is_differernt() then
+	println("befor step surface")
+	print_all()
 		step_surface()
+		println("after step surface")
+	print_all()	
 	else
 		step_direction()
 	end if
@@ -806,7 +1072,8 @@ sub back_surface(n as Integer){
 		else
 			//ここに入りたくない
 			println("disapミスってる？？")
-			ExitSimulation()
+			PauseSimulation()
+			//DelAgt(my)
 		end if
 		my.is_back = true
 		prev_forward()
@@ -846,18 +1113,22 @@ function is_step() as Boolean{
 
 	if is_filled() then
 		ret = false
+		println("fill")
 	else
 		if is_float() then
 			ret = false
+			println("float")
 		else
 			if not is_jump() then
 				if is_pause() then
 					ret = false
+						println("pause")
 				else
 					ret = true
 				end if
 			else
 				ret = false
+					println("jump")
 			end if
 		end if
 	end if
@@ -1653,6 +1924,11 @@ sub store_vector(type as Integer,angle as Double){
 	dim i as Integer
 	dim pre_t(3) as Integer
 
+	println("store_vector")
+	print_all()
+	println("")
+
+	n = -1
 	for i = 0 to 2	
 		pre_t(i) = GetHistory(my.touch(i),1)
 		if my.normal_vector(i) != 0 then
@@ -1661,7 +1937,11 @@ sub store_vector(type as Integer,angle as Double){
 	next i
 	type = my.b_type
 	angle = my.angle_surface
-
+	if n == -1 then
+		println("normal miss")
+		PauseSimulation()
+		//terminateagt(my)
+	end if
 
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
@@ -1887,6 +2167,8 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 		else
 			PrintLn("type miss")
+			PauseSimulation()
+			//terminateagt(my)
 		end if
 	end if
 
@@ -2115,6 +2397,9 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 		n = 3
 	end if
 
+	if sum_diff == 0 then
+		sum_diff = 1
+	end if
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
@@ -2141,13 +2426,13 @@ function different_surface() as Boolean{
 	ret = false
 	if is_appear_surface() then
 			my.ap_or_dis = 1
-			//println("appear")
 			ret = true
+			println("app")
 	else
 		if is_disappear_surface() then
 			my.ap_or_dis = -1
 			ret = true
-			//println("disappear")
+			println("disapp")
 		end if
 	end if
 	
@@ -2183,6 +2468,8 @@ function direction_type() as Integer{
 		ret = 1
 	else
 		PrintLn("miss")
+		PauseSimulation()
+		//terminateagt(my)
 	end if
 
 	return ret
@@ -2539,6 +2826,8 @@ function is_disappear_surface() as Boolean{
 	dim f(3) as Double
 	dim i as Integer
 
+	println("appear")
+	print_all()
 	axis = direction_type()
 	ny = Int(my.Y)
 	nz = Int(my.Z)
@@ -2645,6 +2934,12 @@ function is_disappear_surface() as Boolean{
 						my.dis_surface = 2
 						my.touch(0) = -f(0)
 						//println("7")
+					elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+f(0),ny+1,nz - my.normal_vector(2)) then
+						ret = true
+						my.b_type = 1
+						my.dis_surface = 2
+						my.touch(0) = -f(0)
+						//println("7")
 					else
 						ret = false
 					end if
@@ -2655,6 +2950,12 @@ function is_disappear_surface() as Boolean{
 				ret = false
 			else
 				if universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx,ny+f(1),nz - my.normal_vector(2)) then
+					ret = true
+					my.b_type = 0
+					my.dis_surface = 2
+					my.touch(1) = -f(1)
+					//println("8")
+				elseif universe.map.is_void(nx,ny,nz - my.normal_vector(2)) and not universe.map.is_void(nx+1,ny+f(1),nz - my.normal_vector(2)) then
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 2
@@ -2695,6 +2996,12 @@ function is_disappear_surface() as Boolean{
 						my.dis_surface = 1
 						my.touch(0) = -f(0)
 						//println("11")
+					elseif universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx+f(0),ny- my.normal_vector(1),nz+1) then
+						ret = true
+						my.b_type = 2
+						my.dis_surface = 1
+						my.touch(0) = -f(0)
+						//println("11")
 					else
 						ret = false
 					end if
@@ -2705,6 +3012,12 @@ function is_disappear_surface() as Boolean{
 				ret = false
 			else
 				if universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx,ny- my.normal_vector(1),nz+f(2)) then
+					ret = true
+					my.b_type = 0
+					my.dis_surface = 1
+					my.touch(2) = -f(2)
+					//println("12")
+				elseif universe.map.is_void(nx,ny- my.normal_vector(1),nz) and not universe.map.is_void(nx+1,ny- my.normal_vector(1),nz+f(2)) then
 					ret = true
 					my.b_type = 0
 					my.dis_surface = 1
@@ -2809,6 +3122,12 @@ function is_disappear_surface() as Boolean{
 						my.dis_surface = 0
 						my.touch(1) = -f(1)
 						//println("20")
+					elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny+f(1),nz+1) then
+						ret = true
+						my.b_type = 2
+						my.dis_surface = 0
+						my.touch(1) = -f(1)
+						//println("20")
 					else
 						ret = false
 					end if
@@ -2819,6 +3138,12 @@ function is_disappear_surface() as Boolean{
 				ret = false
 			else
 				if universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny,nz+f(2)) then
+					ret = true
+					my.b_type = 1
+					my.dis_surface = 0
+					my.touch(2) = -f(2)
+					//println("21")
+				elseif universe.map.is_void(nx - my.normal_vector(0),ny,nz) and not universe.map.is_void(nx - my.normal_vector(0),ny+1,nz+f(2)) then
 					ret = true
 					my.b_type = 1
 					my.dis_surface = 0
@@ -3056,7 +3381,7 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
-	
+	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3171,6 +3496,94 @@ Time_Graph {
 
 
 //-------------------------------------------------------
+//  3 Dimension Map Display Definition Division
+//-------------------------------------------------------
+Map3D_Output {
+    Map3D_Name = "map";
+    Disable = Yes;
+    Background_Image_Display = No;
+    Background_Image_Type = Fixed_Value;
+    Background_Image_Folder_Name = "";
+    Background_Image_Folder_Variable_Name = Dummy;
+    Background_Color = -1;
+    FastDraw = No;
+    Line_Display = No;
+    Camera_Position_Type = Mouse;
+    Camera_Position_Agent_Name = Universe.CameraPointer;
+    Light_Position_Type = Coordinate;
+    Light_Position = 0.0,0.0,0.0;
+    Light_Position_Agent_Name = Dummy;
+    Output_Group_Name = "";
+    Font_Name = "Dialog";
+    Font_Char_Set = 81;
+    Font_Size = 12.0;
+    Font_Style = 0;
+    Font_Color = 0, 0, 0;
+    Font_Background_Color = 255, 255, 255;
+    Position_x = 71;
+    Position_y = 16;
+    Size_x = 671;
+    Size_y = 747;
+    Map_Cell_Size = -1;
+    Draw_Timing = Simulation_Step;
+    Draw_Interval = 1;
+    Space3D_Output {
+        Space_3D_Name = "map";
+        Space_Path_Name = Universe.map;
+        Layer = 0;
+        Space_3D_PositionD = 0.0,0.0,0.0;
+        Ruled_Line_Display = Yes;
+        Origin_Position = Left_Top;
+        Display_Object_Type = None;
+        Image_File_Path_Name = "";
+        Model_3D_File_Path_Name = "";
+        Agent3D_Output {
+                Agent_3D_Name = "insect";
+                Agent_Path_Name = Universe.map.insect;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Sphere_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -65536;
+                Color_Variable_Path_Name = Universe.map.insect.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+        Agent3D_Output {
+                Agent_3D_Name = "barrier";
+                Agent_Path_Name = Universe.map.barrier;
+                Display_Object_Type = Image_File;
+                Display_Object_Image_Id = Quadrartic_Prism;
+                Model_3D_File_Path_Name = "";
+                Color_Type = None;
+                Color_Value = -1;
+                Color_Variable_Path_Name = Universe.map.barrier.ID;
+                Smooth_Movement = No;
+                Draw_line = No;
+                Line_AgtSet_Variable_Path_Name = "";
+                Line_Type = 1;
+                Line_Type_Variable_Path_Name = "";
+                Line_Arrow = 1;
+                Line_Arrow_Variable_Path_Name = "";
+                Line_Color = -16777216;
+                Line_Color_Variable_Path_Name = "";
+                Magnify_Value = 1.0;
+                Magnify_Variable_Path_Name = "";
+        }
+    }
+}
+
+
+//-------------------------------------------------------
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
@@ -3198,9 +3611,9 @@ Others_Data {
     Debug_Position_y = 72;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 7;
-    Console_Position_y = 8;
-    Console_Size_x = 681;
+    Console_Position_x = 778;
+    Console_Position_y = 6;
+    Console_Size_x = 451;
     Console_Size_y = 905;
     Componen_Tree_Position_x = 153;
     Componen_Tree_Position_y = 28;
@@ -3237,7 +3650,7 @@ Space_Map_Initial_Value {
     Background_Image_File_Path_Name = "";
     Origin_Position = Left_Bottom;
     Space_Variable {
-        Variable = Universe.map.fin,(480000*0);
+        Variable = Universe.map.fin,(32000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3245,7 +3658,7 @@ Space_Map_Initial_Value {
         Max_Value_Color = 0, 255, 255;
     }
     Space_Variable {
-        Variable = Universe.map.is_void,(480000*0);
+        Variable = Universe.map.is_void,(32000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3259,11 +3672,11 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1696, 1026;
-    Window_Name = Output_Setting_Window, 623, 338, 480, 350;
+    Window_Name = Main_Window, -8, -8, 1936, 1056;
+    Window_Name = Output_Setting_Window, 743, 353, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
-    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 623, 243, 450, 540;
+    Window_Name = Map_3D_Setting_Window, 628, 278, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 743, 258, 450, 540;
 }
 
 

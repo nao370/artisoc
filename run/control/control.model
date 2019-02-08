@@ -39,6 +39,8 @@ UNIVERSE {
             Dim is_back(0, 0) As Boolean = (0);
             Dim sum_repulsive_force(0, 0)[3] As Double = (3*0.0);
             Dim repulsive_vector(0, 0)[3][3] As Double = (9*0.0);
+            Dim edge(0, 0)[3] As Double = (3*0.0);
+            Dim edge_vector(0, 0)[3] As Double = (3*0.0);
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -49,8 +51,8 @@ UNIVERSE {
             Dim Direction(0, 0) As Double = (0.0);
             Dim Angle(0, 0) As Double = (0.0);
         }
-        Dim fin(0, 0)[20][40][40] As Boolean = (32000*0);
-        Dim is_void(0, 0)[20][40][40] As Boolean = (32000*0);
+        Dim fin(0, 0)[20][40][40] As Boolean = ();
+        Dim is_void(0, 0)[20][40][40] As Boolean = ();
     }
     Dim CameraPointer(0, 0) As Agt = (0);
     Dim num_fin(0, 0) <6000>  As Integer = (0);
@@ -66,9 +68,9 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
-    UNIVERSE.NUM_INSECT = 1(2);
-    UNIVERSE.T = 1(50);
-    UNIVERSE.ALPHA = 1(0.8);
+    UNIVERSE.NUM_INSECT = 1(1);
+    UNIVERSE.T = 1(100);
+    UNIVERSE.ALPHA = 1(0.6000000000000001);
 }
 
 
@@ -79,10 +81,24 @@ Initial_Value {
 Univ_Init{
 	CreateAgtMulti(universe.map.insect,universe.num_insect)
 	ClearConsoleScreen()
-	make_rubble_mix(0.15)
+	make_rubble_mix(0.3)
 	make_void()
 	println("")
 	println("start")
+	write_parameter()
+}
+
+sub write_parameter(){
+	OpenFileCSV("insect_position_list.csv",1,3)
+	WriteFileCSV(1,"N",False)
+	WriteFileCSV(1,universe.num_insect,True)
+	WriteFileCSV(1,"T",False)
+	WriteFileCSV(1,universe.T,True)
+	WriteFileCSV(1,"alpha",False)
+	WriteFileCSV(1,universe.alpha,True)
+	WriteFileCSV(1,"r",False)
+	WriteFileCSV(1,2,True)
+	CloseFileCSV(1)
 }
 
 sub make_void(){
@@ -106,94 +122,36 @@ Univ_Step_Begin{
 }
 
 Univ_Step_End{
-	draw_fin()
-	if (GetCountStep() mod 1000 ) == 0 then
-		write_csv()
-	end if
-	if universe.num_fin == 480000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+
+	write_csv()
+	if universe.num_fin == 48000000 or GetCountStep() >= 100000 then
 		ExitSimulation()
 	end if
 }
 
 sub write_csv(){
-	dim i as Integer
-	dim j as Integer
-	dim k as Integer
-	dim n as Integer
-	dim m as Integer
-
-	n = GetCountStep() / 1000
-	m = universe.num_insect
-	OpenFileCSV("voxel_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&".csv",n,3)
-
-	for k= 0 to 39
-		for j = 0 to GetHeightSpace(universe.map) -1
-			for i = 0 to GetWidthSpace(universe.map) -1
-				WriteFileCSV(n,i,false)
-				WriteFileCSV(n,j,false)
-				WriteFileCSV(n,k,false)
-				WriteFileCSV(n,universe.map.fin(i,j,k),false)
-				WriteFileCSV(n,universe.map.is_void(i,j,k),true)
-			next i
-		next j
-	next k
-
-	CloseFileCSV(n)
-}
-
-sub draw_fin(){
-	dim i as Integer
-	dim j as Integer
-	dim k as Integer
-
-	for k= 0 to 39
-		for j = 0 to GetHeightSpace(universe.map) -1
-			for i = 0 to GetWidthSpace(universe.map) -1
-				if not universe.map.fin(i,j,k) then
-					if is_in_area(i,j,k) then
-						universe.map.fin(i,j,k)= true
-						universe.num_fin = universe.num_fin + 1
-						if universe.map.is_void(i,j,k) then
-							universe.num_fill_fin = universe.num_fill_fin + 1
-						else
-							universe.num_void_fin = universe.num_void_fin +1
-						end if
-					end if
-				end if
-			next i
-		next j
-	next k
-}
-
-function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
-	dim ret as Boolean
-	dim tmp as AgtSet
+	dim insectlist as AgtSet
 	dim one as Agt
-	dim r as Double
+	dim count as Integer
 
-	r = 20
-	if not universe.map.fin(x,y,z) then
-		//MakeAgtSet(tmp,universe.map.insect)
-		MakeOneAgtSetAroundPosition(tmp,universe.map,x,y,0,r,universe.map.insect)
-		if CountAgtSet(tmp) > 0 then
-			ret = false
-			for each one in tmp
-				if ((one.X - x)^2 + (one.y - y)^2 + (one.z - z)^2) < r^2 then
-					ret = true
-				end if
-			next i
-		else
-			ret = false
-		end if
-	end if
-
-	return ret
+	count = GetCountStep()
+	OpenFileCSV("insect_position_list.csv",1,3)
+	MakeAgtSet(insectlist,universe.map.insect)
+	for each one in insectlist
+		WriteFileCSV(1,count,false)
+		WriteFileCSV(1,one.ID,false)
+		WriteFileCSV(1,one.X,false)
+		WriteFileCSV(1,one.Y,false)
+		WriteFileCSV(1,one.Z,false)
+		WriteFileCSV(1,one.forward_vector(0),false)
+		WriteFileCSV(1,one.forward_vector(1),false)
+		WriteFileCSV(1,one.forward_vector(2),True)
+	next one
+	CloseFileCSV(1)
 }
 
 Univ_Finish{
 	println("num_fin_sum : "&universe.num_fin)
-	println("num_fin_barrier : "&universe.num_fill_fin)
-	println("num_fin_voxel : "&universe.num_void_fin)
 }
 
 sub make_rubble_mix(rate as Double){
@@ -245,116 +203,90 @@ function make_rubble_board(pattern as Integer, x as Integer, y as integer ,z as 
 	dim ret as Integer
 	dim flag as Boolean
 	dim kill as AgtSet
+	dim i as integer
+	dim j as integer
 
 	flag = false
 	ret = 64
-	set = CreateAgtMulti(universe.map.barrier,64)
 	if not universe.map.is_void(x,y,z) then
 		if pattern == 0 and x< GetWidthSpace(universe.map) -8 and y < GetHeightSpace(universe.map) - 8 then //水平に置く
-			for each one in set
-				t = GetAgtEntry(set,one)
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
 				c = t / 8
 				b = t Mod 8
 				if not universe.map.is_void(x+b,y+c,z) then
-					one.X = x + b
-					one.Y = y + c
-					one.Z = z
 					universe.map.is_void(x+b,y+c,z) = true
-					if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
 				else
-					AddAgt(kill,one)
 					ret = ret - 1
 				end if
-			next one
-			DelAgtSet(set,kill)
-			for each one in kill
-				DelAgt(one)
-			next one
-			if  not flag then
-				for each one in set
-					universe.map.is_void(one.X,one.Y,one.Z) = false
-					DelAgt(one)
-				next one
-				ret = 0
-			end if
+			next t
 		elseif pattern == 1 and y < GetHeightSpace(universe.map) - 8 and z < 40 - 8 then // 縦長に置く
-			for each one in set
-				t = GetAgtEntry(set,one)
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
 				a = t / 8
 				b = t Mod 8
 				if not universe.map.is_void(x,y+b,z+a) then
-					one.X = x
-					one.Y = y + b
-					one.Z = z + a
 					universe.map.is_void(x,y+b,z+a) = true
-					if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x,y+b,z-1) then
-							flag = true
-						end if
-					end if
 				else
-					AddAgt(kill,one)
 					ret = ret - 1
 				end if
-			next one
-			DelAgtSet(set,kill)
-			for each one in kill
-				DelAgt(one)
-			next one
-			if  not flag then
-				for each one in set
-					universe.map.is_void(one.X,one.Y,one.Z) = false
-					DelAgt(one)
-				next one
-				ret = 0
-			end if		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // 横長に置く
-			for each one in set
-				t = GetAgtEntry(set,one)
+			next t
+		elseif pattern == 2 and x< GetWidthSpace(universe.map) -8 and z < 40 - 8 then // 横長に置く
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
 				a = t / 8
 				c = t Mod 8
 				if not universe.map.is_void(x+c,y,z+a) then
-					one.X = x + c
-					one.Y = y
-					one.Z = z + a
 					universe.map.is_void(x+c,y,z+a) = true
-					if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+c,y,z-1) then
-							flag = true
-						end if
-					end if
 				else
-					AddAgt(kill,one)
 					ret = ret - 1
 				end if
 			next one
-			DelAgtSet(set,kill)
-			for each one in kill
-				DelAgt(one)
-			next one
-			if  not flag then
-				for each one in set
-					universe.map.is_void(one.X,one.Y,one.Z) = false
-					DelAgt(one)
-				next one
-				ret = 0
-			end if
 		else
 			ret = 0
 		end if
 	else
 		ret = 0
 	end if
-	
 	 
 	return ret
 }
@@ -370,46 +302,38 @@ function make_rubble_box(x as Integer,y as integer, z as integer)as Integer{
 	dim ret as integer
 	dim flag as Boolean
 	dim kill as AgtSet
+	dim i as integer
+	dim j as integer
 
 	ret = 64
 	flag = false
-	set = CreateAgtMulti(universe.map.barrier,64)
 	if x <= GetWidthSpace(universe.map) - 4 and y <= GetHeightSpace(universe.map) - 4 and z <= 40 - 4 then
 		if not universe.map.is_void(x,y,z) then
-			for each one in set
-				t = GetAgtEntry(set,one)
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
 				a = t  / 16 
 				b = t Mod (16)
 				c = b / 4
 				b = b Mod 4
  				if not universe.map.is_void(x+b,y+c,z+a) then
-		  		one.X = x + b
-		  		one.Y = y + c
-		  		one.Z = z + a
 		  		universe.map.is_void(x+b,y+c,z+a) = true
-		  		if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
 		  	else
-		  		AddAgt(kill,one)
 					ret = ret - 1		  		
 		  	end if		  	
-			next one
-			DelAgtSet(set,kill)
-			for each one in kill
-				DelAgt(one)
-			next one
-			if  not flag then
-				for each one in set
-					universe.map.is_void(one.X,one.Y,one.Z) = false
-					DelAgt(one)
-				next one
-				ret = 0
-			end if
+			next t
 		else
 			ret = 0
 		end if
@@ -432,116 +356,92 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	dim ret as Integer
 	dim flag as Boolean
 		dim kill as AgtSet
+			dim i as integer
+	dim j as integer
 
 	ret = 64
 	flag = false
-	set = CreateAgtMulti(universe.map.barrier,64)
 	if not universe.map.is_void(x,y,z) then
 		if pattern == 0 and x <= GetWidthSpace(universe.map) - 16 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 -2  then
 		//横長の柱を作る
-			for each one in set
-				t = GetAgtEntry(set,one)
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+			for t = 0 to 63
 	  		a = t  / 32 
 	  		b = t Mod (32)
 	  		c = b / 16
 	  		b = b Mod 16
 				if not universe.map.is_void(x+b,y+c,z+a) then
-		  		one.X = x + b
-		  		one.Y = y + c
-		  		one.Z = z + a
 		  		universe.map.is_void(x+b,y+c,z+a) = true
-		  		if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
 		  	else
-		 	 		AddAgt(kill,one)
 					ret = ret - 1		  		
 		  	end if
 	  	next one
-	  	DelAgtSet(set,kill)
-	  	for each one in kill
-				DelAgt(one)
-			next one
-			if  not flag then
-				for each one in set
-					universe.map.is_void(one.X,one.Y,one.Z) = false
-					DelAgt(one)
-				next one
-				ret = 0
-			end if
 		elseif pattern == 1 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 16 and z <= 40 -2 then
 		//縦長の柱を作る
-	 		for each one in set
-	 			t = GetAgtEntry(set,one)
+			Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+	 		for t = 0 to 63
 	 			a = t  / 32 
 	 			b = t Mod (32)
 	 			c = b / 2
 	 			b = b Mod 2
 				if not universe.map.is_void(x+b,y+c,z+a) then
-	  			one.X = x + b
-		 			one.Y = y + c
-		 			one.Z = z + a
 		 			universe.map.is_void(x+b,y+c,z+a) = true
-		 			if z == 0 then
-						flag = true
-					elseif universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-					end if
 				else
-					AddAgt(kill,one)
 					ret = ret - 1		  	 		 		
 		 		end if
-	 		next one
-	 		DelAgtSet(set,kill)
-	 		for each one in kill
-				DelAgt(one)
-			next one
-			if  not flag then
-				for each one in set
-					universe.map.is_void(one.X,one.Y,one.Z) = false
-					DelAgt(one)
-				next one
-				ret = 0
-			end if
+	 		next t
 	  elseif pattern == 2 and x <= GetWidthSpace(universe.map) - 2 and y <= GetHeightSpace(universe.map) - 2 and z <= 40 - 16 then //立ってる柱を作る
-	 		for each one in set
-	 			t = GetAgtEntry(set,one)
+	  	Do While Not flag
+				if z == 0 then
+					flag = true
+					break
+				end if
+				for j = 0 to 4
+					for i = 0 to 4
+						if universe.map.is_void(i,j,z-1) then
+							flag = true
+						end if
+					next i
+				next j
+				z = z -1
+			Loop
+	 		for t = 0 to 63
 	 			a = t  / 4 
 	 			b = t Mod (4)
 	 			c = b / 2
 	 			b = b Mod 2
 				if not universe.map.is_void(x+b,y+c,z+a) then
-	  			one.X = x + b
-		 			one.Y = y + c
-		 			one.Z = z + a
 		 			universe.map.is_void(x+b,y+c,z+a) = true
-		 			if z == 0 then
-						flag = true
-					else
-						if universe.map.is_void(x+b,y+c,z-1) then
-							flag = true
-						end if
-					end if
 		 		else
-			 		AddAgt(kill,one)
 					ret = ret - 1		  	 		 		
 		 		end if
 	 		next one
-	 		DelAgtSet(set,kill)
-	 		for each one in kill
-				DelAgt(one)
-			next one
-			if  not flag then
-				for each one in set
-					universe.map.is_void(one.X,one.Y,one.Z) = false
-					DelAgt(one)
-				next one
-				ret = 0
-			end if
 	  else
 	  	ret = 0
 		end if
@@ -576,8 +476,9 @@ my.Z = 0
 }
 
 Agt_Step{
-dim i as Integer
-
+	if is_edge() then
+		avoid_edge()
+	end if
 	if is_control() then
 		calculate_repulsive()
 		decide_vector()
@@ -593,6 +494,75 @@ dim i as Integer
 	end if
 	forward_step()
 	clear_val()
+}
+
+function is_edge()as Boolean{
+	dim position(2) as Double
+	dim max(2) as Integer
+	dim i as Integer
+	dim r as Double
+	dim ret as Boolean
+
+	r = 2
+
+	position(0) = my.X
+	position(1) = my.Y
+	max(0) = GetWidthSpace(universe.map)
+	max(1) = GetHeightSpace(universe.map)
+
+	ret = false
+	for i = 0 to 1
+		if position(i) <= r then
+			my.edge(i) = position(i)
+			ret = true
+		elseif position(i) >= max(i) - r then
+			my.edge(i) = position(i) - max(i)
+			ret = true
+		end if 
+	next i
+
+	return ret
+}
+
+sub avoid_edge(){
+	cal_edge_vector()
+	store_edge_vector()
+}
+
+sub cal_edge_vector(){
+	dim k(3) as Double
+	dim f(3) as Double
+	dim r as Integer
+	dim i as Integer
+
+	r = 2
+	for i = 0 to 2
+		if my.edge(i) != 0 then
+			k(i) = (r / my.edge(i))^2
+		else
+			k(i) = 0
+		end if
+		my.edge_vector(i) = my.edge(i) * k(i)
+	next i
+}
+
+sub store_edge_vector(){
+	dim i as Integer
+	dim alpha as Double
+	dim f(3) as Double
+	dim sum as Double
+
+	alpha = 0.5
+	for i = 0 to 2
+		f(i) = my.forward_vector(i) + alpha * my.edge_vector(i)
+	next i
+	sum = Sqr(f(0)^2 + f(1)^2 + f(2)^2)
+
+	if sum != 0 then
+		for i = 0 to 2
+			my.forward_vector(i) = f(i) / sum
+		next i
+	end if
 }
 
 function is_control() as Boolean{
@@ -640,10 +610,12 @@ sub repulsive_insect(){
 			diff(1) = my.Y - one.Y
 			diff(2) = my.Z - one.Z
 			d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-	
-			for i = 0 to 2
-				my.repulsive_vector(0,i) = my.repulsive_vector(0,i) + diff(i) / d ^ 2
-			next i
+
+			if d != 0 then
+				for i = 0 to 2
+					my.repulsive_vector(0,i) = my.repulsive_vector(0,i) + diff(i) / d ^ 2
+				next i
+			end if
 		next one
 	end if
 }
@@ -657,84 +629,61 @@ sub repulsive_barrier(){
 	dim d as Double
 	dim n as Integer
 	dim i as Integer
-	dim j as Integer
-	dim k as Integer
-	dim max(3) as Integer
-	dim min(3) as Integer
 
 	r = 2
 	n = get_surface()
-	min(0) = Int(my.X)-2
-	min(1) = Int(my.Y)-2
-	min(2) = Int(my.Z)-2
+	MakeOneAgtSetAroundOwn(objectset,r,universe.map.barrier,false)
+	if CountAgtSet(objectset) > 0 then
+			if n == 0 then
+					for each one in objectset
+						if one.X == my.X then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
 
-	max(0) = Int(my.X)+2
-	max(1) = Int(my.Y)+2
-	max(2) = Int(my.Z)+2
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			elseif n == 1 then
+				for each one in objectset
+						if one.Y == my.Y then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
 
-	for i = 0 to 2
-		if min(i) < 0 then
-			min(i) = 0
-		end if
-	next i
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			elseif n == 2 then
+				for each one in objectset
+						if one.Z == my.Z then
+							diff(0) = my.X - one.X
+							diff(1) = my.Y - one.Y
+							diff(2) = my.Z - one.Z
+							d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
 
-	if max(0) >=  GetWidthSpace(universe.map) then
-		max(0) = GetWidthSpace(universe.map)
-	end if
-	if max(1) >=  GetheightSpace(universe.map) then
-		max(1) = GetheightSpace(universe.map)
-	end if
-	if max(2) >=  40 then
-		max(2) = 39
-	end if
-	
-	if n == 0 then
-		for j = min(2) to max(2) step 1
-			for i = min(1) to max(1) step 1
-				if universe.map.is_void(my.X,i,j) then
-					diff(0) = 0
-					diff(1) = my.Y - i
-					diff(2) = my.Z - j
-					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-						
-					for k = 0 to 2
-						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-					next k
-				end if
-			next i
-		next j
-	elseif n == 1 then
-		for j = min(2) to max(2) step 1
-			for i = min(0) to max(0) step 1
-				if universe.map.is_void(i,my.Y,j) then
-					diff(0) = my.X - i
-					diff(1) = 0
-					diff(2) = my.Z - j
-					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-						
-					for k = 0 to 2
-						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-					next k
-				end if
-			next i
-		next j
-	elseif n == 2 then
-		for j = min(1) to max(1) step 1
-			for i = min(0) to max(0) step 1
-				if universe.map.is_void(i,j,my.Z) then
-					diff(0) = my.X - i
-					diff(1) = my.Y - j
-					diff(2) = 0
-					d = Sqr(diff(0)^2 + diff(1)^2 + diff(2)^2) / r
-						
-					for k = 0 to 2
-						my.repulsive_vector(1,k) = my.repulsive_vector(1,k) + diff(k) / d ^ 3
-					next k
-				end if
-			next i
-		next j
+							if d != 0 then
+								for i = 0 to 2
+									my.repulsive_vector(1,i) = my.repulsive_vector(1,i) + diff(i) / d ^ 3
+								next i
+							end if
+						end if
+					next one
+			else
+				PrintLn("miss")
+				TerminateAgt(my)
+			end if
 	else
-		println("miss")
 	end if
 }
 
@@ -742,7 +691,7 @@ function get_surface()as Integer{
 	dim ret as Integer
 	dim i as Integer
 
-	ret = -1
+	ret = 0
 	for i = 0 to 2
 		if my.normal_vector(i) != 0 then
 			ret = i
@@ -767,17 +716,19 @@ sub decide_vector(){
 		length = length + my.repulsive_vector(2,i)^2
 	next i 
 	length = Sqr(length)
-	println("ID" &my.ID)
-	for i = 0 to 2
-		my.forward_vector(i) = my.repulsive_vector(2,i) / length
-		println("forward : " & my.forward_vector(i))
-	next i 
+	if length != 0 then
+		for i = 0 to 2
+			my.forward_vector(i) = my.repulsive_vector(2,i) / length
+		next i 
+	end if
 }
 
 sub clear_val(){
 //毎ステップ初期化必要な変数を初期化する関数
 	my.dis_surface = -1
 	my.is_back = false
+	My.is_hemi = false
+	my.a_flag = false
 }
 
 
@@ -915,7 +866,7 @@ sub back_surface(n as Integer){
 		else
 			//ここに入りたくない
 			println("disapミスってる？？")
-			ExitSimulation()
+			DelAgt(my)
 		end if
 		my.is_back = true
 		prev_forward()
@@ -1762,6 +1713,7 @@ sub store_vector(type as Integer,angle as Double){
 	dim i as Integer
 	dim pre_t(3) as Integer
 
+	n = -1
 	for i = 0 to 2	
 		pre_t(i) = GetHistory(my.touch(i),1)
 		if my.normal_vector(i) != 0 then
@@ -1770,7 +1722,10 @@ sub store_vector(type as Integer,angle as Double){
 	next i
 	type = my.b_type
 	angle = my.angle_surface
-
+	if n == -1 then
+		println("normal miss")
+		TerminateAgt(my)
+	end if
 
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
@@ -1996,6 +1951,7 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 		else
 			PrintLn("type miss")
+			TerminateAgt(my)
 		end if
 	end if
 
@@ -2224,6 +2180,9 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 		n = 3
 	end if
 
+	if sum_diff == 0 then
+		sum_diff = 1
+	end if
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
@@ -2250,13 +2209,11 @@ function different_surface() as Boolean{
 	ret = false
 	if is_appear_surface() then
 			my.ap_or_dis = 1
-			//println("appear")
 			ret = true
 	else
 		if is_disappear_surface() then
 			my.ap_or_dis = -1
 			ret = true
-			//println("disappear")
 		end if
 	end if
 	
@@ -2292,6 +2249,7 @@ function direction_type() as Integer{
 		ret = 1
 	else
 		PrintLn("miss")
+		TerminateAgt(my)
 	end if
 
 	return ret
@@ -3165,6 +3123,7 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
+	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3193,7 +3152,7 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 0;
+    Exec_Wait = 12;
     Exec_Wait_Max = 1000;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
@@ -3228,52 +3187,32 @@ Time_Graph {
     Font_Background_Color = 255, 255, 255;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
-    Graph_Name = "探索したボクセルの数";
-    Title = "探索したボクセルの数";
-    Disable = No;
+    Graph_Name = "test";
+    Title = "test";
+    Disable = Yes;
     Background_Color = 255, 255, 255;
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 403;
-    Position_y = 598;
-    Size_x = 403;
-    Size_y = 299;
+    Position_x = -3;
+    Position_y = 7;
+    Size_x = 1768;
+    Size_y = 940;
     Map_Cell_Size = -1;
-    Axis_Label = "step数", "ボクセル数";
+    Axis_Label = "step", "voxel";
     Draw_By_JFree_Chart = Yes;
     Scale = 0, 0.0, 1000, 100.0, 100, 10.0;
     ScaleAuto = Yes, Yes;
     Output_Group_Name = "";
     Output {
-        Graph_Element_Name = "合計";
-        Line_Color = 0, 0, 255;
-        Line_Width = 3;
+        Graph_Element_Name = "fin";
+        Line_Color = 255, 0, 0;
+        Line_Width = 2;
         Marker_Id = 0;
         Output_Expression = "universe.num_fin";
         Expression_Value_Display = No;
         Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (255, 0, 0);
-    }
-    Output {
-        Graph_Element_Name = "障害物なし";
-        Line_Color = 255, 0, 0;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_void_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 255, 0);
-    }
-    Output {
-        Graph_Element_Name = "障害物あり";
-        Line_Color = 0, 0, 255;
-        Line_Width = 2;
-        Marker_Id = 0;
-        Output_Expression = "universe.num_fill_fin";
-        Expression_Value_Display = No;
-        Effective_Fraction_Figures = 0;
-        Graph_Element_Color = (0, 51, 255);
+        Graph_Element_Color = (204, 0, 0);
     }
 }
 
@@ -3303,10 +3242,10 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 403;
-    Position_y = 299;
-    Size_x = 403;
-    Size_y = 299;
+    Position_x = 884;
+    Position_y = 470;
+    Size_x = 884;
+    Size_y = 470;
     Map_Cell_Size = -1;
     Draw_Timing = Simulation_Step;
     Draw_Interval = 1;
@@ -3348,7 +3287,7 @@ Map3D_Output {
                 Display_Object_Image_Id = Quadrartic_Prism;
                 Model_3D_File_Path_Name = "";
                 Color_Type = None;
-                Color_Value = -16776961;
+                Color_Value = -16777012;
                 Color_Variable_Path_Name = Universe.map.barrier.ID;
                 Smooth_Movement = No;
                 Draw_line = No;
@@ -3370,7 +3309,7 @@ Map3D_Output {
 // Control Panel Definition Division
 //-------------------------------------------------------
 Control_Panel {
-    Display_Area = 0, 0, 420, 130;
+    Display_Area = 0, 0, 414, 113;
     Display_Type = 1;
     Panel_Item {
         Item_Type = Drop_Down_List;
@@ -3399,7 +3338,7 @@ Control_Panel {
         Slider_Range_Max = 20;
         Slider_Value_Min = 0.0;
         Slider_Value_Step = 0.05;
-        Slider_Value = "16";
+        Slider_Value = "12";
     }
     Panel_Item {
         Item_Type = Edit_Box;
@@ -3412,7 +3351,7 @@ Control_Panel {
         Font_Color = 0, 0, 0;
         Font_Background_Color = 0, 0, 0;
         Var_Name = "Universe.num_insect";
-        Text_Data = "2";
+        Text_Data = "1";
     }
 }
 
@@ -3436,14 +3375,14 @@ Others_Data {
     Debug_Position_y = 8;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 0;
-    Console_Position_y = 448;
-    Console_Size_x = 403;
-    Console_Size_y = 448;
+    Console_Position_x = 884;
+    Console_Position_y = 0;
+    Console_Size_x = 884;
+    Console_Size_y = 470;
     Componen_Tree_Position_x = 0;
-    Componen_Tree_Position_y = 0;
-    Componen_Tree_Size_x = 806;
-    Componen_Tree_Size_y = 897;
+    Componen_Tree_Position_y = 470;
+    Componen_Tree_Size_x = 884;
+    Componen_Tree_Size_y = 470;
     Console_Background_Color = 16777215;
     Console_Foreground_Color = 255;
     Console_DisplayLines_Max = 500;
@@ -3475,7 +3414,7 @@ Space_Map_Initial_Value {
     Background_Image_File_Path_Name = "";
     Origin_Position = Left_Bottom;
     Space_Variable {
-        Variable = Universe.map.fin,(32000*0);
+        Variable = Universe.map.fin,(48000000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3483,7 +3422,7 @@ Space_Map_Initial_Value {
         Max_Value_Color = 0, 255, 255;
     }
     Space_Variable {
-        Variable = Universe.map.is_void,(32000*0);
+        Variable = Universe.map.is_void,(48000000*0);
         Marker_Id = 1;
         Min_Value = "";
         Max_Value = "";
@@ -3497,11 +3436,11 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, 950, 0, 980, 1030;
-    Window_Name = Output_Setting_Window, 746, 346, 480, 350;
-    Window_Name = Artisoc_Help_Window, 10, 10, 796, 853;
-    Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
-    Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;
+    Window_Name = Main_Window, -8, -8, 1936, 1056;
+    Window_Name = Output_Setting_Window, 743, 353, 480, 350;
+    Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
+    Window_Name = Map_3D_Setting_Window, 628, 278, 680, 500;
+    Window_Name = Space_3D_Setting_Window, 743, 258, 450, 540;
 }
 
 

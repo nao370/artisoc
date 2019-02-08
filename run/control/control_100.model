@@ -39,6 +39,8 @@ UNIVERSE {
             Dim is_back(0, 0) As Boolean = (0);
             Dim sum_repulsive_force(0, 0)[3] As Double = (3*0.0);
             Dim repulsive_vector(0, 0)[3][3] As Double = (9*0.0);
+            Dim edge(0, 0)[3] As Double = (3*0.0);
+            Dim edge_vector(0, 0)[3] As Double = (3*0.0);
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -79,10 +81,24 @@ Initial_Value {
 Univ_Init{
 	CreateAgtMulti(universe.map.insect,universe.num_insect)
 	ClearConsoleScreen()
-	make_rubble_mix(0.6)
+	make_rubble_mix(0.02)
 	make_void()
 	println("")
 	println("start")
+	write_parameter()
+}
+
+sub write_parameter(){
+	OpenFileCSV("insect_position_list.csv",1,3)
+	WriteFileCSV(1,"N",False)
+	WriteFileCSV(1,universe.num_insect,True)
+	WriteFileCSV(1,"T",False)
+	WriteFileCSV(1,universe.T,True)
+	WriteFileCSV(1,"alpha",False)
+	WriteFileCSV(1,universe.alpha,True)
+	WriteFileCSV(1,"r",False)
+	WriteFileCSV(1,2,True)
+	CloseFileCSV(1)
 }
 
 sub make_void(){
@@ -106,93 +122,32 @@ Univ_Step_Begin{
 }
 
 Univ_Step_End{
-	draw_fin()
-	if (GetCountStep() mod 100 ) == 0 then
-		OpenFileCSV("graph_control_"&universe.num_insect&"_"&GetCountSimulationNumber()&"_T_"&universe.T&".csv",1,3)
-		WriteFileCSV(1,GetCountStep(),false)
-		WriteFileCSV(1,universe.num_fin,true)
-		CloseFileCSV(1)
-	end if
-	if (GetCountStep() mod 2000 ) == 0 then
-		write_csv()
-	end if
-	if universe.num_fin == 48000000 or (GetHistory(universe.num_fin,6000) == universe.num_fin) then
+
+	write_csv()
+	if universe.num_fin == 48000000 or GetCountStep() >= 100000 then
 		ExitSimulation()
 	end if
 }
 
 sub write_csv(){
-	dim i as Integer
-	dim j as Integer
-	dim k as Integer
-	dim n as Integer
-	dim m as Integer
-
-	n = GetCountStep() / 2000
-	m = universe.num_insect
-	OpenFileCSV("control_"&m&"_"&GetCountSimulationNumber()&"_"&GetCountStep()&"_T_"&universe.T&".csv",n+1,3)
-
-	for k= 0 to 39
-		for j = 0 to GetHeightSpace(universe.map) -1
-			for i = 0 to GetWidthSpace(universe.map) -1
-				WriteFileCSV(n+1,i,false)
-				WriteFileCSV(n+1,j,false)
-				WriteFileCSV(n+1,k,false)
-				WriteFileCSV(n+1,universe.map.fin(i,j,k),false)
-				WriteFileCSV(n+1,universe.map.is_void(i,j,k),true)
-			next i
-		next j
-	next k
-
-	CloseFileCSV(n+1)
-}
-
-sub draw_fin(){
-	dim i as Integer
-	dim j as Integer
-	dim k as Integer
-
-	for k= 0 to 39
-		for j = 0 to GetHeightSpace(universe.map) -1
-			for i = 0 to GetWidthSpace(universe.map) -1
-				if not universe.map.fin(i,j,k) then
-					if is_in_area(i,j,k) then
-						universe.map.fin(i,j,k)= true
-						universe.num_fin = universe.num_fin + 1
-						if universe.map.is_void(i,j,k) then
-							universe.num_fill_fin = universe.num_fill_fin + 1
-						else
-							universe.num_void_fin = universe.num_void_fin +1
-						end if
-					end if
-				end if
-			next i
-		next j
-	next k
-}
-
-function is_in_area(x as Integer,y as Integer,z as Integer) as Boolean{
-	dim ret as Boolean
-	dim tmp as AgtSet
+	dim insectlist as AgtSet
 	dim one as Agt
-	dim r as Double
+	dim count as Integer
 
-	r = 20
-	if not universe.map.fin(x,y,z) then
-		MakeOneAgtSetAroundPosition(tmp,universe.map,x,y,0,r,universe.map.insect)
-		if CountAgtSet(tmp) > 0 then
-			ret = false
-			for each one in tmp
-				if ((one.X - x)^2 + (one.y - y)^2 + (one.z - z)^2) < r^2 then
-					ret = true
-				end if
-			next i
-		else
-			ret = false
-		end if
-	end if
-
-	return ret
+	count = GetCountStep()
+	OpenFileCSV("insect_position_list.csv",1,3)
+	MakeAgtSet(insectlist,universe.map.insect)
+	for each one in insectlist
+		WriteFileCSV(1,count,false)
+		WriteFileCSV(1,one.ID,false)
+		WriteFileCSV(1,one.X,false)
+		WriteFileCSV(1,one.Y,false)
+		WriteFileCSV(1,one.Z,false)
+		WriteFileCSV(1,one.forward_vector(0),false)
+		WriteFileCSV(1,one.forward_vector(1),false)
+		WriteFileCSV(1,one.forward_vector(2),True)
+	next one
+	CloseFileCSV(1)
 }
 
 Univ_Finish{
@@ -521,8 +476,9 @@ my.Z = 0
 }
 
 Agt_Step{
-dim i as Integer
-
+	if is_edge() then
+		avoid_edge()
+	end if
 	if is_control() then
 		calculate_repulsive()
 		decide_vector()
@@ -538,6 +494,75 @@ dim i as Integer
 	end if
 	forward_step()
 	clear_val()
+}
+
+function is_edge()as Boolean{
+	dim position(2) as Double
+	dim max(2) as Integer
+	dim i as Integer
+	dim r as Double
+	dim ret as Boolean
+
+	r = 2
+
+	position(0) = my.X
+	position(1) = my.Y
+	max(0) = GetWidthSpace(universe.map)
+	max(1) = GetHeightSpace(universe.map)
+
+	ret = false
+	for i = 0 to 1
+		if position(i) <= r then
+			my.edge(i) = position(i)
+			ret = true
+		elseif position(i) >= max(i) - r then
+			my.edge(i) = position(i) - max(i)
+			ret = true
+		end if 
+	next i
+
+	return ret
+}
+
+sub avoid_edge(){
+	cal_edge_vector()
+	store_edge_vector()
+}
+
+sub cal_edge_vector(){
+	dim k(3) as Double
+	dim f(3) as Double
+	dim r as Integer
+	dim i as Integer
+
+	r = 2
+	for i = 0 to 2
+		if my.edge(i) != 0 then
+			k(i) = (r / my.edge(i))^2
+		else
+			k(i) = 0
+		end if
+		my.edge_vector(i) = my.edge(i) * k(i)
+	next i
+}
+
+sub store_edge_vector(){
+	dim i as Integer
+	dim alpha as Double
+	dim f(3) as Double
+	dim sum as Double
+
+	alpha = 0.5
+	for i = 0 to 2
+		f(i) = my.forward_vector(i) + alpha * my.edge_vector(i)
+	next i
+	sum = Sqr(f(0)^2 + f(1)^2 + f(2)^2)
+
+	if sum != 0 then
+		for i = 0 to 2
+			my.forward_vector(i) = f(i) / sum
+		next i
+	end if
 }
 
 function is_control() as Boolean{
@@ -656,6 +681,7 @@ sub repulsive_barrier(){
 					next one
 			else
 				PrintLn("miss")
+				TerminateAgt(my)
 			end if
 	else
 	end if
@@ -665,7 +691,7 @@ function get_surface()as Integer{
 	dim ret as Integer
 	dim i as Integer
 
-	ret = -1
+	ret = 0
 	for i = 0 to 2
 		if my.normal_vector(i) != 0 then
 			ret = i
@@ -701,6 +727,8 @@ sub clear_val(){
 //毎ステップ初期化必要な変数を初期化する関数
 	my.dis_surface = -1
 	my.is_back = false
+	My.is_hemi = false
+	my.a_flag = false
 }
 
 
@@ -1685,6 +1713,7 @@ sub store_vector(type as Integer,angle as Double){
 	dim i as Integer
 	dim pre_t(3) as Integer
 
+	n = -1
 	for i = 0 to 2	
 		pre_t(i) = GetHistory(my.touch(i),1)
 		if my.normal_vector(i) != 0 then
@@ -1693,7 +1722,10 @@ sub store_vector(type as Integer,angle as Double){
 	next i
 	type = my.b_type
 	angle = my.angle_surface
-
+	if n == -1 then
+		println("normal miss")
+		TerminateAgt(my)
+	end if
 
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
@@ -1919,6 +1951,7 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 		else
 			PrintLn("type miss")
+			TerminateAgt(my)
 		end if
 	end if
 
@@ -2147,6 +2180,9 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 		n = 3
 	end if
 
+	if sum_diff == 0 then
+		sum_diff = 1
+	end if
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
 	ret = ( 1 - diff / sum_diff ) / ( n -1 )
 	
@@ -2173,13 +2209,11 @@ function different_surface() as Boolean{
 	ret = false
 	if is_appear_surface() then
 			my.ap_or_dis = 1
-			//println("appear")
 			ret = true
 	else
 		if is_disappear_surface() then
 			my.ap_or_dis = -1
 			ret = true
-			//println("disappear")
 		end if
 	end if
 	
@@ -2215,6 +2249,7 @@ function direction_type() as Integer{
 		ret = 1
 	else
 		PrintLn("miss")
+		TerminateAgt(my)
 	end if
 
 	return ret
@@ -3088,6 +3123,7 @@ function calculate_theta(n as Integer,sign as Integer) as Double{
 	end if
 
 	return theta
+	}
 #end_rule UNIVERSE.MAP.INSECT
 
 
@@ -3116,7 +3152,7 @@ Single_Simulation {
     Step_Max = 0;
     Time_Max = 0;
     End_Condition = "";
-    Exec_Wait = 0;
+    Exec_Wait = 1;
     Exec_Wait_Max = 1000;
     Random_Generator = Java_Standard;
     Exec_Order = Random;
@@ -3158,8 +3194,8 @@ Time_Graph {
     Remarks = Yes;
     Legend_Pos = Top;
     FastDraw = Yes;
-    Position_x = 0;
-    Position_y = 0;
+    Position_x = -3;
+    Position_y = 7;
     Size_x = 1768;
     Size_y = 940;
     Map_Cell_Size = -1;
@@ -3251,12 +3287,12 @@ Others_Data {
     Debug_Position_y = 8;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 0;
-    Console_Position_y = 0;
+    Console_Position_x = 45;
+    Console_Position_y = -21;
     Console_Size_x = 1768;
     Console_Size_y = 940;
-    Componen_Tree_Position_x = 0;
-    Componen_Tree_Position_y = 0;
+    Componen_Tree_Position_x = -6;
+    Componen_Tree_Position_y = 464;
     Componen_Tree_Size_x = 1768;
     Componen_Tree_Size_y = 940;
     Console_Background_Color = 16777215;
@@ -3312,7 +3348,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1936, 1056;
+    Window_Name = Main_Window, 0, 0, 800, 700;
     Window_Name = Output_Setting_Window, 623, 338, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
