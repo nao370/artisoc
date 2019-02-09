@@ -154,16 +154,126 @@
 	そこで，この考えを満たすようなサイボーグインセクトのモデルを考案した．
 	
 	このサイボーグインセクトのモデルのアルゴリズムをフローチャートにしたものを図\ref{fig:algorithm}に示す．
+	サイボーグインセクトのモデルは，連続でない離散系として考える．
+	
 	\begin{figure}
 		\centering
 		\includegraphics[width=0.7\linewidth]{png/Untitled.png}
 		\caption[アルゴリズムのフローチャート]{制御されていないサイボーグインセクトのアルゴリズムのフローチャート}
 		\label{fig:algorithm}
 	\end{figure}
+	
+	進行方向ベクトルの初期値は，探索が始まった時に0から90度の範囲で一様ランダムに決定される．
+	以降，サイボーグインセクトが進む方向に平行な単位ベクトルを進行方向ベクトルと呼ぶ．
+	
+	サイボーグインセクトは，現在いる場所が面と面が構成する境界線に接しているかどうかの判定を1step毎に行う．
+	面と面が構成する境界線にサイボーグインセクトが接している場合は，次の進行方向ベクトルを計算する．次の進行方向ベクトルの候補として，図\ref{fig:vec_surface}のような3種類のベクトルを計算する．この時，サイボーグインセクトがすでに境界線に沿って進んでいる場合は，図\ref{fig:vec_boader}のように，新しく接した境界線に沿うような2つのベクトルを計算する．
+	\begin{figure}
+		\begin{minipage}{0.5\linewidth}
+			\centering
+			\includegraphics[width=1\linewidth]{png/vector.png}
+			\subcaption{面上を進んでいる場合}\label{fig:vec_surface}
+		\end{minipage}
+		\begin{minipage}{0.5\linewidth}
+			\centering
+			\includegraphics[width=1\linewidth]{png/vector2.png}
+			\subcaption{境界線上を進んでいる場合}\label{fig:vec_boader}
+		\end{minipage}\\
+		\caption{次に進む方向のベクトル}
+		\label{fig:vector}
+	\end{figure}
+	境界線に平行なベクトルは，境界線に接したときに境界線の方向がわかるため，それに平行な単位ベクトルを計算することで求められる．
+	図\ref{fig:vec_surface}の場合は，求めたベクトルの逆ベクトルを求めることで，もう一つの境界線に平行な進行方向ベクトルを得ることができる．
+	図\ref{fig:vec_boader}の場合は，新しく接した2本の境界線からそれぞれ平行な単位ベクトルを計算することで，進行方向ベクトルを得ることができる．
+	次に，今いる面とは異なる面に移るようなベクトルは，新たに接した境界線を軸にして，現在の進行方向ベクトルを回転することで次の進行方向ベクトルを計算する．
+	現在の進行方向ベクトルの境界線に垂直な成分から，新しく検知した面に平行で境界線に垂直なベクトルへ反時計回りでなす角を$ \phi $としたときに，現在の進行方向ベクトル$\vec{v}$を$\phi$だけ回転することで，次の進行方向ベクトルの候補$\vec{l}$が得られる．
+	
+	回転角$\phi$は図\ref{fig:xz}のように，現在の進行方向ベクトルと新たに検知した面に平行で境界線に垂直なベクトルを求めて，進行方向ベクトルの垂直成分から求めたベクトルへ反時計回りになす角である．
+	\begin{figure}
+		\begin{minipage}{0.5\linewidth}
+			\centering
+			\includegraphics[width=1\linewidth]{png/sub.png}
+			\subcaption{現在のベクトルと求めるベクトル}
+			\label{fig:phi}
+		\end{minipage}
+		\begin{minipage}{0.5\linewidth}
+			\centering
+			\includegraphics[width=1\linewidth]{png/rotation.png}
+			\subcaption{図\ref{fig:phi}をy軸方向から見た図}
+			\label{fig:xz}
+		\end{minipage}
+		\caption{なす角$\phi$の位置}
+		\label{fig:rotation}
+	\end{figure}
+	ここで，境界線に平行なベクトルを$\vec{b} $とした際に，次の進行方向ベクトルの候補$\vec{l}$は式\ref{formula:l}によってあらわされる．
+	\begin{equation}
+	\label{formula:l}
+	\vec{l} = R_{\vec{b}}(\phi)\vec{v}
+	\end{equation}
+	
+	ここで$R_{\vec{b}}(\phi)$は境界線に平行なベクトル$\vec{b}$を軸に角度$\phi$だけ回転させるための回転行列とする．
+	回転行列$R_{\vec{b}}(\phi)$は式\ref{formula:rotation}で計算される．
+	
+	\begin{equation}
+	\label{formula:rotation}
+	R_{\vec{b}}(\phi)=\left( \begin{array}{ccc}
+	b_x^2(1-\cos\phi)+\cos\phi & b_x b_y (1-\cos\phi) - b_z\sin\phi & b_z b_x (1-\cos\phi) + b_y\sin\phi \\
+	b_x b_y (1-\cos\phi)+b_z \sin\phi & b_y^2 (1-\cos\phi) + \cos\phi & b_y b_z (1-\cos\phi) - b_x\sin\phi \\
+	b_z b_x (1-\cos\phi)- b_y\sin\phi & b_y b_z (1-\cos\phi) + b_x \sin\phi & b_z^2 (1-\cos\phi) + \cos\phi \\
+	\end{array} \right)
+	\end{equation}
+	
+	ここで，計算したベクトル$\vec{l}_i$から，次の進行方向ベクトルを決定する．
+	次の進行方向ベクトルは，基準ベクトルとの差異による確率に従って決定される．
+	基準ベクトルは，現在の進行方向ベクトルと重力ベクトルとの和によって計算される．
+	まず，現在の方向ベクトル$ \vec{v} $と重力ベクトル$ \vec{g} $から基準となるベクトル$ \vec{a} $を計算する式は以下の通りである．
+	\begin{equation}
+	\vec{m} = \vec{v} +\frac{49}{60} \vec{g} 
+	\end{equation}
+	
+	\begin{equation}
+	\vec{a} = \frac{\vec{m}}{|\vec{m}|}
+	\end{equation}
+	ここで，$ \vec{g} $の係数は，0.1秒分の自由落下の計算から求めている．また，単位ベクトルである$\vec{l}_i$と合わせるために$\vec{a}$も単位ベクトルとなるように求めている．
+	次に，各ベクトルを選択する確率は式\ref{formula:prob}によって計算される．
+	\begin{equation}
+	\label{formula:prob}
+	P(\vec{l}_i) = \frac{1}{n-1}(1 - \frac{|\vec{a} - \vec{l}_i |}{\sum_{k=1}^{n}|\vec{a} - \vec{l}_k|})
+	\end{equation}
+	
+	
+	また，サイボーグインセクトは，1step毎に現在の進行方向ベクトルを新しい進行方向ベクトルに変更するかの判定を行う．
+	この時に，進行方向ベクトルを変更する確率は1\%とする．
+	その後，変更するとなった場合は現在の進行方向ベクトルからどれだけ回転するかの決定を行う．
+	この時，現在の進行方向ベクトルから角度が大きく異なる進行方向ベクトルほど選択する確率が低くなるように設定した．
+	これは，サイボーグインセクトが移動中に方向転換する場合において，回転角が大きい進行方向ベクトルと回転角が小さい進行方向ベクトルならば，変更にかかるエネルギーの少なさから回転角の小さいベクトルを選びやすいと考えたためである．
+	また，現在接している面から別の面へ移動するようなベクトルには回転しないものとする．
+	図\ref{fig:bend}のように赤い矢印であらわされるベクトルには回転する可能性が存在し，青のベクトルのように接する面が変わるベクトルには回転しないものとする．
+	ここで，回転する角度は，平均0,分散$\frac{\pi}{6}$の正規分布に従って決定される．
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.35\linewidth]{png/bend.png}
+		\caption[ベクトルの決定]{回転できるベクトル(赤)と回転できないベクトル(青)の例}
+		\label{fig:bend}
+	\end{figure}
 
+	サイボーグインセクトは，進行方向ベクトルに1step分前進する．
+	また，途中で障害物があったり接している面が途切れたりなどで1step分の距離を進めない場合は，進めるところまで進み，その位置で停止する．
+
+	
 	\subsubsection{提案手法による拡張}
 	この章では，\ref{sec:not_control}章で説明したモデルに対して，拡張を行う．
 	提案する制御手法は，\ref{sec:control}章で記述した手法である．
+	
+	制御を加える場合の全体のアルゴリズムは図\ref{fig:control}のフローチャートであらわされる．
+	
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.8\linewidth]{png/control.png}
+		\caption[アルゴリズムのフローチャート]{サイボーグインセクトを制御する場合のアルゴリズムのフローチャート}
+		\label{fig:control}
+	\end{figure}
+	ここでの制御の周期Tはシミュレーションを行う際のパラメータとする．
 	\subsection{シミュレーション結果と考察}
 	\section{おわりに}
 	\label{sec:last}

@@ -3365,8 +3365,8 @@ Time_Graph {
     FastDraw = Yes;
     Position_x = 0;
     Position_y = 0;
-    Size_x = 1768;
-    Size_y = 940;
+    Size_x = 632;
+    Size_y = 584;
     Map_Cell_Size = -1;
     Axis_Label = "step", "voxel";
     Draw_By_JFree_Chart = Yes;
@@ -3517,7 +3517,7 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1936, 1056;
+    Window_Name = Main_Window, 530, 258, 800, 700;
     Window_Name = Output_Setting_Window, 175, 175, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
