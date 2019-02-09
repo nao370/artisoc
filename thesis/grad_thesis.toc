@@ -6,17 +6,10 @@
 \contentsline {subsection}{\numberline {3.3}斥力にもとづく進行方向の決定}{7}
 \contentsline {section}{\numberline {4}シミュレーションによる評価}{8}
 \contentsline {subsection}{\numberline {4.1}シミュレーション条件}{8}
-\contentsline {subsection}{\numberline {4.2}サイボーグインセクトのモデル}{8}
-\contentsline {subsubsection}{\numberline {4.2.1}進行方向ベクトルの初期値決定}{9}
-\contentsline {subsubsection}{\numberline {4.2.2}進行方向ベクトルを変更するかの判定}{9}
-\contentsline {subsubsection}{\numberline {4.2.3}回転角の決定}{9}
-\contentsline {subsubsection}{\numberline {4.2.4}1step分前進}{9}
-\contentsline {subsubsection}{\numberline {4.2.5}面と面が構成する境界線に接したかの判定}{10}
-\contentsline {subsubsection}{\numberline {4.2.6}次の進行方向ベクトルの決定}{10}
-\contentsline {subsubsection}{\numberline {4.2.7}境界線に平行なベクトル}{10}
-\contentsline {subsubsection}{\numberline {4.2.8}境界線に平行なベクトルの逆ベクトル}{11}
-\contentsline {subsubsection}{\numberline {4.2.9}現在の方向を保ちつつ，新しく接した面に平行なベクトル}{11}
-\contentsline {subsubsection}{\numberline {4.2.10}ベクトルの決定}{12}
-\contentsline {subsection}{\numberline {4.3}シミュレーション結果と考察}{12}
-\contentsline {section}{\numberline {5}おわりに}{13}
-\contentsline {section}{参考文献}{14}
+\contentsline {subsection}{\numberline {4.2}評価指標}{8}
+\contentsline {subsection}{\numberline {4.3}サイボーグインセクトのモデル}{8}
+\contentsline {subsubsection}{\numberline {4.3.1}制御されていないサイボーグインセクトのモデル}{8}
+\contentsline {subsubsection}{\numberline {4.3.2}提案手法による拡張}{8}
+\contentsline {subsection}{\numberline {4.4}シミュレーション結果と考察}{8}
+\contentsline {section}{\numberline {5}おわりに}{9}
+\contentsline {section}{参考文献}{10}

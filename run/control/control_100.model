@@ -41,6 +41,7 @@ UNIVERSE {
             Dim repulsive_vector(0, 0)[3][3] As Double = (9*0.0);
             Dim edge(0, 0)[3] As Double = (3*0.0);
             Dim edge_vector(0, 0)[3] As Double = (3*0.0);
+            Dim edge_flag(0, 0) As Boolean = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -462,15 +463,15 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.INSECT
 Agt_Init{
-my.Direction = rnd() * 360
+my.Direction = rnd() * 90
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 my.do_type = 1
 my.ap_or_dis = 1
-my.position_type = 0
 my.normal_vector(2) = 1
 my.touch(2) = 1
 my.dis_surface = -1
+my.edge_flag = false
 my.X = 1 + rnd()
 my.Y = 1 + rnd()
 my.Z = 0
@@ -520,6 +521,7 @@ sub print_all(){
 	println("fX :"&my.forward_vector(0)&" fY :"&my.forward_vector(1)& " fZ :"&my.forward_vector(2))
 	println("nX :"&my.normal_vector(0)&" nY :"&my.normal_vector(1)& " nZ :"&my.normal_vector(2))
 	println("do_type :"&my.do_type)
+	println("edge_flag :"&my.edge_flag)
 }
 
 function is_edge()as Boolean{
@@ -619,7 +621,7 @@ sub sum_repulsive(){
 	dim i as Integer
 	dim alpha as Double
 
-	alpha = 0.6//universe.alpha
+	alpha = universe.alpha
 
 	for i = 0 to 2
 		my.repulsive_vector(2,i) = alpha * my.repulsive_vector(0,i) + (1 - alpha) * my.repulsive_vector(1,i)
@@ -761,6 +763,7 @@ sub clear_val(){
 	my.is_back = false
 	My.is_hemi = false
 	my.a_flag = false
+	my.edge_flag = false
 }
 
 
@@ -1760,7 +1763,6 @@ sub store_vector(type as Integer,angle as Double){
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
 	my.next_vector(2,2) = 0
-	//printLn("dis : "&my.dis_surface)
 	if type > 2 then
 	//Å}ÇÃè·äQï®å©ÇƒÉxÉNÉgÉãÇÃï˚å¸ÇåàÇﬂÇÈ
 		if type == 3 then
@@ -1799,100 +1801,109 @@ sub store_vector(type as Integer,angle as Double){
 			else
 				if my.normal_vector(0) == 0 then
 					my.n_normal(0) = 0
-					my.n_normal(1) = 1//2
+					my.n_normal(1) = 1
 				else
 					my.n_normal(0) = 0
 					my.n_normal(1) = 1
 				end if
 			end if
 		elseif type == 4 then
-			my.next_vector(0,0) = 0
-			my.next_vector(0,1) = 0
-			if my.ap_or_dis == 1 then
-				my.next_vector(0,2) = pre_t(2)
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = 0
+			if my.edge_flag then
+				my.next_vector(1,2) = 0
 			else
-				if my.dis_surface == 2 then
-					my.next_vector(0,2) = - my.touch(2)
+				if my.ap_or_dis == 1 then
+					my.next_vector(1,2) = pre_t(2)
 				else
-					my.next_vector(0,2) =  my.touch(2)
+					if my.dis_surface == 2 then
+						my.next_vector(1,2) = - my.touch(2)
+					else
+						my.next_vector(1,2) =  my.touch(2)
+					end if
 				end if
 			end if
 			
 
 			if my.ap_or_dis == 1 then
-				my.next_vector(1,0) = pre_t(0)
+				my.next_vector(0,0) = pre_t(0)
 			else
 				if my.dis_surface == 0 then
-					my.next_vector(1,0) = - my.touch(0)
+					my.next_vector(0,0) = - my.touch(0)
 				else
-					my.next_vector(1,0) =  my.touch(0)
+					my.next_vector(0,0) =  my.touch(0)
 				end if
 			end if
-			my.next_vector(1,1) = 0
-			my.next_vector(1,2) = 0
-
-			if my.ap_or_dis == 1 or n == my.dis_surface then
-				if my.normal_vector(0) == 0 then
-					my.n_normal(0) = 1
-					my.n_normal(1) = 2
-				else
-					my.n_normal(0) = 0
-					my.n_normal(1) = 1
-				end if
-			else
-				if my.normal_vector(0) == 0 then
-					my.n_normal(0) = 0
-					my.n_normal(1) = 2
-				else
-					my.n_normal(0) = 0//1
-					my.n_normal(1) = 2
-				end if
-			end if
-		elseif type == 5 then
-			my.next_vector(0,0) = 0
 			my.next_vector(0,1) = 0
-			if my.ap_or_dis == 1 then
-				my.next_vector(0,2) = pre_t(2)
-			else
-				if my.dis_surface == 2 then
-					my.next_vector(0,2) = - my.touch(2)
-				else
-					my.next_vector(0,2) = my.touch(2)
-				end if
-			end if
-			
-
-			my.next_vector(1,0) = 0
-			if my.ap_or_dis == 1 then
-				my.next_vector(1,1) = pre_t(1)
-			else
-				if my.dis_surface == 1 then
-					my.next_vector(1,1) = - my.touch(1)
-				else
-					my.next_vector(1,1) =  my.touch(1)
-				end if
-			end if
-			my.next_vector(1,2) = 0
+			my.next_vector(0,2) = 0
 
 			if my.ap_or_dis == 1 or n == my.dis_surface then
-				if my.normal_vector(1) == 0 then
-					my.n_normal(0) = 0
-					my.n_normal(1) = 2
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 2
+					my.n_normal(1) = 1
 				else
 					my.n_normal(0) = 1
 					my.n_normal(1) = 0
 				end if
 			else
-				if my.normal_vector(1) == 0 then
-					my.n_normal(0) = 1
-					my.n_normal(1) = 2
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 2
+					my.n_normal(1) = 0
 				else
-					my.n_normal(0) = 1
-					my.n_normal(1) = 2
+					my.n_normal(0) = 2
+					my.n_normal(1) = 0
+				end if
+			end if
+		elseif type == 5 then
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = 0
+			if my.edge_flag then
+				my.next_vector(1,2) = 0
+			else
+				if my.ap_or_dis == 1 then
+					my.next_vector(1,2) = pre_t(2)
+				else
+					if my.dis_surface == 2 then
+						my.next_vector(1,2) = - my.touch(2)
+					else
+						my.next_vector(1,2) = my.touch(2)
+					end if
+				end if
+			end if
+			
+
+			my.next_vector(0,0) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,1) = pre_t(1)
+			else
+				if my.dis_surface == 1 then
+					my.next_vector(0,1) = - my.touch(1)
+				else
+					my.next_vector(0,1) =  my.touch(1)
+				end if
+			end if
+			my.next_vector(0,2) = 0
+
+			if my.ap_or_dis == 1 or n == my.dis_surface then
+				if my.normal_vector(1) == 0 then
+					my.n_normal(0) = 2
+					my.n_normal(1) = 0
+				else
+					my.n_normal(0) = 0
+					my.n_normal(1) = 1
+				end if
+			else
+				if my.normal_vector(1) == 0 then
+					my.n_normal(0) = 2
+					my.n_normal(1) = 1
+				else
+					my.n_normal(0) = 2
+					my.n_normal(1) = 1
 				end if
 			end if
 		else
-			//println("type miss")
+			println("type miss")
+			TerminateAgt(my)
 		end if
 	else
 		if type == 0 then
@@ -1908,7 +1919,7 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 0
 			u(2) = 0
 
-			if not my.is_hemi then
+			if not my.is_hemi and not my.edge_flag then
 				my.next_vector(2,0) = my.forward_vector(0)
 				my.next_vector(2,1) = Abs(my.forward_vector(2)) * pre_t(1) * my.ap_or_dis
 				my.next_vector(2,2) = Abs(my.forward_vector(1)) * pre_t(2) * my.ap_or_dis
@@ -1936,7 +1947,7 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 1
 			u(2) = 0
 
-			if not my.is_hemi then
+			if not my.is_hemi and not my.edge_flag then
 				my.next_vector(2,0) = Abs(my.forward_vector(2)) * pre_t(0) * my.ap_or_dis
 				my.next_vector(2,1) = my.forward_vector(1)
 				my.next_vector(2,2) = Abs(my.forward_vector(0)) * pre_t(2) * my.ap_or_dis
@@ -1964,7 +1975,7 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 0
 			u(2) = 1
 
-			if not my.is_hemi then
+			if not my.is_hemi  and not my.edge_flag then
 				my.next_vector(2,0) = Abs(my.forward_vector(1)) * pre_t(0) * my.ap_or_dis
 				my.next_vector(2,1) = Abs(my.forward_vector(0)) * pre_t(1) * my.ap_or_dis
 				my.next_vector(2,2) = my.forward_vector(2)
@@ -2209,7 +2220,11 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	dim n as Integer
 
 	if my.next_vector(2,0) == 0 and my.next_vector(2,1) == 0 and my.next_vector(2,2) == 0 then
-		n = 2
+		if my.next_vector(2,0) == 0 and my.next_vector(2,1) == 0 and my.next_vector(2,2) == 0 then
+			n = 1
+		else
+			n = 2
+		end if
 	else
 		n = 3
 	end if
@@ -2218,7 +2233,11 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 		sum_diff = 1
 	end if
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
-	ret = ( 1 - diff / sum_diff ) / ( n -1 )
+	if n == 1 then
+		ret =1
+	else
+		ret = ( 1 - diff / sum_diff ) / ( n -1 )
+	end if
 	
 	return ret
 }
@@ -2296,12 +2315,14 @@ function is_appear_surface() as Boolean{
 	dim nx as Integer
 	dim ny as Integer
 	dim nz as Integer
+	dim max(2) as Integer
 
 	axis = direction_type()
-	pos = my.position_type
 	ny = Int(my.Y)
 	nz = Int(my.Z)
 	nx = Int(my.X)
+	max(0) = GetWidthSpace(universe.map) - 1 
+	max(1) = GetHeightSpace(universe.map) - 1
 
 	my.a_flag = false
 	if axis == 0 then
@@ -2312,6 +2333,9 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = -1
 					my.b_type = 5
 					my.touch(0) = -1
+					if my.X + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2328,6 +2352,9 @@ function is_appear_surface() as Boolean{
 						my.angle_surface = -1
 						my.b_type = 5
 						my.touch(0) = 1
+						if my.X - 1 == 0 then
+							my.edge_flag = true
+						end if
 					else
 						ret = false
 					end if
@@ -2344,12 +2371,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type = 1
 					my.touch(0) = -1
+					if nx + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 1
 					my.touch(0) = -1
 					my.is_hemi = true
+					if nx + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2359,12 +2392,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 270
 					my.b_type = 1
 					my.touch(0) = 1
+					if nx - 1 == 0 then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 1
 					my.touch(0) = 1
 					my.is_hemi = true
+					if nx - 1 == 0 then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2376,12 +2415,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 270
 					my.b_type = 0
 					my.touch(1) = -1
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx,ny+1,nz) == 1 or check_void(nx+1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 0
 					my.touch(1) = -1
 					my.is_hemi = true
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2391,12 +2436,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type = 0
 					my.touch(1) = 1
+					if ny - 1 == 0 then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx,ny-1,nz) == 1 or check_void(nx+1,ny-1,nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 0
 					my.touch(1) = 1
 					my.is_hemi = true
+					if ny - 1 == max(1) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2412,12 +2463,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(0) = -1
+					if nx + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(0) = -1
 					my.is_hemi = true
+					if nx + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2427,12 +2484,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 270
 					my.b_type = 2
 					my.touch(0) = 1
+					if nx - 1 == 0 then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 2
 					my.touch(0) = 1
 					my.is_hemi = true
+					if nx - 1 == 0 then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2480,6 +2543,9 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = -1
 					my.b_type =4
 					my.touch(1) = -1
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2496,6 +2562,9 @@ function is_appear_surface() as Boolean{
 						my.angle_surface = -1
 						my.b_type =4
 						my.touch(1) = 1
+						if ny - 1 == 0 then
+						my.edge_flag = true
+					end if
 					else
 						ret = false
 					end if
@@ -2512,12 +2581,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(1) = -1
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx,ny+1,nz) == 1 or check_void(nx,ny+1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(1) = -1
 					my.is_hemi = true
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2527,12 +2602,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 270
 					my.b_type =2
 					my.touch(1) = 1
+					if ny - 1 == 0 then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx,ny-1,nz) == 1 or check_void(nx,ny-1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type =2
 					my.touch(1) = 1
 					my.is_hemi = true
+					if ny - 1 == 0 then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -3228,7 +3309,7 @@ Agt_Step{
 // Simulation Definition Division
 //-------------------------------------------------------
 Single_Simulation {
-    Step_Max = 0;
+    Step_Max = 100000;
     Time_Max = 0;
     End_Condition = "";
     Exec_Wait = 0;
@@ -3249,7 +3330,14 @@ Single_Simulation {
 Repeat_Simulation {
     Value_Change = None;
     Initial_Value_Change_None {
-        Repeat_Max = 10;
+        Repeat_Max = 1;
+    }
+    Initial_Value_Change_Linear {
+        Variable_Name = "universe.T";
+        Exec_Times_Same_Value = 1;
+        Start_Value = 10.0;
+        Step_Value = 10.0;
+        End_Value = 100.0;
     }
 }
 
@@ -3427,8 +3515,8 @@ Space_Map_Initial_Value {
 // Window Location Definition Division
 //-------------------------------------------------------
 Window_Rectangle {
-    Window_Name = Main_Window, -8, -8, 1936, 1056;
-    Window_Name = Output_Setting_Window, 743, 353, 480, 350;
+    Window_Name = Main_Window, 403, 31, 800, 700;
+    Window_Name = Output_Setting_Window, 175, 175, 480, 350;
     Window_Name = Artisoc_Help_Window, 10, 10, 400, 300;
     Window_Name = Map_3D_Setting_Window, 631, 271, 680, 500;
     Window_Name = Space_3D_Setting_Window, 746, 251, 450, 540;

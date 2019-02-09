@@ -13,7 +13,7 @@ Version = 4.0;
 //-------------------------------------------------------
 UNIVERSE {
     Space map(0,0),Square_2D(20, 40, !Loop, North, 1, Map_3D){
-        AgtType insect(0, 0)[1] {
+        AgtType insect(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
             Dim X(0, 0) <2>  As Double = (0.0);
             Dim Y(0, 0) <2>  As Double = (0.0);
@@ -40,6 +40,7 @@ UNIVERSE {
             Dim edge(0, 0)[3] As Double = (3*0.0);
             Dim edge_vector(0, 0)[3] As Double = (3*0.0);
             Dim repulsive_vector(0, 0)[3][3] As Double = (9*0.0);
+            Dim edge_flag(0, 0) As Boolean = ();
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -65,18 +66,6 @@ UNIVERSE {
 // Agent Variable Initial Data
 //-------------------------------------------------------
 Initial_Value {
-    UNIVERSE.MAP.INSECT.X = 1(1.0);
-    UNIVERSE.MAP.INSECT.Y = 1(1.0);
-    UNIVERSE.MAP.INSECT.Z = 1(0.0);
-    UNIVERSE.MAP.INSECT.LAYER = 1(0);
-    UNIVERSE.MAP.INSECT.DIRECTION = 1(0.0);
-    UNIVERSE.MAP.INSECT.ANGLE = 1(0.0);
-    UNIVERSE.MAP.INSECT.FORWARD_VECTOR = 1(3*0.0);
-    UNIVERSE.MAP.INSECT.BASE_VECTOR = 1(3*0.0);
-    UNIVERSE.MAP.INSECT.ANGLE_SURFACE = 1(0.0);
-    UNIVERSE.MAP.INSECT.B_TYPE = 1(0);
-    UNIVERSE.MAP.INSECT.NORMAL_VECTOR = 1(2*0.0, 1.0);
-    UNIVERSE.MAP.INSECT.TOUCH = 1(3*0);
 }
 
 
@@ -85,7 +74,8 @@ Initial_Value {
 //-------------------------------------------------------
 #begin_rule UNIVERSE
 Univ_Init{
-	universe.num_insect = 1
+	universe.num_insect = 2
+	CreateAgtMulti(universe.map.insect,universe.num_insect)
 	ClearConsoleScreen()
 	make_rubble_mix(0.3)
 	make_void()
@@ -639,15 +629,15 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 //-------------------------------------------------------
 #begin_rule UNIVERSE.MAP.INSECT
 Agt_Init{
-my.Direction = rnd() * 360
+my.Direction = rnd() * 90
 my.forward_vector(0) = Cos(DegreeToRad(my.Direction))
 my.forward_vector(1) = Sin(DegreeToRad(my.Direction))
 my.do_type = 1
 my.ap_or_dis = 1
-my.position_type = 0
 my.normal_vector(2) = 1
 my.touch(2) = 1
 my.dis_surface = -1
+my.edge_flag = false
 my.X = 1 + rnd()
 my.Y = 1 + rnd()
 my.Z = 0
@@ -655,9 +645,6 @@ my.Z = 0
 
 Agt_Step{
 
-	println("")
-	println("step start")
-	print_all()
 	if is_edge() then
 		avoid_edge()
 	end if
@@ -666,12 +653,10 @@ Agt_Step{
 		decide_vector()
 	else
 		if different_surface() then
-			println("determining vector")
 			determining_vector()
 			update_normal_vector()
 		else
 			if is_bend() then
-				println("bend")
 				determining_bend()
 			end if
 		end if
@@ -703,6 +688,7 @@ sub print_all(){
 	println("fX :"&my.forward_vector(0)&" fY :"&my.forward_vector(1)& " fZ :"&my.forward_vector(2))
 	println("nX :"&my.normal_vector(0)&" nY :"&my.normal_vector(1)& " nZ :"&my.normal_vector(2))
 	println("do_type :"&my.do_type)
+	println("edge_flag :"&my.edge_flag)
 }
 
 function is_edge()as Boolean{
@@ -719,10 +705,6 @@ function is_edge()as Boolean{
 	max(0) = GetWidthSpace(universe.map)
 	max(1) = GetHeightSpace(universe.map)
 
-	println("max0 :"&max(0))
-	println("max(1) :"&max(1))
-	print_all()
-
 	ret = false
 	for i = 0 to 1
 		if position(i) < r then
@@ -738,7 +720,6 @@ function is_edge()as Boolean{
 }
 
 sub avoid_edge(){
-	println("avoid edge")
 	cal_edge_vector()
 	store_edge_vector()
 }
@@ -901,8 +882,7 @@ sub repulsive_barrier(){
 					next one
 			else
 				PrintLn("miss")
-				PauseSimulation()
-				//terminateagt(my)
+				terminateagt(my)
 			end if
 	else
 	end if
@@ -950,6 +930,7 @@ sub clear_val(){
 	my.is_back = false
 	My.is_hemi = false
 	my.a_flag = false
+	my.edge_flag = false
 }
 
 
@@ -1016,11 +997,7 @@ sub update_normal(){
 sub forward_step() {
 
 	if is_differernt() then
-	println("befor step surface")
-	print_all()
 		step_surface()
-		println("after step surface")
-	print_all()	
 	else
 		step_direction()
 	end if
@@ -1090,12 +1067,8 @@ sub back_surface(n as Integer){
 			my.Z = my.Z + pre + f(2)
 		else
 			//ここに入りたくない
-			for i = 0 to 2
-				println("a("&i&")"&a(i))
-			next i
 			println("disapミスってる？？")
-			PauseSimulation()
-			//DelAgt(my)
+			DelAgt(my)
 		end if
 		my.is_back = true
 		prev_forward()
@@ -1135,22 +1108,18 @@ function is_step() as Boolean{
 
 	if is_filled() then
 		ret = false
-		println("fill")
 	else
 		if is_float() then
 			ret = false
-			println("float")
 		else
 			if not is_jump() then
 				if is_pause() then
 					ret = false
-						println("pause")
 				else
 					ret = true
 				end if
 			else
 				ret = false
-					println("jump")
 			end if
 		end if
 	end if
@@ -1689,7 +1658,6 @@ sub back_step(){
 	//println("x ;" & my.X)
 	//println("y ;" & my.y)
 	//println("z ;" & my.z)
-	print_all()
 			
 	pre(0) = GetHistory(my.X,1)
 	pre(1) = GetHistory(my.y,1)
@@ -1749,7 +1717,6 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
@@ -1769,7 +1736,6 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
@@ -1789,7 +1755,6 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
@@ -1809,7 +1774,6 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
@@ -1829,7 +1793,6 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	else			
@@ -1849,7 +1812,6 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	end if
@@ -1951,10 +1913,6 @@ sub store_vector(type as Integer,angle as Double){
 	dim i as Integer
 	dim pre_t(3) as Integer
 
-	println("store_vector")
-	print_all()
-	println("")
-
 	n = -1
 	for i = 0 to 2	
 		pre_t(i) = GetHistory(my.touch(i),1)
@@ -1966,14 +1924,12 @@ sub store_vector(type as Integer,angle as Double){
 	angle = my.angle_surface
 	if n == -1 then
 		println("normal miss")
-		PauseSimulation()
-		//terminateagt(my)
+		terminateagt(my)
 	end if
 
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
 	my.next_vector(2,2) = 0
-	//printLn("dis : "&my.dis_surface)
 	if type > 2 then
 	//±の障害物見てベクトルの方向を決める
 		if type == 3 then
@@ -2012,100 +1968,109 @@ sub store_vector(type as Integer,angle as Double){
 			else
 				if my.normal_vector(0) == 0 then
 					my.n_normal(0) = 0
-					my.n_normal(1) = 1//2
+					my.n_normal(1) = 1
 				else
 					my.n_normal(0) = 0
 					my.n_normal(1) = 1
 				end if
 			end if
 		elseif type == 4 then
-			my.next_vector(0,0) = 0
-			my.next_vector(0,1) = 0
-			if my.ap_or_dis == 1 then
-				my.next_vector(0,2) = pre_t(2)
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = 0
+			if my.edge_flag then
+				my.next_vector(1,2) = 0
 			else
-				if my.dis_surface == 2 then
-					my.next_vector(0,2) = - my.touch(2)
+				if my.ap_or_dis == 1 then
+					my.next_vector(1,2) = pre_t(2)
 				else
-					my.next_vector(0,2) =  my.touch(2)
+					if my.dis_surface == 2 then
+						my.next_vector(1,2) = - my.touch(2)
+					else
+						my.next_vector(1,2) =  my.touch(2)
+					end if
 				end if
 			end if
 			
 
 			if my.ap_or_dis == 1 then
-				my.next_vector(1,0) = pre_t(0)
+				my.next_vector(0,0) = pre_t(0)
 			else
 				if my.dis_surface == 0 then
-					my.next_vector(1,0) = - my.touch(0)
+					my.next_vector(0,0) = - my.touch(0)
 				else
-					my.next_vector(1,0) =  my.touch(0)
+					my.next_vector(0,0) =  my.touch(0)
 				end if
 			end if
-			my.next_vector(1,1) = 0
-			my.next_vector(1,2) = 0
-
-			if my.ap_or_dis == 1 or n == my.dis_surface then
-				if my.normal_vector(0) == 0 then
-					my.n_normal(0) = 1
-					my.n_normal(1) = 2
-				else
-					my.n_normal(0) = 0
-					my.n_normal(1) = 1
-				end if
-			else
-				if my.normal_vector(0) == 0 then
-					my.n_normal(0) = 0
-					my.n_normal(1) = 2
-				else
-					my.n_normal(0) = 0//1
-					my.n_normal(1) = 2
-				end if
-			end if
-		elseif type == 5 then
-			my.next_vector(0,0) = 0
 			my.next_vector(0,1) = 0
-			if my.ap_or_dis == 1 then
-				my.next_vector(0,2) = pre_t(2)
-			else
-				if my.dis_surface == 2 then
-					my.next_vector(0,2) = - my.touch(2)
-				else
-					my.next_vector(0,2) = my.touch(2)
-				end if
-			end if
-			
-
-			my.next_vector(1,0) = 0
-			if my.ap_or_dis == 1 then
-				my.next_vector(1,1) = pre_t(1)
-			else
-				if my.dis_surface == 1 then
-					my.next_vector(1,1) = - my.touch(1)
-				else
-					my.next_vector(1,1) =  my.touch(1)
-				end if
-			end if
-			my.next_vector(1,2) = 0
+			my.next_vector(0,2) = 0
 
 			if my.ap_or_dis == 1 or n == my.dis_surface then
-				if my.normal_vector(1) == 0 then
-					my.n_normal(0) = 0
-					my.n_normal(1) = 2
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 2
+					my.n_normal(1) = 1
 				else
 					my.n_normal(0) = 1
 					my.n_normal(1) = 0
 				end if
 			else
-				if my.normal_vector(1) == 0 then
-					my.n_normal(0) = 1
-					my.n_normal(1) = 2
+				if my.normal_vector(0) == 0 then
+					my.n_normal(0) = 2
+					my.n_normal(1) = 0
 				else
-					my.n_normal(0) = 1
-					my.n_normal(1) = 2
+					my.n_normal(0) = 2
+					my.n_normal(1) = 0
+				end if
+			end if
+		elseif type == 5 then
+			my.next_vector(1,0) = 0
+			my.next_vector(1,1) = 0
+			if my.edge_flag then
+				my.next_vector(1,2) = 0
+			else
+				if my.ap_or_dis == 1 then
+					my.next_vector(1,2) = pre_t(2)
+				else
+					if my.dis_surface == 2 then
+						my.next_vector(1,2) = - my.touch(2)
+					else
+						my.next_vector(1,2) = my.touch(2)
+					end if
+				end if
+			end if
+			
+
+			my.next_vector(0,0) = 0
+			if my.ap_or_dis == 1 then
+				my.next_vector(0,1) = pre_t(1)
+			else
+				if my.dis_surface == 1 then
+					my.next_vector(0,1) = - my.touch(1)
+				else
+					my.next_vector(0,1) =  my.touch(1)
+				end if
+			end if
+			my.next_vector(0,2) = 0
+
+			if my.ap_or_dis == 1 or n == my.dis_surface then
+				if my.normal_vector(1) == 0 then
+					my.n_normal(0) = 2
+					my.n_normal(1) = 0
+				else
+					my.n_normal(0) = 0
+					my.n_normal(1) = 1
+				end if
+			else
+				if my.normal_vector(1) == 0 then
+					my.n_normal(0) = 2
+					my.n_normal(1) = 1
+				else
+					my.n_normal(0) = 2
+					my.n_normal(1) = 1
 				end if
 			end if
 		else
-			//println("type miss")
+			println("type miss")
+			TerminateAgt(my)
 		end if
 	else
 		if type == 0 then
@@ -2121,7 +2086,7 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 0
 			u(2) = 0
 
-			if not my.is_hemi then
+			if not my.is_hemi and not my.edge_flag then
 				my.next_vector(2,0) = my.forward_vector(0)
 				my.next_vector(2,1) = Abs(my.forward_vector(2)) * pre_t(1) * my.ap_or_dis
 				my.next_vector(2,2) = Abs(my.forward_vector(1)) * pre_t(2) * my.ap_or_dis
@@ -2149,7 +2114,7 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 1
 			u(2) = 0
 
-			if not my.is_hemi then
+			if not my.is_hemi and not my.edge_flag then
 				my.next_vector(2,0) = Abs(my.forward_vector(2)) * pre_t(0) * my.ap_or_dis
 				my.next_vector(2,1) = my.forward_vector(1)
 				my.next_vector(2,2) = Abs(my.forward_vector(0)) * pre_t(2) * my.ap_or_dis
@@ -2177,7 +2142,7 @@ sub store_vector(type as Integer,angle as Double){
 			u(1) = 0
 			u(2) = 1
 
-			if not my.is_hemi then
+			if not my.is_hemi  and not my.edge_flag then
 				my.next_vector(2,0) = Abs(my.forward_vector(1)) * pre_t(0) * my.ap_or_dis
 				my.next_vector(2,1) = Abs(my.forward_vector(0)) * pre_t(1) * my.ap_or_dis
 				my.next_vector(2,2) = my.forward_vector(2)
@@ -2194,44 +2159,60 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 		else
 			PrintLn("type miss")
-			PauseSimulation()
-			//terminateagt(my)
+			terminateagt(my)
 		end if
 	end if
 
-	print_vector()
 }
 
-sub calculate_matrix(){
+sub matrix(){
+	dim x(3) as Double
+	dim y(3) as Double
+	dim b(3) as Double
+	dim R(3,3) as Double
+	dim i as Integer
 	dim theta as Double
-	dim n(3) as Double
+	dim j as Integer
+	dim n as Integer
 
-	theta = DegreeToRad(my.angle_surface)
-	if my.b_type == 0 then
-		n(0) = 1
-		n(1) = 0
-		n(2) = 0
-	elseif my.b_type == 1 then
-		n(0) = 0
-		n(1) = 1
-		n(2) = 0	
+	n = my.b_type
+	x(0) = my.forward_vector(0)
+	x(1) = my.forward_vector(1)
+	x(2) = my.forward_vector(2)
+
+	theta = calculate_theta()
+
+	if n == 0 then
+		b(0) = -1
+		b(1) = 0
+		b(2) = 0
+	elseif n == 1 then
+		b(0) = 0
+		b(1) = -1
+		b(2) = 0
+	elseif n == 2 then
+		b(0) = 0
+		b(1) = 0
+		b(2) = -1
 	else
-		n(0) = 0
-		n(1) = 0
-		n(2) = 1	
 	end if
 
-	my.matrix(0,0) = Cos(theta) + (n(0)^2) * (1 - Cos(theta))
-	my.matrix(0,1) = n(0) * n(1) * (1 - Cos(theta)) - (n(2)) * (sin(theta))
-	my.matrix(0,2) = n(2) * n(0) * (1 - Cos(theta)) + (n(1)) * (sin(theta))
-	my.matrix(1,0) = n(0) * n(1) * (1 - Cos(theta)) + (n(2)) * (sin(theta))
-	my.matrix(1,1) = Cos(theta) + (n(1)^2) * (1 - Cos(theta))
-	my.matrix(1,2) = n(1) * n(2) * (1 - Cos(theta)) - (n(0)) * (sin(theta))
-	my.matrix(2,0) = n(2) * n(0) * (1 - Cos(theta)) - (n(1)) * (sin(theta))
-	my.matrix(2,1) = n(1) * n(2) * (1 - Cos(theta)) + (n(0)) * (sin(theta))
-	my.matrix(2,2) = Cos(theta) + (n(2)^2) * (1 - Cos(theta))
-}
+	R(0,0) = b(0)^2 * (1 - Cos(theta)) + Cos(theta)
+	R(0,1) = b(0) * b(1) * (1 - Cos(theta)) - b(2) * Sin(theta)
+	R(0,2) = b(2) * b(0) * (1 - Cos(theta)) + b(1) * Sin(theta)
 
+	R(1,0) = b(0) * b(1) * (1 - Cos(theta)) + b(2) * Sin(theta)
+	R(1,1) = b(1)^2 * (1 - Cos(theta)) + Cos(theta)
+	R(1,2) = b(1) * b(2) * (1 - Cos(theta)) - b(0) * Sin(theta)
+
+	R(2,0) = b(2) * b(0) * (1 - Cos(theta)) - b(1) * Sin(theta)
+	R(2,1) = b(1) * b(2) * (1 - Cos(theta)) + b(0) * Sin(theta)
+	R(2,2) = b(2)^2 * (1 - Cos(theta)) + Cos(theta)
+
+	for i = 0 to 2
+		y(i) = x(0) * R(i,0) + x(1) * R(i,1) + x(2) * R(i,2)
+	next i
+}
 
 sub select_vector(){
 //my.next_vectorから1つ確率で選んでmy.forward_vectorに入れる
@@ -2268,19 +2249,6 @@ sub select_vector(){
 	//println("x : "&my.forward_vector(0)&"     y : "&my.forward_vector(1)&"       z : "&my.forward_vector(2))
 
 	my.do_type = select_do_type()
-}
-
-sub print_vector(){
-	dim i as Integer
-
-	for i = 0 to 2
-		//println("")
-		//printLn(i& "th next_vector")
-		//printLn("next_vector(0)"&my.next_vector(i,0))
-		//printLn("next_vector(1)"&my.next_vector(i,1))
-		//printLn("next_vector(2)"&my.next_vector(i,2))
-		//printLn("next_normal is"&my.n_normal(i))
-	next i
 }
 
 sub set_normal_vector(n as Integer){
@@ -2419,7 +2387,11 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	dim n as Integer
 
 	if my.next_vector(2,0) == 0 and my.next_vector(2,1) == 0 and my.next_vector(2,2) == 0 then
-		n = 2
+		if my.next_vector(2,0) == 0 and my.next_vector(2,1) == 0 and my.next_vector(2,2) == 0 then
+			n = 1
+		else
+			n = 2
+		end if
 	else
 		n = 3
 	end if
@@ -2428,7 +2400,11 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 		sum_diff = 1
 	end if
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
-	ret = ( 1 - diff / sum_diff ) / ( n -1 )
+	if n == 1 then
+		ret =1
+	else
+		ret = ( 1 - diff / sum_diff ) / ( n -1 )
+	end if
 	
 	return ret
 }
@@ -2454,12 +2430,10 @@ function different_surface() as Boolean{
 	if is_appear_surface() then
 			my.ap_or_dis = 1
 			ret = true
-			println("app")
 	else
 		if is_disappear_surface() then
 			my.ap_or_dis = -1
 			ret = true
-			println("disapp")
 		end if
 	end if
 	
@@ -2495,8 +2469,7 @@ function direction_type() as Integer{
 		ret = 1
 	else
 		PrintLn("miss")
-		PauseSimulation()
-		//terminateagt(my)
+		terminateagt(my)
 	end if
 
 	return ret
@@ -2509,12 +2482,14 @@ function is_appear_surface() as Boolean{
 	dim nx as Integer
 	dim ny as Integer
 	dim nz as Integer
+	dim max(2) as Integer
 
 	axis = direction_type()
-	pos = my.position_type
 	ny = Int(my.Y)
 	nz = Int(my.Z)
 	nx = Int(my.X)
+	max(0) = GetWidthSpace(universe.map) - 1 
+	max(1) = GetHeightSpace(universe.map) - 1
 
 	my.a_flag = false
 	if axis == 0 then
@@ -2525,6 +2500,9 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = -1
 					my.b_type = 5
 					my.touch(0) = -1
+					if my.X + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2541,6 +2519,9 @@ function is_appear_surface() as Boolean{
 						my.angle_surface = -1
 						my.b_type = 5
 						my.touch(0) = 1
+						if my.X - 1 == 0 then
+							my.edge_flag = true
+						end if
 					else
 						ret = false
 					end if
@@ -2557,12 +2538,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type = 1
 					my.touch(0) = -1
+					if nx + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 1
 					my.touch(0) = -1
 					my.is_hemi = true
+					if nx + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2572,12 +2559,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 270
 					my.b_type = 1
 					my.touch(0) = 1
+					if nx - 1 == 0 then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 1
 					my.touch(0) = 1
 					my.is_hemi = true
+					if nx - 1 == 0 then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2589,12 +2582,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 270
 					my.b_type = 0
 					my.touch(1) = -1
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx,ny+1,nz) == 1 or check_void(nx+1,ny+1,nz) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 0
 					my.touch(1) = -1
 					my.is_hemi = true
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2604,12 +2603,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type = 0
 					my.touch(1) = 1
+					if ny - 1 == 0 then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx,ny-1,nz) == 1 or check_void(nx+1,ny-1,nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 0
 					my.touch(1) = 1
 					my.is_hemi = true
+					if ny - 1 == max(1) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2625,12 +2630,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(0) = -1
+					if nx + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(0) = -1
 					my.is_hemi = true
+					if nx + 1 == max(0) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2640,12 +2651,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 270
 					my.b_type = 2
 					my.touch(0) = 1
+					if nx - 1 == 0 then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type = 2
 					my.touch(0) = 1
 					my.is_hemi = true
+					if nx - 1 == 0 then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2693,6 +2710,9 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = -1
 					my.b_type =4
 					my.touch(1) = -1
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2709,6 +2729,9 @@ function is_appear_surface() as Boolean{
 						my.angle_surface = -1
 						my.b_type =4
 						my.touch(1) = 1
+						if ny - 1 == 0 then
+						my.edge_flag = true
+					end if
 					else
 						ret = false
 					end if
@@ -2725,12 +2748,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(1) = -1
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx,ny+1,nz) == 1 or check_void(nx,ny+1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type =2
 					my.touch(1) = -1
 					my.is_hemi = true
+					if ny + 1 == max(1) then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2740,12 +2769,18 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 270
 					my.b_type =2
 					my.touch(1) = 1
+					if ny - 1 == 0 then
+						my.edge_flag = true
+					end if
 				elseif check_void(nx,ny-1,nz) == 1 or check_void(nx,ny-1,nz+1) == 1 then
 					ret = true
 					my.angle_surface = 270
 					my.b_type =2
 					my.touch(1) = 1
 					my.is_hemi = true
+					if ny - 1 == 0 then
+						my.edge_flag = true
+					end if
 				else
 					ret = false
 				end if
@@ -2848,8 +2883,6 @@ function is_disappear_surface() as Boolean{
 	dim f(3) as Double
 	dim i as Integer
 
-	println("appear")
-	print_all()
 	axis = direction_type()
 	ny = Int(my.Y)
 	nz = Int(my.Z)
@@ -3313,9 +3346,6 @@ sub step_surface(){
 
 	n = my.dis_surface
 	b = my.b_type
-
-	println("n :"&n)
-	println("b :"&b)
 	
 	for i =0 to 2
 		pre(i) = GetHistory(my.touch(i),1)
@@ -3368,42 +3398,55 @@ sub step_surface(){
 	my.dis_surface = -1	
 }
 
-function calculate_theta(n as Integer,sign as Integer) as Double{
-	dim i as Integer
-	dim nor(3) as Double
-	dim pnor(3) as Double
-	dim no as Double
-	dim p as Double
+function calculate_theta() as Double{
 	dim theta as Double
-	
+	dim n as Integer
+	dim i as Integer
+	dim jud as Double
+	dim f as Double
+
 	for i = 0 to 2
-		if i != n then
-			nor(i) = my.forward_vector(i)
-			pnor(i) = GetHistory(my.forward_vector(i),1)
-		else
-			nor(i) = 0
-			pnor(i) = 0
-		end if
-		if nor(i) != 0 then
-			no = nor(i)
-		end if
-		if pnor(i) != 0 then
-			p = pnor(i)
+		if my.normal_vector(i) != 0 then
+			n = my.normal_vector(i)//正からふれてるかどうか
+			break
 		end if
 	next i
-
-	if no * p > 0 then
-		if sign > 0 then
-			theta = DegreeToRad(270)
+	if my.b_type == 0 then
+		if i == 1 then
+			f = my.forward_vector(2)
+		elseif i == 2 then
+			f = -my.forward_vector(1)
 		else
-			theta = DegreeToRad(90)
+			println("miss")
+		end if
+	elseif my.b_type == 1 then
+		if i == 0 then
+			f = -my.forward_vector(2)
+		elseif i == 2 then
+			f = my.forward_vector(0)
+		else
+			println("miss")
+		end if
+	elseif my.b_type == 2 then
+		if i == 0 then
+			f = my.forward_vector(1)
+		elseif i == 1 then
+			f = -my.forward_vector(0)
+		else
+			println("miss")
 		end if
 	else
-		if sign < 0 then
-			theta = DegreeToRad(270)
-		else
-			theta = DegreeToRad(90)
-		end if
+		println("miss")
+	end if
+
+	jud = f * n * my.ap_or_dis
+
+	if jud > 0 then
+		theta = DegreeToRad(90)
+	elseif jud < 0 then
+		theta = DegreeToRad(270)
+	else
+		theta = DegreeToRad(90)
 	end if
 
 	return theta
