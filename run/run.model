@@ -40,7 +40,7 @@ UNIVERSE {
             Dim edge(0, 0)[3] As Double = (3*0.0);
             Dim edge_vector(0, 0)[3] As Double = (3*0.0);
             Dim repulsive_vector(0, 0)[3][3] As Double = (9*0.0);
-            Dim edge_flag(0, 0) As Boolean = ();
+            Dim edge_flag(0, 0) As Boolean = (0);
         }
         AgtType barrier(0, 0)[0] {
             Dim ID(0, 0) As Integer = (0);
@@ -619,6 +619,8 @@ function make_rubble_Pillar(pattern as Integer,x as Integer,y as integer ,z as i
 	 
 	return ret
 	}
+	
+	
 #end_rule UNIVERSE
 
 
@@ -645,18 +647,23 @@ my.Z = 0
 
 Agt_Step{
 
+	println("ID :"&my.ID)
 	if is_edge() then
+		println(my.ID&"avoid edge")
 		avoid_edge()
 	end if
 	if is_control() then
+		PrintLn(my.ID&"control")
 		calculate_repulsive()
 		decide_vector()
 	else
 		if different_surface() then
+			println(my.ID&"determing")
 			determining_vector()
 			update_normal_vector()
 		else
 			if is_bend() then
+				println(my.ID&"bend")
 				determining_bend()
 			end if
 		end if
@@ -684,6 +691,7 @@ function check_void(x as Double,y as Double,z as Double) as Integer{
 }
 
 sub print_all(){
+	println("ID :"&my.ID)
 	println("X :"&my.X&" Y :"&my.Y& " Z :"&my.Z)
 	println("fX :"&my.forward_vector(0)&" fY :"&my.forward_vector(1)& " fZ :"&my.forward_vector(2))
 	println("nX :"&my.normal_vector(0)&" nY :"&my.normal_vector(1)& " nZ :"&my.normal_vector(2))
@@ -882,7 +890,8 @@ sub repulsive_barrier(){
 					next one
 			else
 				PrintLn("miss")
-				terminateagt(my)
+				//terminateagt(my)
+				PauseSimulation()
 			end if
 	else
 	end if
@@ -1068,7 +1077,8 @@ sub back_surface(n as Integer){
 		else
 			//ここに入りたくない
 			println("disapミスってる？？")
-			DelAgt(my)
+			PauseSimulation()
+			//TerminateAgt(my)
 		end if
 		my.is_back = true
 		prev_forward()
@@ -1717,6 +1727,7 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
@@ -1736,6 +1747,7 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
@@ -1755,6 +1767,7 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
@@ -1774,6 +1787,7 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
@@ -1793,6 +1807,7 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	else			
@@ -1812,6 +1827,7 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
+				PauseSimulation()
 			end if
 		end if
 	end if
@@ -1883,6 +1899,8 @@ sub determining_bend(){
 	//printLn("Y is "&my.forward_vector(1))
 	//printLn("Z is "&my.forward_vector(2))
 
+	my.do_type = select_do_type()
+
 }
 
 
@@ -1924,7 +1942,8 @@ sub store_vector(type as Integer,angle as Double){
 	angle = my.angle_surface
 	if n == -1 then
 		println("normal miss")
-		terminateagt(my)
+		//terminateagt(my)
+		PauseSimulation()
 	end if
 
 	my.next_vector(2,0) = 0
@@ -2070,7 +2089,8 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 		else
 			println("type miss")
-			TerminateAgt(my)
+			//TerminateAgt(my)
+			PauseSimulation()
 		end if
 	else
 		if type == 0 then
@@ -2159,7 +2179,8 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 		else
 			PrintLn("type miss")
-			terminateagt(my)
+			//terminateagt(my)
+			PauseSimulation()
 		end if
 	end if
 
@@ -2430,48 +2451,15 @@ function different_surface() as Boolean{
 	if is_appear_surface() then
 			my.ap_or_dis = 1
 			ret = true
+			println(my.ID&"app")
 	else
 		if is_disappear_surface() then
 			my.ap_or_dis = -1
 			ret = true
+			println(my.ID&"disapp")
 		end if
 	end if
 	
-	return ret
-}
-
-function direction_type() as Integer{
-//x平行0,xyで動く1,xzで動く2，y平行3，yzで動く4，z平行5の0~5をタイプで返す
-	dim ret as Integer
-	dim x as Double
-	dim y as Double
-	dim z as Double
-
-	x = my.forward_vector(0)
-	y = my.forward_vector(1)
-	z = my.forward_vector(2)
-	
-	if x==0 then
-		if y == 0 then
-			ret = 5
-		elseif z == 0 then
-			ret = 3
-		else
-			ret = 4
-		end if
-	elseif y == 0 then
-		if z == 0 then
-			ret = 0
-		else
-			ret = 2
-		end if	
-	elseif z == 0 then
-		ret = 1
-	else
-		PrintLn("miss")
-		terminateagt(my)
-	end if
-
 	return ret
 }
 
@@ -2483,13 +2471,23 @@ function is_appear_surface() as Boolean{
 	dim ny as Integer
 	dim nz as Integer
 	dim max(2) as Integer
+	dim f(3) as Double
+	dim i as Integer
 
-	axis = direction_type()
+	axis = select_do_type()
 	ny = Int(my.Y)
 	nz = Int(my.Z)
 	nx = Int(my.X)
 	max(0) = GetWidthSpace(universe.map) - 1 
 	max(1) = GetHeightSpace(universe.map) - 1
+
+	for i = 0 to 2
+		if my.forward_vector(i) == 0 then
+			f(i) = 0 
+		else
+			f(i) = my.forward_vector(i) / Abs(my.forward_vector(i))
+		end if
+	next i	
 
 	my.a_flag = false
 	if axis == 0 then
@@ -2532,47 +2530,69 @@ function is_appear_surface() as Boolean{
 		end if
 	elseif axis == 1 then
 		if nx == my.X then
-			if my.forward_vector(0) > 0 then
-				if check_void(nx+1,ny,nz) == 1 and check_void(nx+1,ny+1,nz) == 1 then
+			if ny == my.Y then
+				if check_void(nx+f(0),ny,nz) == 1 and check_void(nx+f(0),ny+f(1),nz) == 1 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 1
 					my.touch(0) = -1
-					if nx + 1 == max(0) then
+					if nx + f(0) == max(0) or nx + f(0) == 0 then
 						my.edge_flag = true
 					end if
-				elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny+1,nz) == 1 then
+				elseif check_void(nx,ny+f(1),nz) == 1 and check_void(nx+f(0),ny+f(1),nz) == 1 then
 					ret = true
-					my.angle_surface = 90
-					my.b_type = 1
-					my.touch(0) = -1
-					my.is_hemi = true
-					if nx + 1 == max(0) then
+					my.angle_surface = 270
+					my.b_type = 0
+					my.touch(1) = -1
+					if ny + f(1) == max(1) or ny + f(1) == 0 then
 						my.edge_flag = true
 					end if
 				else
 					ret = false
 				end if
 			else
-				if check_void(nx-1,ny,nz) == 1 and check_void(nx-1,ny+1,nz) == 1 then
-					ret = true
-					my.angle_surface = 270
-					my.b_type = 1
-					my.touch(0) = 1
-					if nx - 1 == 0 then
-						my.edge_flag = true
-					end if
-				elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny+1,nz) == 1 then
-					ret = true
-					my.angle_surface = 270
-					my.b_type = 1
-					my.touch(0) = 1
-					my.is_hemi = true
-					if nx - 1 == 0 then
-						my.edge_flag = true
+				if my.forward_vector(0) > 0 then
+					if check_void(nx+1,ny,nz) == 1 and check_void(nx+1,ny+1,nz) == 1 then
+						ret = true
+						my.angle_surface = 90
+						my.b_type = 1
+						my.touch(0) = -1
+						if nx + 1 == max(0) then
+							my.edge_flag = true
+						end if
+					elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny+1,nz) == 1 then
+						ret = true
+						my.angle_surface = 90
+						my.b_type = 1
+						my.touch(0) = -1
+						my.is_hemi = true
+						if nx + 1 == max(0) then
+							my.edge_flag = true
+						end if
+					else
+						ret = false
 					end if
 				else
-					ret = false
+					if check_void(nx-1,ny,nz) == 1 and check_void(nx-1,ny+1,nz) == 1 then
+						ret = true
+						my.angle_surface = 270
+						my.b_type = 1
+						my.touch(0) = 1
+						if nx - 1 == 0 then
+							my.edge_flag = true
+						end if
+					elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny+1,nz) == 1 then
+						ret = true
+						my.angle_surface = 270
+						my.b_type = 1
+						my.touch(0) = 1
+						my.is_hemi = true
+						if nx - 1 == 0 then
+							my.edge_flag = true
+						end if
+					else
+						ret = false
+					end if
 				end if
 			end if
 		elseif ny == my.Y then
@@ -2624,47 +2644,69 @@ function is_appear_surface() as Boolean{
 		end if
 	elseif axis == 2 then	
 		if nx == my.X then
-			if my.forward_vector(0) > 0 then
-				if check_void(nx+1,ny,nz) == 1 and check_void(nx+1,ny,nz+1) == 1 then
+			if nz == my.Z then
+				if check_void(nx+f(0),ny,nz) != 0 and check_void(nx+f(0),ny,nz+f(2)) != 0 then
 					ret = true
 					my.angle_surface = 90
-					my.b_type =2
+					my.b_type = 1
 					my.touch(0) = -1
-					if nx + 1 == max(0) then
+					if nx + f(0) == max(0) or nx + f(0) == 0 then
 						my.edge_flag = true
 					end if
-				elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny,nz+1) == 1 then
+				elseif check_void(nx,ny,nz+f(2)) != 0 and check_void(nx+f(0),ny,nz+f(2)) != 0 then
 					ret = true
-					my.angle_surface = 90
-					my.b_type =2
-					my.touch(0) = -1
-					my.is_hemi = true
-					if nx + 1 == max(0) then
+					my.angle_surface = 270
+					my.b_type = 0
+					my.touch(1) = -1
+					if nz + f(2) == max(1) or nz + f(2) == 0 then
 						my.edge_flag = true
 					end if
 				else
 					ret = false
 				end if
 			else
-				if check_void(nx-1,ny,nz) == 1 and check_void(nx-1,ny,nz+1) == 1 then
-					ret = true
-					my.angle_surface = 270
-					my.b_type = 2
-					my.touch(0) = 1
-					if nx - 1 == 0 then
-						my.edge_flag = true
-					end if
-				elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny,nz+1) == 1 then
-					ret = true
-					my.angle_surface = 270
-					my.b_type = 2
-					my.touch(0) = 1
-					my.is_hemi = true
-					if nx - 1 == 0 then
-						my.edge_flag = true
+				if my.forward_vector(0) > 0 then
+					if check_void(nx+1,ny,nz) == 1 and check_void(nx+1,ny,nz+1) == 1 then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =2
+						my.touch(0) = -1
+						if nx + 1 == max(0) then
+							my.edge_flag = true
+						end if
+					elseif check_void(nx+1,ny,nz) == 1 or check_void(nx+1,ny,nz+1) == 1 then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =2
+						my.touch(0) = -1
+						my.is_hemi = true
+						if nx + 1 == max(0) then
+							my.edge_flag = true
+						end if
+					else
+						ret = false
 					end if
 				else
-					ret = false
+					if check_void(nx-1,ny,nz) == 1 and check_void(nx-1,ny,nz+1) == 1 then
+						ret = true
+						my.angle_surface = 270
+						my.b_type = 2
+						my.touch(0) = 1
+						if nx - 1 == 0 then
+							my.edge_flag = true
+						end if
+					elseif check_void(nx-1,ny,nz) == 1 or check_void(nx-1,ny,nz+1) == 1 then
+						ret = true
+						my.angle_surface = 270
+						my.b_type = 2
+						my.touch(0) = 1
+						my.is_hemi = true
+						if nx - 1 == 0 then
+							my.edge_flag = true
+						end if
+					else
+						ret = false
+					end if
 				end if
 			end if
 		elseif nz == my.Z then
@@ -2689,7 +2731,7 @@ function is_appear_surface() as Boolean{
 					my.angle_surface = 90
 					my.b_type = 0
 					my.touch(2) = 1
-				elseif check_void(nx,ny,nz-1) == 1 or check_void(nx+1,ny,nz-1) == 1 then
+				elseif check_void(nx,ny,nz-1) != 0 or check_void(nx+1,ny,nz-1) != 0 then
 					ret = true
 					my.angle_surface = 90
 					my.b_type = 0
@@ -2742,47 +2784,69 @@ function is_appear_surface() as Boolean{
 		end if	
 	elseif axis == 4 then
 		if ny == my.y then
-			if my.forward_vector(1) > 0 then
-				if check_void(nx,ny+1,nz) == 1 and check_void(nx,ny+1,nz+1) == 1 then
+			if nz == my.Z then
+				if check_void(nx,ny+f(1),nz) != 0 and check_void(nx,ny+f(1),nz+f(2)) != 0 then
 					ret = true
 					my.angle_surface = 90
-					my.b_type =2
-					my.touch(1) = -1
-					if ny + 1 == max(1) then
+					my.b_type = 1
+					my.touch(0) = -1
+					if ny + f(1) == max(1) or ny + f(1) == 0 then
 						my.edge_flag = true
 					end if
-				elseif check_void(nx,ny+1,nz) == 1 or check_void(nx,ny+1,nz+1) == 1 then
+				elseif check_void(nx,ny,nz+f(2)) != 0 and check_void(nx,ny+f(1),nz+f(2)) != 0 then
 					ret = true
-					my.angle_surface = 90
-					my.b_type =2
+					my.angle_surface = 270
+					my.b_type = 0
 					my.touch(1) = -1
-					my.is_hemi = true
-					if ny + 1 == max(1) then
+					if nz + f(2) == max(1) or nz + f(2) == 0 then
 						my.edge_flag = true
 					end if
 				else
 					ret = false
 				end if
 			else
-				if check_void(nx,ny-1,nz) == 1 and check_void(nx,ny-1,nz+1) == 1 then
-					ret = true
-					my.angle_surface = 270
-					my.b_type =2
-					my.touch(1) = 1
-					if ny - 1 == 0 then
-						my.edge_flag = true
-					end if
-				elseif check_void(nx,ny-1,nz) == 1 or check_void(nx,ny-1,nz+1) == 1 then
-					ret = true
-					my.angle_surface = 270
-					my.b_type =2
-					my.touch(1) = 1
-					my.is_hemi = true
-					if ny - 1 == 0 then
-						my.edge_flag = true
+				if my.forward_vector(1) > 0 then
+					if check_void(nx,ny+1,nz) == 1 and check_void(nx,ny+1,nz+1) == 1 then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =2
+						my.touch(1) = -1
+						if ny + 1 == max(1) then
+							my.edge_flag = true
+						end if
+					elseif check_void(nx,ny+1,nz) == 1 or check_void(nx,ny+1,nz+1) == 1 then
+						ret = true
+						my.angle_surface = 90
+						my.b_type =2
+						my.touch(1) = -1
+						my.is_hemi = true
+						if ny + 1 == max(1) then
+							my.edge_flag = true
+						end if
+					else
+						ret = false
 					end if
 				else
-					ret = false
+					if check_void(nx,ny-1,nz) == 1 and check_void(nx,ny-1,nz+1) == 1 then
+						ret = true
+						my.angle_surface = 270
+						my.b_type =2
+						my.touch(1) = 1
+						if ny - 1 == 0 then
+							my.edge_flag = true
+						end if
+					elseif check_void(nx,ny-1,nz) == 1 or check_void(nx,ny-1,nz+1) == 1 then
+						ret = true
+						my.angle_surface = 270
+						my.b_type =2
+						my.touch(1) = 1
+						my.is_hemi = true
+						if ny - 1 == 0 then
+							my.edge_flag = true
+						end if
+					else
+						ret = false
+					end if
 				end if
 			end if
 		elseif nz == my.Z then
@@ -2808,12 +2872,12 @@ function is_appear_surface() as Boolean{
 					my.b_type =1
 					my.touch(2) = 1
 				else
-					if check_void(nx,ny,nz-1) == 1 and check_void(nx,ny+1,nz-1) == 1 then
+					if check_void(nx,ny,nz-1) != 0 and check_void(nx,ny+1,nz-1) != 0 then
 						ret = true
 						my.angle_surface = 90
 						my.b_type =1
 						my.touch(2) = 1
-					elseif check_void(nx,ny,nz-1) == 1 or check_void(nx,ny+1,nz-1) == 1 then
+					elseif check_void(nx,ny,nz-1) != 0 or check_void(nx,ny+1,nz-1) != 0 then
 						ret = true
 						my.angle_surface = 90
 						my.b_type =1
@@ -2846,7 +2910,7 @@ function is_appear_surface() as Boolean{
 					my.touch(2) = 1
 					my.a_flag = true
 				else
-					if check_void(my.X,my.Y,my.Z-1) == 1 then
+					if check_void(my.X,my.Y,my.Z-1) != 0 then
 						ret = true
 						my.angle_surface = -1
 						my.b_type =3
@@ -2883,7 +2947,7 @@ function is_disappear_surface() as Boolean{
 	dim f(3) as Double
 	dim i as Integer
 
-	axis = direction_type()
+	axis = select_do_type()
 	ny = Int(my.Y)
 	nz = Int(my.Z)
 	nx = Int(my.X)
@@ -3589,8 +3653,8 @@ Map3D_Output {
     Font_Style = 0;
     Font_Color = 0, 0, 0;
     Font_Background_Color = 255, 255, 255;
-    Position_x = 33;
-    Position_y = 16;
+    Position_x = 69;
+    Position_y = -9;
     Size_x = 709;
     Size_y = 924;
     Map_Cell_Size = -1;

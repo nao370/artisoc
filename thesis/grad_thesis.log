@@ -1,4 +1,4 @@
-This is e-pTeX, Version 3.14159265-p3.7-160201-2.6 (sjis) (TeX Live 2016/W32TeX) (preloaded format=platex 2016.4.7)  9 FEB 2019 13:32
+This is e-pTeX, Version 3.14159265-p3.7-160201-2.6 (sjis) (TeX Live 2016/W32TeX) (preloaded format=platex 2016.4.7)  9 FEB 2019 14:47
 entering extended mode
  restricted \write18 enabled.
  Source specials enabled.
@@ -173,46 +173,48 @@ File: png/cohesion.png Graphic file (type bmp)
  <png/cohesion.png>
 File: png/alighnment.png Graphic file (type bmp)
  <png/alighnment.png>
-[6] [7] [8] [9]
+[6] [7] [8]
+File: png/Untitled.png Graphic file (type bmp)
+ <png/Untitled.png> [9] [10]
 
 LaTeX Font Warning: Font shape `JT1/mc/m/it' undefined
-(Font)              using `JT1/mc/m/n' instead on input line 162.
+(Font)              using `JT1/mc/m/n' instead on input line 180.
 
 
 LaTeX Font Warning: Font shape `JY1/mc/m/it' undefined
-(Font)              using `JY1/mc/m/n' instead on input line 162.
+(Font)              using `JY1/mc/m/n' instead on input line 180.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 162--163
+Underfull \hbox (badness 10000) in paragraph at lines 180--181
 [][]\OT1/cmr/m/n/10.95 Wen-Ta Chiu,Jeffrey arnold,Yaw-Tang Shih,Kuang-Hua Hsiun
 g,Hsueh-Yun
  []
 
 
-Underfull \hbox (badness 2368) in paragraph at lines 162--163
+Underfull \hbox (badness 2368) in paragraph at lines 180--181
 \OT1/cmr/m/n/10.95 Chi,Chia-Huei Chiu,Wan-Chen Tsai,and William C.Huang. A Sur-
 vey of In-
  []
 
 
-Underfull \hbox (badness 2512) in paragraph at lines 162--163
+Underfull \hbox (badness 2512) in paragraph at lines 180--181
 \OT1/cmr/m/n/10.95 ter-na-tional Ur-ban Search-and-rescue Teams fol-low-ing the
  Ji Ji Earth-quake.
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 164--165
+Underfull \hbox (badness 10000) in paragraph at lines 182--183
 [][]\OT1/cmr/m/n/10.95 Alper Bozkurt,Robert F.Glimour,Ayesa Sinha,David Stern,a
 nd Amit Lal.
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 164--165
+Underfull \hbox (badness 10000) in paragraph at lines 182--183
 \OT1/cmr/m/n/10.95 Insect-Machine In-ter-face Based Neu-ro-cy-ber-net-ics. \OT1
 /cmr/m/it/10.95 IEEE Trans Biomed-i-cal
  []
 
-[10] [11] (./grad_thesis.aux)
+[11] [12] (./grad_thesis.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
@@ -221,12 +223,12 @@ LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 2319 strings out of 493705
- 34700 string characters out of 6152319
+ 2324 strings out of 493705
+ 34794 string characters out of 6152319
  101992 words of memory out of 5000000
- 5876 multiletter control sequences out of 15000+600000
+ 5880 multiletter control sequences out of 15000+600000
  16728 words of font info for 66 fonts, out of 8000000 for 9000
  929 hyphenation exceptions out of 8191
  42i,6n,40p,454b,523s stack positions out of 5000i,500n,10000p,500000b,80000s
 
-Output written on grad_thesis.dvi (12 pages, 30228 bytes).
+Output written on grad_thesis.dvi (13 pages, 32660 bytes).

@@ -9,7 +9,7 @@
 \contentsline {subsection}{\numberline {4.2}評価指標}{8}
 \contentsline {subsection}{\numberline {4.3}サイボーグインセクトのモデル}{8}
 \contentsline {subsubsection}{\numberline {4.3.1}制御されていないサイボーグインセクトのモデル}{8}
-\contentsline {subsubsection}{\numberline {4.3.2}提案手法による拡張}{8}
-\contentsline {subsection}{\numberline {4.4}シミュレーション結果と考察}{8}
-\contentsline {section}{\numberline {5}おわりに}{9}
-\contentsline {section}{参考文献}{10}
+\contentsline {subsubsection}{\numberline {4.3.2}提案手法による拡張}{9}
+\contentsline {subsection}{\numberline {4.4}シミュレーション結果と考察}{9}
+\contentsline {section}{\numberline {5}おわりに}{10}
+\contentsline {section}{参考文献}{11}
