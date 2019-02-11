@@ -650,34 +650,23 @@ my.Z = 0
 
 Agt_Step{
 
-	println("")
-	println("step start")
 	if is_edge() then
-		println(my.ID&"avoid edge")
 		avoid_edge()
-		print_all()
 	end if
 	if is_control() then
-		PrintLn(my.ID&"control")
 		calculate_repulsive()
 		decide_vector()
-		println("do_type :"&my.do_type)
 	else
 		if different_surface() then
-			println(my.ID&"determing")
 			determining_vector()
 			update_normal_vector()
-			println("do_type :"&my.do_type)
 		else
 			if is_bend() then
-				println(my.ID&"bend")
 				determining_bend()
-				println("do_type :"&my.do_type)
 			end if
 		end if
 	end if
 	forward_step()
-	print_all()
 	clear_val()
 
 }
@@ -766,7 +755,6 @@ sub store_edge_vector(){
 	dim sum as Double
 
 	alpha = NormInv(Rnd(),0.5,0.1)
-	println("alpha"&alpha)
 	for i = 0 to 2
 		if my.normal_vector(i) == 0 then
 			f(i) = my.forward_vector(i) + alpha * my.edge_vector(i)
@@ -901,8 +889,7 @@ sub repulsive_barrier(){
 					next one
 			else
 				PrintLn("miss")
-				//terminateagt(my)
-				PauseSimulation()
+				terminateagt(my)
 			end if
 	else
 	end if
@@ -1019,12 +1006,10 @@ sub update_normal(){
 sub forward_step() {
 
 	if is_differernt() then
-		println("step surface")
 		step_surface()
 		delete_touch_vector()
 		update_normal()
 	else
-		println("step direction")
 		step_direction()
 		delete_touch_vector()
 		update_normal()
@@ -1064,7 +1049,6 @@ sub back_surface(n as Integer){
 	dim f(3) as Double
 	dim a(3) as Double
 
-	println("back :"&n)
 	a(0) = close_num(my.X) - my.normal_vector(0)
 	a(1) = close_num(my.Y) - my.normal_vector(1)
 	a(2) = close_num(my.Z) - my.normal_vector(2)
@@ -1080,12 +1064,8 @@ sub back_surface(n as Integer){
 	next i
 
 
-	print_all()
-	for i = 0 to 2
-		println("a("&i&") :"&a(i))
-	next i
+
 	if is_filled() then
-		println("fill back")
 		my.is_back = true
 		prev_forward()
 		my.X = GetHistory(my.X,1)
@@ -1094,7 +1074,6 @@ sub back_surface(n as Integer){
 	else
 		if check_void(a(0),a(1),a(2)) == 0 then
 			pre = GetHistory(my.touch(n),1)
-			println("pre :"&pre)
 			if n == 0 and check_void(a(0)+ pre + f(0),a(1),a(2)) == 1 then
 				my.X = my.X + pre + f(0)
 				my.Y = my.Y 
@@ -1110,8 +1089,7 @@ sub back_surface(n as Integer){
 			else
 				//ここに入りたくない
 				println("disapミスってる？？")
-				PauseSimulation()
-				//TerminateAgt(my)
+				TerminateAgt(my)
 			end if
 			my.is_back = true
 			prev_forward()
@@ -1154,22 +1132,18 @@ function is_step() as Boolean{
 
 	if is_filled() then
 		ret = false
-		println("fill")
 	else
 		if is_float() then
 			ret = false
-			println("float")
 		else
 			if not is_jump() then
 				if is_pause() then
 					ret = false
-					println("pause")
 				else
 					ret = true
 				end if
 			else
 				ret = false
-				println("jump")
 			end if
 		end if
 	end if
@@ -1211,12 +1185,6 @@ function is_pause() as Boolean{
 	p(1) = Int(GetHistory(my.Y,1))
 	p(2) = Int(GetHistory(my.Z,1))
 
-/*	println("nx :"&nx)
-	println("ny :"&ny)
-	println("nz :"&nz)
-	println("px :"&p(0))
-	println("py :"&p(1))
-	println("pz :"&p(2))*/
 
 	if nx != my.X then
 		nx = nx + minus(0)
@@ -1646,7 +1614,6 @@ function is_filled() as Boolean{
 			if check_void(a(0)-g(0)+i,a(1)-g(1)+j,a(2)-g(2)+k) == 1 then
 	 			if abs(a(0) - g(0) + i  - my.X) < 1 and abs(a(1) - g(1) + j  - my.y) < 1 and abs(a(2) - g(2) + k  - my.z) < 1 then
 	 				ret = true
-	 				println("fill true")
 	 				return ret
 	 			end if
 	 		end if
@@ -1716,19 +1683,11 @@ sub back_step(){
 	dim i as Integer
 	dim ak(3) as Double 
 
-	//println("今いる場所")
-	//println("x ;" & my.X)
-	//println("y ;" & my.y)
-	//println("z ;" & my.z)
 			
 	pre(0) = GetHistory(my.X,1)
 	pre(1) = GetHistory(my.y,1)
 	pre(2) = GetHistory(my.z,1)
 
-	//println("さっきいた場所")
-	//println("x ;" & pre(0))
-	//println("y ;" & pre(1))
-	//println("z ;" & pre(2))
 
 	k(0) = 0
 	k(1) = 0
@@ -1779,7 +1738,6 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
@@ -1799,7 +1757,6 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
@@ -1819,7 +1776,6 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
@@ -1839,7 +1795,6 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
@@ -1859,7 +1814,6 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	else			
@@ -1879,7 +1833,6 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	end if
@@ -1923,10 +1876,6 @@ sub determining_bend(){
 	for i = 0 to 2	
 		prob(i) = Abs(my.touch(i)) / sum
 	next i
-	//printLn("X is "&my.forward_vector(0))
-	//printLn("Y is "&my.forward_vector(1))
-	//printLn("Z is "&my.forward_vector(2))
-
 
 	if r < prob(0) and my.normal_vector(0) != 0 then
 		my.forward_vector(1) = Cos(rad) * y - Sin(rad) * z
@@ -1946,11 +1895,6 @@ sub determining_bend(){
 	else
 		//println("あり得ない方向に曲がった")
 	end if
-
-	//printLn("X is "&my.forward_vector(0))
-	//printLn("Y is "&my.forward_vector(1))
-	//printLn("Z is "&my.forward_vector(2))
-
 	my.do_type = select_do_type()
 
 }
@@ -1994,11 +1938,8 @@ sub store_vector(type as Integer,angle as Double){
 	angle = my.angle_surface
 	if n == -1 then
 		println("normal miss")
-		//terminateagt(my)
-		PauseSimulation()
+		terminateagt(my)
 	end if
-
-	println("b_type ;"&type)
 
 	my.next_vector(2,0) = 0
 	my.next_vector(2,1) = 0
@@ -2142,8 +2083,7 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 		else
 			println("type miss")
-			//TerminateAgt(my)
-			PauseSimulation()
+			TerminateAgt(my)
 		end if
 	else
 		if type == 0 then
@@ -2235,12 +2175,10 @@ sub store_vector(type as Integer,angle as Double){
 			end if
 		else
 			PrintLn("type miss")
-			//terminateagt(my)
-			PauseSimulation()
+			terminateagt(my)
 		end if
 	end if
 
-	println("edge_flag"&my.edge_flag)
 }
 
 sub matrix(){
@@ -2306,13 +2244,9 @@ sub select_vector(){
 	sum_diff = calclator_sum_diff()
 	for i = 0 to 2
 		prob(i) = calculate_probabilistic(my.next_vector(i,0),my.next_vector(i,1),my.next_vector(i,2),sum_diff)
-		println("prob("&i&") :"&prob(i))
 	next i
 	r = Rnd()
-	println("r : "&r)
 
-	println("x : "&my.forward_vector(0)&"     y : "&my.forward_vector(1)&"       z : "&my.forward_vector(2))
-	
 	if r < prob(0) then
 		set_normal_vector(my.n_normal(0))
 		my.forward_vector(0) = my.next_vector(0,0)
@@ -2329,9 +2263,6 @@ sub select_vector(){
 		my.forward_vector(1) = my.next_vector(2,1)
 		my.forward_vector(2) = my.next_vector(2,2)
 	end if
-
-	println("my.forward_vector is")
-	println("x : "&my.forward_vector(0)&"     y : "&my.forward_vector(1)&"       z : "&my.forward_vector(2))
 
 	my.do_type = select_do_type()
 }
@@ -2485,10 +2416,8 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 		sum_diff = 1
 	end if
 
-	println("n :"&n)
-	println("sum_diff :"&sum_diff)
+
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
-	println("diff :"&diff)
 	if n == 1 then
 		ret =1
 	else
@@ -2519,12 +2448,10 @@ function different_surface() as Boolean{
 	if is_appear_surface() then
 			my.ap_or_dis = 1
 			ret = true
-			println(my.ID&"app")
 	else
 		if is_disappear_surface() then
 			my.ap_or_dis = -1
 			ret = true
-			println(my.ID&"disapp")
 		end if
 	end if
 	
@@ -3020,14 +2947,12 @@ function is_disappear_surface() as Boolean{
 	nz = Int(my.Z)
 	nx = Int(my.X)
 
-	println("dissap")
 	for i = 0 to 2
 		if my.forward_vector(i) != 0 then
 			f(i) = My.forward_vector(i) / Abs(My.forward_vector(i))
 		else
 			f(i) = 0
 		end if
-		println("f("&i&") is"&f(i))
 	next i
 
 	if axis == 0 then
@@ -3467,7 +3392,7 @@ function is_disappear_surface() as Boolean{
 		y(0) = - x(0)
 	else
 		println("b_type miss")
-		PauseSimulation()
+		TerminateAgt()
 	end if
 
 	for i = 0 to 2		
@@ -3485,14 +3410,12 @@ sub step_surface(){
 
 	n = my.dis_surface
 	b = my.b_type
-	println("n :"&n&" b :"&b)	
 	for i =0 to 2
 		pre(i) = GetHistory(my.touch(i),1)
 		f(i) = GetHistory(my.forward_vector(i),1)
 		if f(i) != 0 then
 			f(i) = f(i) / Abs(f(i))
 		end if
-		println("f("&i&") :"&f(i))
 	next i
 
 	if b < 3 then
@@ -3504,9 +3427,6 @@ sub step_surface(){
 			f(2) = 0
 		end if
 	end if
-	for i = 0 to 2
-		println("f("&i&") :"&f(i))
-	next i
 
 	if n == 0 then
 		my.X = my.X - pre(0)
@@ -3545,7 +3465,6 @@ function calculate_theta() as Double{
 		end if
 	next i
 
-	println("b_type :"&my.b_type)
 	if my.b_type == 0 then
 		if i == 1 then
 			f = my.forward_vector(2)

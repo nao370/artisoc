@@ -62,6 +62,7 @@ UNIVERSE {
     Dim num_insect(0, 0) As Integer = (0);
     Dim T(0, 0) As Integer = (0);
     Dim alpha(0, 0) As Double = (0.0);
+    Dim insect_speed(0, 0) As Double = ();
 }
 
 
@@ -70,7 +71,7 @@ UNIVERSE {
 //-------------------------------------------------------
 Initial_Value {
     UNIVERSE.NUM_INSECT = 1(100);
-    UNIVERSE.T = 1(1);
+    UNIVERSE.T = 1(100);
     UNIVERSE.ALPHA = 1(0.6000000000000001);
 }
 
@@ -895,6 +896,7 @@ sub back_surface(n as Integer){
 	next i
 
 
+
 	if is_filled() then
 		my.is_back = true
 		prev_forward()
@@ -1513,9 +1515,11 @@ sub back_step(){
 	dim i as Integer
 	dim ak(3) as Double 
 
+			
 	pre(0) = GetHistory(my.X,1)
 	pre(1) = GetHistory(my.y,1)
 	pre(2) = GetHistory(my.z,1)
+
 
 	k(0) = 0
 	k(1) = 0
@@ -1566,7 +1570,6 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(0) <= ak(2) and ak(2) <= ak(1) then
@@ -1586,7 +1589,6 @@ sub back_step(){
 				my.y = pre(1) + k(0) * u(1)
 				my.z = pre(2) + k(0) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(0) and k(0) <= ak(2) then
@@ -1606,7 +1608,6 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(1) <= ak(2) and k(2) <= ak(0) then
@@ -1626,7 +1627,6 @@ sub back_step(){
 				my.y = pre(1) + k(1) * u(1)
 				my.z = pre(2) + k(1) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	elseif ak(2) <= ak(0) and k(0) <= ak(1) then
@@ -1646,7 +1646,6 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	else			
@@ -1666,7 +1665,6 @@ sub back_step(){
 				my.y = pre(1) + k(2) * u(1)
 				my.z = pre(2) + k(2) * u(2)
 				back_0()
-				PauseSimulation()
 			end if
 		end if
 	end if
@@ -1711,7 +1709,6 @@ sub determining_bend(){
 		prob(i) = Abs(my.touch(i)) / sum
 	next i
 
-
 	if r < prob(0) and my.normal_vector(0) != 0 then
 		my.forward_vector(1) = Cos(rad) * y - Sin(rad) * z
 		my.forward_vector(2) = Sin(rad) * y + cos(rad) * z 		 
@@ -1730,7 +1727,6 @@ sub determining_bend(){
 	else
 		//println("‚ ‚è“¾‚È‚¢•ûŒü‚É‹È‚ª‚Á‚½")
 	end if
-
 	my.do_type = select_do_type()
 
 }
@@ -2014,6 +2010,7 @@ sub store_vector(type as Integer,angle as Double){
 			terminateagt(my)
 		end if
 	end if
+
 }
 
 sub matrix(){
@@ -2081,7 +2078,7 @@ sub select_vector(){
 		prob(i) = calculate_probabilistic(my.next_vector(i,0),my.next_vector(i,1),my.next_vector(i,2),sum_diff)
 	next i
 	r = Rnd()
-	
+
 	if r < prob(0) then
 		set_normal_vector(my.n_normal(0))
 		my.forward_vector(0) = my.next_vector(0,0)
@@ -2250,6 +2247,7 @@ function calculate_probabilistic(x as Double,y as Double,z as Double, sum_diff a
 	if sum_diff == 0 then
 		sum_diff = 1
 	end if
+
 
 	diff = Sqr( ( my.base_vector(0) - x )^2 + ( my.base_vector(1) - y )^2 + ( my.base_vector(2) - z )^2 )
 	if n == 1 then
@@ -3384,16 +3382,16 @@ Single_Simulation {
 // Simulation Loop Definition Division
 //-------------------------------------------------------
 Repeat_Simulation {
-    Value_Change = None;
+    Value_Change = Linear;
     Initial_Value_Change_None {
         Repeat_Max = 1;
     }
     Initial_Value_Change_Linear {
         Variable_Name = "universe.T";
         Exec_Times_Same_Value = 1;
-        Start_Value = 10.0;
-        Step_Value = 10.0;
-        End_Value = 100.0;
+        Start_Value = 100.0;
+        Step_Value = 100.0;
+        End_Value = 1000.0;
     }
 }
 
@@ -3477,7 +3475,7 @@ Control_Panel {
     }
     Panel_Item {
         Item_Type = Edit_Box;
-        Item_Name = "T";
+        Item_Name = "speed";
         Display_Area = 0, 0, 0, 0;
         Font_Name = "";
         Font_Char_Set = 0;
@@ -3485,8 +3483,8 @@ Control_Panel {
         Font_Style = 0;
         Font_Color = 0, 0, 0;
         Font_Background_Color = 0, 0, 0;
-        Var_Name = "Universe.T";
-        Text_Data = "1";
+        Var_Name = "Universe.insect_speed";
+        Text_Data = "0.6";
     }
 }
 
@@ -3510,8 +3508,8 @@ Others_Data {
     Debug_Position_y = 8;
     Debug_Size_x = 400;
     Debug_Size_y = 200;
-    Console_Position_x = 1121;
-    Console_Position_y = 10;
+    Console_Position_x = 1110;
+    Console_Position_y = -20;
     Console_Size_x = 1768;
     Console_Size_y = 940;
     Componen_Tree_Position_x = -6;
